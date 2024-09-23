@@ -8,6 +8,8 @@ namespace PolyChessTGBot
 
         public long QuestionChannel;
 
+        public string LogsFolder = "";
+
         public static ConfigFile Load(string name)
         {
             string path = Path.Combine(Environment.CurrentDirectory, "Configs", name + ".json");

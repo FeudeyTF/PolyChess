@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text;
 using PolyChessTGBot.Bot.Commands;
+using PolyChessTGBot.Logs;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -53,7 +54,7 @@ namespace PolyChessTGBot.Bot
             List<string> commandArgs = index < 0 ? new() : ParseParameters(commandText[index..]);
 
             CommandArgs args = new(message, Program.BotClient, user, commandArgs);
-            Console.WriteLine($"Received command: {message.Text}. Arguments: {string.Join(", ", args.Parameters)}");
+            Program.Logger.Write($"Received command: {message.Text}. Arguments: {string.Join(", ", args.Parameters)}", LogType.Info);
             foreach (var command in Commands)
                 if (command.Names.Contains(commandName))
                 {  

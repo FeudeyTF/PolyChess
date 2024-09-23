@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using PolyChessTGBot.Bot;
-using PolyChessTGBot.Bot.Commands;
+using PolyChessTGBot.Logs;
+using PolyChessTGBot.Logs.LogTypes;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
@@ -19,12 +20,15 @@ namespace PolyChessTGBot
 
         public static ConfigFile MainConfig;
 
+        public static readonly TextLog Logger;
+
         private static CommandRegistrator CommandRegistrator;
 
         static Program()
         {
             MainConfig = ConfigFile.Load("Main");
             CommandRegistrator = new();
+            Logger = new(DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".log", MainConfig.LogsFolder);
             BotClient = new TelegramBotClient(MainConfig.BotToken);
             BotReceiverOptions = new ReceiverOptions
             {
@@ -70,7 +74,7 @@ namespace PolyChessTGBot
                                         await BotClient.SendTextMessageAsync(realUserId, $"❗️Получен **ответ** на ваш вопрос от {user.FirstName} {user.LastName}:\n{update.Message.Text}".RemoveBadSymbols(), cancellationToken: token, parseMode: ParseMode.MarkdownV2);
                                 }
 
-                                Console.WriteLine($"Recieved Message: [{user.FirstName} {user.LastName}]: {update.Message.Text}");
+                                Logger.Write($"Recieved Message: [{user.FirstName} {user.LastName}]: {update.Message.Text}", LogType.Info);
                             }
                         }
                         break;
@@ -88,7 +92,7 @@ namespace PolyChessTGBot
                 _ => exception.ToString()
             };
 
-            Console.WriteLine(message);
+            Logger.Write(message, Logs.LogType.Error);
             return Task.CompletedTask;
         }
     }
