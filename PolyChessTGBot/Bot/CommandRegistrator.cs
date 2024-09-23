@@ -4,6 +4,7 @@ using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Logs;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace PolyChessTGBot.Bot
 {
@@ -27,7 +28,7 @@ namespace PolyChessTGBot.Bot
                 commandDelegate = (CommandDelegate)Delegate.CreateDelegate(typeof(CommandDelegate), null, method);
                 if (commandDelegate != null)
                 {
-                    var command = new Command(new[] { commandAttribute.Name }, commandAttribute.Description, commandDelegate);
+                    var command = new Command(new[] { commandAttribute.Name }, commandAttribute.Description, commandAttribute.ScopeType, commandDelegate);
 
                     var equals = Commands.Where(c => c.Names.Contains(command.Name));
                     if (equals.Any())
@@ -56,13 +57,13 @@ namespace PolyChessTGBot.Bot
             CommandArgs args = new(message, Program.BotClient, user, commandArgs);
             foreach (var command in Commands)
                 if (command.Names.Contains(commandName))
-                {  
+                {
                     Program.Logger.Write($"Received command: {message.Text}. Arguments: {string.Join(", ", args.Parameters)}", LogType.Info);
                     try
                     {
                         await command.Delegate(args);
                     }
-                    catch(Exception)
+                    catch (Exception)
                     {
                         await Program.BotClient.SendTextMessageAsync(message.Chat.Id, "Произошла ошибка при выполнении команды! Обратитесь к вашему системному администратору");
                     }
@@ -118,6 +119,28 @@ namespace PolyChessTGBot.Bot
         private static bool IsWhiteSpace(char c)
         {
             return c == ' ' || c == '\t' || c == '\n';
+        }
+
+        public async Task RegisterCommandsInTelegram()
+        {
+            Dictionary<BotCommandScopeType, List<BotCommand>> commands = new();
+            foreach (var command in Commands)
+                if (commands.TryGetValue(command.ScopeType, out var list))
+                    list.Add(command.ToTelegramCommand());
+                else
+                    commands.Add(command.ScopeType, new() { command.ToTelegramCommand() });
+            foreach(var commandList in commands)
+            await Program.BotClient.SetMyCommandsAsync(commandList.Value, GetScopeByType(commandList.Key));
+        }
+
+        private BotCommandScope GetScopeByType(BotCommandScopeType type)
+        {
+            return type switch{
+                BotCommandScopeType.AllChatAdministrators => BotCommandScope.AllChatAdministrators(),
+                BotCommandScopeType.AllGroupChats => BotCommandScope.AllGroupChats(),
+                BotCommandScopeType.AllPrivateChats => BotCommandScope.AllPrivateChats(),
+                _=> BotCommandScope.Default()
+            };
         }
     }
 }

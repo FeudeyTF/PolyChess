@@ -1,3 +1,5 @@
+using Telegram.Bot.Types.Enums;
+
 namespace PolyChessTGBot.Bot.Commands
 {
     [AttributeUsage(AttributeTargets.Method)]
@@ -7,10 +9,13 @@ namespace PolyChessTGBot.Bot.Commands
 
         public string Description { get; }
 
-        public CommandAttribute(string name, string description)
+        public BotCommandScopeType ScopeType { get; }
+
+        public CommandAttribute(string name, string description, BotCommandScopeType scopeType = BotCommandScopeType.Default)
         {
             Name = name;
             Description = description;
+            ScopeType = scopeType;
         }
     }
 }

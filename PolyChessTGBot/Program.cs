@@ -44,10 +44,10 @@ namespace PolyChessTGBot
         {
             using var cancellationTokenSource = new CancellationTokenSource();
             BotClient.StartReceiving(UpdateHandler, ErrorHandler, BotReceiverOptions, cancellationTokenSource.Token);
-
             BotUser = await BotClient.GetMeAsync();
-            Console.WriteLine($"{BotUser.FirstName} запущен!");
+            Logger.Write($"{BotUser.FirstName} запущен!", LogType.Info);
             CommandRegistrator.RegisterCommands<BotCommands>();
+            await CommandRegistrator.RegisterCommandsInTelegram();
             await Task.Delay(-1);
         }
 
