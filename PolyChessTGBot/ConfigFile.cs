@@ -6,7 +6,9 @@ namespace PolyChessTGBot
     {
         public string BotToken = "";
 
-         public static ConfigFile Load(string name)
+        public long QuestionChannel;
+
+        public static ConfigFile Load(string name)
         {
             string path = Path.Combine(Environment.CurrentDirectory, "Configs", name + ".json");
 
