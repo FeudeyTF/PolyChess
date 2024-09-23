@@ -67,12 +67,10 @@ namespace PolyChessTGBot
                                 {
                                     var userId = update.Message.ReplyToMessage.Text.Split("\n").Last().Replace("|", "");
                                     if (long.TryParse(userId, out long realUserId))
-                                    {
-                                        Console.WriteLine(realUserId);
-                                        await BotClient.SendTextMessageAsync(realUserId, $"Получен ответ на ваш вопрос: " + update.Message.Text, cancellationToken: token);
-                                    }
+                                        await BotClient.SendTextMessageAsync(realUserId, $"❗️Получен **ответ** на ваш вопрос от {user.FirstName} {user.LastName}:\n{update.Message.Text}".RemoveBadSymbols(), cancellationToken: token, parseMode: ParseMode.MarkdownV2);
                                 }
-                                Console.WriteLine($"[{user.FirstName} {user.Id} {update.Message.Chat.Id} {user.LastName}]: {update.Message.Text}");
+
+                                Console.WriteLine($"Recieved Message: [{user.FirstName} {user.LastName}]: {update.Message.Text}");
                             }
                         }
                         break;

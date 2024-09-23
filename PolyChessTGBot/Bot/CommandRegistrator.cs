@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text;
 using PolyChessTGBot.Bot.Commands;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace PolyChessTGBot.Bot
@@ -55,7 +56,16 @@ namespace PolyChessTGBot.Bot
             Console.WriteLine($"Received command: {message.Text}. Arguments: {string.Join(", ", args.Parameters)}");
             foreach (var command in Commands)
                 if (command.Names.Contains(commandName))
-                    await command.Delegate(args);
+                {  
+                    try
+                    {
+                        await command.Delegate(args);
+                    }
+                    catch(Exception)
+                    {
+                        await Program.BotClient.SendTextMessageAsync(message.Chat.Id, "Произошла ошибка при выполнении команды! Обратитесь к вашему системному администратору");
+                    }
+                }
         }
 
         private static List<string> ParseParameters(string message)
