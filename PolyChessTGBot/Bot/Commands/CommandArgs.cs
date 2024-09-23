@@ -21,5 +21,10 @@ namespace PolyChessTGBot.Bot.Commands
 			Parameters = args;
             Bot = bot;
 		}
+
+        public async Task Reply(string message)
+        {
+            await Bot.SendTextMessageAsync(Message.Chat.Id, message, replyToMessageId: Message.MessageId);
+        }
     }
 }

@@ -24,13 +24,13 @@ namespace PolyChessTGBot
                 await args.Bot.SendTextMessageAsync(Program.MainConfig.QuestionChannel, string.Join("\n", message).RemoveBadSymbols(), parseMode: ParseMode.MarkdownV2);
             }
             else
-                await args.Bot.SendTextMessageAsync(args.User.Id, "Неправильно введён вопрос!");
+                await args.Reply("Неправильно введён вопрос!");
         }
         
         [Command("cstats", "test command")]
         public async Task Stats(CommandArgs args)
         {
-            await args.Bot.SendTextMessageAsync(args.Message.Chat.Id, $"Айди канала: {args.Message.Chat.Id}");
+            await args.Reply($"Айди канала: {args.Message.Chat.Id}");
         }
     }
 }
