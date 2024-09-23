@@ -6,7 +6,7 @@ namespace PolyChessTGBot
 {
     public class BotCommands
     {
-        [Command("question", "test command")]
+        [Command("question", "Синтаксис: /question \"вопрос\". Команда отправит вопрос напрямую Павлу")]
         public async Task Question(CommandArgs args)
         {
             string question = string.Join(" ", args.Parameters);
@@ -27,7 +27,7 @@ namespace PolyChessTGBot
                 await args.Reply("Неправильно введён вопрос!");
         }
         
-        [Command("cstats", "test command")]
+        [Command("cstats", "Покажет характеристики канала")]
         public async Task Stats(CommandArgs args)
         {
             await args.Reply($"Айди канала: {args.Message.Chat.Id}");
