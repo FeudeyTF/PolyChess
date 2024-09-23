@@ -51,7 +51,6 @@ namespace PolyChessTGBot
             await Task.Delay(-1);
         }
 
-        //Если будет нужен ассинхронный код, то этот метод можно сделать ассинхронным
         private async static Task UpdateHandler(ITelegramBotClient client, Update update, CancellationToken token)
         {
             switch (update.Type)
@@ -82,8 +81,7 @@ namespace PolyChessTGBot
             }
         }
 
-        //Если будет нужен ассинхронный код, то этот метод можно сделать ассинхронным
-        private static Task ErrorHandler(ITelegramBotClient client, Exception exception, CancellationToken token)
+        private async static Task ErrorHandler(ITelegramBotClient client, Exception exception, CancellationToken token)
         {
             var message = exception switch
             {
@@ -92,8 +90,8 @@ namespace PolyChessTGBot
                 _ => exception.ToString()
             };
 
-            Logger.Write(message, Logs.LogType.Error);
-            return Task.CompletedTask;
+            Logger.Write(message, LogType.Error);
+            await Task.CompletedTask;
         }
     }
 }
