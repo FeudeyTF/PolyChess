@@ -54,10 +54,10 @@ namespace PolyChessTGBot.Bot
             List<string> commandArgs = index < 0 ? new() : ParseParameters(commandText[index..]);
 
             CommandArgs args = new(message, Program.BotClient, user, commandArgs);
-            Program.Logger.Write($"Received command: {message.Text}. Arguments: {string.Join(", ", args.Parameters)}", LogType.Info);
             foreach (var command in Commands)
                 if (command.Names.Contains(commandName))
                 {  
+                    Program.Logger.Write($"Received command: {message.Text}. Arguments: {string.Join(", ", args.Parameters)}", LogType.Info);
                     try
                     {
                         await command.Delegate(args);
