@@ -1,5 +1,4 @@
-﻿using System.Text;
-using PolyChessTGBot.Bot;
+﻿using PolyChessTGBot.Bot;
 using PolyChessTGBot.Logs;
 using PolyChessTGBot.Logs.LogTypes;
 using Telegram.Bot;
@@ -73,7 +72,7 @@ namespace PolyChessTGBot
                                         await BotClient.SendTextMessageAsync(realUserId, $"❗️Получен **ответ** на ваш вопрос от {user.FirstName} {user.LastName}:\n{update.Message.Text}".RemoveBadSymbols(), cancellationToken: token, parseMode: ParseMode.MarkdownV2);
                                 }
 
-                                Logger.Write($"Recieved Message: [{user.FirstName} {user.LastName}]: {update.Message.Text}", LogType.Info);
+                                Logger.Write($"Recieved Message: [{user.FirstName} {user.LastName} (@{user.Username})]: {update.Message.Text}", LogType.Info);
                             }
                         }
                         break;

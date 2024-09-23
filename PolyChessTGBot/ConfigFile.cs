@@ -12,7 +12,10 @@ namespace PolyChessTGBot
 
         public static ConfigFile Load(string name)
         {
-            string path = Path.Combine(Environment.CurrentDirectory, "Configs", name + ".json");
+            string configFolder = Path.Combine(Environment.CurrentDirectory, "Configs");
+            if (!Directory.Exists(configFolder))
+                Directory.CreateDirectory(configFolder);
+            string path = Path.Combine(configFolder, name + ".json");
 
             ConfigFile emptyConfig = new();
 

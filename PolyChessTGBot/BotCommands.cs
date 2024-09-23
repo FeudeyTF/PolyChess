@@ -15,7 +15,7 @@ namespace PolyChessTGBot
                 List<string> message = new()
                 {
                     "**__Вопрос от пользователя!__**🙋‍♂️",
-                    $"👤**Ник пользователя:** {args.User.Username}",
+                    $"👤**Ник пользователя:** @{args.User.Username}",
                     $"👤**Имя пользователя:** {args.User.FirstName} {args.User.LastName}",
                     $"🕑**Дата отправки:** {args.Message.Date:G}",
                     $"❓**Вопрос:**\n{question}",
