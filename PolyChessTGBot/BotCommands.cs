@@ -1,6 +1,8 @@
 using PolyChessTGBot.Bot.Commands;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PolyChessTGBot
 {
@@ -18,10 +20,10 @@ namespace PolyChessTGBot
                     $"👤**Ник пользователя:** @{args.User.Username}",
                     $"👤**Имя пользователя:** {args.User.FirstName} {args.User.LastName}",
                     $"🕑**Дата отправки:** {args.Message.Date:G}",
-                    $"❓**Вопрос:**\n{question}",
-                    $"||{args.User.Id}||"
+                    $"❓**Вопрос:**\n{question}"
                 };
-                await args.Bot.SendTextMessageAsync(Program.MainConfig.QuestionChannel, string.Join("\n", message).RemoveBadSymbols(), parseMode: ParseMode.MarkdownV2);
+                InlineKeyboardMarkup uesrInfo = new(new InlineKeyboardButton("Данные") { CallbackData = args.User.Id.ToString() });
+                await args.Bot.SendTextMessageAsync(Program.MainConfig.QuestionChannel, string.Join("\n", message).RemoveBadSymbols(), parseMode: ParseMode.MarkdownV2, replyMarkup: uesrInfo);
             }
             else
                 await args.Reply("Неправильно введён вопрос!");

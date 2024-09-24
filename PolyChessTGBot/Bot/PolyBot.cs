@@ -70,11 +70,18 @@ namespace PolyChessTGBot.Bot
                                 if (text != null && text.StartsWith('/'))
                                     await CommandRegistrator.ExecuteCommand(text, update.Message, user);
 
-                                if (update.Message.ReplyToMessage != null && update.Message.ReplyToMessage.Text != null)
+                                if (update.Message.ReplyToMessage != null && update.Message.ReplyToMessage.ReplyMarkup != null)
                                 {
-                                    var userId = update.Message.ReplyToMessage.Text.Split("\n").Last().Replace("|", "");
-                                    if (long.TryParse(userId, out long realUserId))
-                                        await RealBot.SendTextMessageAsync(realUserId, $"❗️Получен **ответ** на ваш вопрос от {user.FirstName} {user.LastName}:\n{update.Message.Text}".RemoveBadSymbols(), cancellationToken: token, parseMode: ParseMode.MarkdownV2);
+                                    if (update.Message.ReplyToMessage.ReplyMarkup.InlineKeyboard.Any())
+                                    {
+                                        var inlineKeyBoard = update.Message.ReplyToMessage.ReplyMarkup.InlineKeyboard.First();
+                                        if(inlineKeyBoard.Any())
+                                        {
+                                            var userId = inlineKeyBoard.First().CallbackData;
+                                            if (long.TryParse(userId, out long realUserId))
+                                                await RealBot.SendTextMessageAsync(realUserId, $"❗️Получен **ответ** на ваш вопрос от {user.FirstName} {user.LastName}:\n{update.Message.Text}".RemoveBadSymbols(), cancellationToken: token, parseMode: ParseMode.MarkdownV2);
+                                        }
+                                    }
                                 }
 
                                 Logger.Write($"Recieved Message: [{user.FirstName} {user.LastName} (@{user.Username}) in {update.Message.Chat.Id}]: {update.Message.Text}", LogType.Info);

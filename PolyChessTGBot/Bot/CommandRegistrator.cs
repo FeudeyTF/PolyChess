@@ -62,8 +62,9 @@ namespace PolyChessTGBot.Bot
                     {
                         await command.Delegate(args);
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
+                        Program.Logger.Write(e.ToString(), LogType.Error);
                         await args.Reply("Произошла ошибка при выполнении команды! Обратитесь к вашему системному администратору");
                     }
                 }
