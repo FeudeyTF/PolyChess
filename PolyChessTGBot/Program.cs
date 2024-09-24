@@ -52,6 +52,7 @@ namespace PolyChessTGBot
 
         private async static Task UpdateHandler(ITelegramBotClient client, Update update, CancellationToken token)
         {
+            Logger.Write("Recieved Update: " + update.Type, LogType.Info);
             switch (update.Type)
             {
                 case UpdateType.Message:
@@ -72,7 +73,7 @@ namespace PolyChessTGBot
                                         await BotClient.SendTextMessageAsync(realUserId, $"❗️Получен **ответ** на ваш вопрос от {user.FirstName} {user.LastName}:\n{update.Message.Text}".RemoveBadSymbols(), cancellationToken: token, parseMode: ParseMode.MarkdownV2);
                                 }
 
-                                Logger.Write($"Recieved Message: [{user.FirstName} {user.LastName} (@{user.Username})]: {update.Message.Text}", LogType.Info);
+                                Logger.Write($"Recieved Message: [{user.FirstName} {user.LastName} (@{user.Username}) in {update.Message.Chat.Id}]: {update.Message.Text}", LogType.Info);
                             }
                         }
                         break;
