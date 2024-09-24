@@ -42,13 +42,30 @@ namespace PolyChessTGBot
 
         public async static Task Main(string[] args)
         {
+            if(string.IsNullOrEmpty(MainConfig.BotToken))
+            {
+                Logger.Write("Обнаружен пустой токен в конфиге!", LogType.Error);
+                Environment.Exit(0);
+            }
+
             using var cancellationTokenSource = new CancellationTokenSource();
-            BotClient.StartReceiving(UpdateHandler, ErrorHandler, BotReceiverOptions, cancellationTokenSource.Token);
-            BotUser = await BotClient.GetMeAsync();
+
+            try
+            {
+                BotClient.StartReceiving(UpdateHandler, ErrorHandler, BotReceiverOptions, cancellationTokenSource.Token);
+                BotUser = await BotClient.GetMeAsync();
+            }
+            catch (Exception)
+            {
+                Logger.Write($"Бот не был запущен из-за ошибки!", LogType.Error);
+                Environment.Exit(0);
+            }
+
             Logger.Write($"{BotUser.FirstName} запущен!", LogType.Info);
             CommandRegistrator.RegisterCommands<BotCommands>();
             await CommandRegistrator.RegisterCommandsInTelegram();
-            while(true)
+
+            while (true)
             {
                 var text = Console.ReadLine();
                 if (string.IsNullOrEmpty(text))
