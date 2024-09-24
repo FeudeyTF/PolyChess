@@ -1,3 +1,7 @@
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types;
+using System.Text;
+
 namespace PolyChessTGBot
 {
     public static class Utils
@@ -6,5 +10,62 @@ namespace PolyChessTGBot
             message.Replace(".", @"\.")
                    .Replace("!", @"\!")
                    .Replace("-", @"\-");
+
+        public static BotCommandScope GetScopeByType(BotCommandScopeType type)
+        {
+            return type switch
+            {
+                BotCommandScopeType.AllChatAdministrators => BotCommandScope.AllChatAdministrators(),
+                BotCommandScopeType.AllGroupChats => BotCommandScope.AllGroupChats(),
+                BotCommandScopeType.AllPrivateChats => BotCommandScope.AllPrivateChats(),
+                _ => BotCommandScope.Default()
+            };
+        }
+
+        public static List<string> ParseParameters(string message)
+        {
+            var result = new List<string>();
+            var sb = new StringBuilder();
+            bool instr = false;
+            for (int i = 0; i < message.Length; i++)
+            {
+                char c = message[i];
+
+                if (c == '\\' && ++i < message.Length)
+                {
+                    if (message[i] != '"' && message[i] != ' ' && message[i] != '\\')
+                        sb.Append('\\');
+                    sb.Append(message[i]);
+                }
+                else if (c == '"')
+                {
+                    instr = !instr;
+                    if (!instr)
+                    {
+                        result.Add(sb.ToString());
+                        sb.Clear();
+                    }
+                    else if (sb.Length > 0)
+                    {
+                        result.Add(sb.ToString());
+                        sb.Clear();
+                    }
+                }
+                else if (c == ' ' && !instr)
+                {
+                    if (sb.Length > 0)
+                    {
+                        result.Add(sb.ToString());
+                        sb.Clear();
+                    }
+                }
+                else
+                    sb.Append(c);
+            }
+            if (sb.Length > 0)
+                result.Add(sb.ToString());
+
+            return result;
+        }
     }
 }
