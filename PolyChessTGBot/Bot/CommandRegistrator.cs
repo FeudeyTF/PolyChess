@@ -70,7 +70,7 @@ namespace PolyChessTGBot.Bot
                 }
         }
 
-        private static List<string> ParseParameters(string message)
+        public static List<string> ParseParameters(string message)
         {
             var result = new List<string>();
             var sb = new StringBuilder();

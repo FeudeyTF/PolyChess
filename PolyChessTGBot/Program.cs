@@ -1,4 +1,5 @@
 ﻿using PolyChessTGBot.Bot;
+using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Logs;
 using PolyChessTGBot.Logs.LogTypes;
 using Telegram.Bot;
@@ -47,7 +48,35 @@ namespace PolyChessTGBot
             Logger.Write($"{BotUser.FirstName} запущен!", LogType.Info);
             CommandRegistrator.RegisterCommands<BotCommands>();
             await CommandRegistrator.RegisterCommandsInTelegram();
-            await Task.Delay(-1);
+            while(true)
+            {
+                var text = Console.ReadLine();
+                if (string.IsNullOrEmpty(text))
+                    continue;
+
+                if (text.StartsWith('/'))
+                    text = text[1..];
+
+                int index = -1;
+                for (int i = 0; i < text.Length; i++)
+                {
+                    if (text[i] == ' ')
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+                string commandName = index < 0 ? text.ToLower() : text[..index].ToLower();
+                List<string> parameters = index < 0 ? new() : CommandRegistrator.ParseParameters(text[index..]);
+                Logger.Write($"Command {commandName} was entered. Args: '{string.Join(", ", parameters)}'", LogType.Info);
+                switch(commandName.ToLower())
+                {
+                    case "exit":
+                        Environment.Exit(0);
+                        break;
+                }
+
+            }
         }
 
         private async static Task UpdateHandler(ITelegramBotClient client, Update update, CancellationToken token)
