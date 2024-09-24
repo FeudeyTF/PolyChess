@@ -65,7 +65,7 @@ namespace PolyChessTGBot.Bot
                     }
                     catch (Exception)
                     {
-                        await Program.BotClient.SendTextMessageAsync(message.Chat.Id, "Произошла ошибка при выполнении команды! Обратитесь к вашему системному администратору");
+                        await args.Reply("Произошла ошибка при выполнении команды! Обратитесь к вашему системному администратору");
                     }
                 }
         }

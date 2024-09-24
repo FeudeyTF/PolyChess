@@ -10,6 +10,8 @@ namespace PolyChessTGBot
 
         public string LogsFolder = "";
 
+        public List<int> DebugChats = new();
+
         public static ConfigFile Load(string name)
         {
             string configFolder = Path.Combine(Environment.CurrentDirectory, "Configs");

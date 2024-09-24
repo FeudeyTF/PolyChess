@@ -52,7 +52,6 @@ namespace PolyChessTGBot
 
         private async static Task UpdateHandler(ITelegramBotClient client, Update update, CancellationToken token)
         {
-            Logger.Write("Recieved Update: " + update.Type, LogType.Info);
             switch (update.Type)
             {
                 case UpdateType.Message:
@@ -78,6 +77,9 @@ namespace PolyChessTGBot
                         }
                         break;
                     }
+                default:
+                    Logger.Write("Recieved Update: " + update.Type, LogType.Info);
+                    break;
             }
         }
 
@@ -91,7 +93,8 @@ namespace PolyChessTGBot
             };
 
             Logger.Write(message, LogType.Error);
-            await Task.CompletedTask;
+            foreach (var debugChatID in MainConfig.DebugChats)
+                await BotClient.SendTextMessageAsync(debugChatID, message, cancellationToken: token);
         }
     }
 }
