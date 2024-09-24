@@ -8,7 +8,7 @@ namespace PolyChessTGBot
 
         public long QuestionChannel;
 
-        public string LogsFolder = "";
+        public string LogsFolder = "logs";
 
         public List<int> DebugChats = new();
 
