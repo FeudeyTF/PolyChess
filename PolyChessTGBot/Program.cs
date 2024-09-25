@@ -1,6 +1,8 @@
 ﻿using PolyChessTGBot.Bot;
+using PolyChessTGBot.Database;
 using PolyChessTGBot.Logs;
 using PolyChessTGBot.Logs.LogTypes;
+using System.Data.Common;
 
 namespace PolyChessTGBot
 {
@@ -12,11 +14,14 @@ namespace PolyChessTGBot
 
         internal static PolyBot Bot;
 
+        internal static PolyData Data;
+
         static Program()
         {
             MainConfig = ConfigFile.Load("Main");
             Logger = new(DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".log", MainConfig.LogsFolder);
             Bot = new(Logger);
+            Data = new(MainConfig.DatabasePath);
         }
 
         public async static Task Main(string[] args)

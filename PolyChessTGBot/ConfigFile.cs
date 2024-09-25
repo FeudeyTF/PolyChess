@@ -8,7 +8,9 @@ namespace PolyChessTGBot
 
         public long QuestionChannel;
 
-        public string LogsFolder = "logs";
+        public string LogsFolder = "Logs";
+
+        public string DatabasePath = "data.sqlite";
 
         public List<int> DebugChats = new();
 
