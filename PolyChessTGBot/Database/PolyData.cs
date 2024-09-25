@@ -5,7 +5,7 @@ namespace PolyChessTGBot.Database
 {
     internal class PolyData
     {
-        private readonly SqliteConnection MainDatabase;
+        private readonly SqliteConnection DB;
 
         public PolyData(string path)
         {
@@ -13,8 +13,8 @@ namespace PolyChessTGBot.Database
             var dirName = Path.GetDirectoryName(sqlPath);
             if(dirName != null)
                 Directory.CreateDirectory(dirName);
-            MainDatabase = new(string.Format("Data Source={0}", sqlPath));
-            Program.Logger.Write($"Database {MainDatabase.Database} connected!", LogType.Info);
+            DB = new(string.Format("Data Source={0}", sqlPath));
+            Program.Logger.Write($"Database {DB.Database} connected!", LogType.Info);
         }
 
         public int Query(string query, params object[] args)
@@ -55,6 +55,6 @@ namespace PolyChessTGBot.Database
         }
 
         public SqliteConnection Clone()
-            => new() { ConnectionString = MainDatabase.ConnectionString};
+            => new() { ConnectionString = DB.ConnectionString};
     }
 }
