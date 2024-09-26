@@ -21,6 +21,8 @@ namespace PolyChessTGBot
             Logger = new(DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".log", MainConfig.LogsFolder);
             Bot = new(Logger);
             Data = new(MainConfig.DatabasePath);
+            Data.LoadTables();
+            Logger.Write($"База данных '{Data.DatabaseName}' подключена!", LogType.Info);
         }
 
         public async static Task Main(string[] args)
@@ -54,7 +56,7 @@ namespace PolyChessTGBot
                 }
                 string commandName = index < 0 ? text.ToLower() : text[..index].ToLower();
                 List<string> parameters = index < 0 ? new() : Utils.ParseParameters(text[index..]);
-                Logger.Write($"Command {commandName} was entered. Args: '{string.Join(", ", parameters)}'", LogType.Info);
+                Logger.Write($"Была введена команда '{commandName}'. Аргументы: '{string.Join(", ", parameters)}'", LogType.Info);
                 switch(commandName.ToLower())
                 {
                     case "exit":

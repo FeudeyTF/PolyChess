@@ -84,13 +84,13 @@ namespace PolyChessTGBot.Bot
                                     }
                                 }
 
-                                Logger.Write($"Recieved Message: [{user.FirstName} {user.LastName} (@{user.Username}) in {update.Message.Chat.Id}]: {update.Message.Text}", LogType.Info);
+                                Logger.Write($"Получено сообщение: [{user.FirstName} {user.LastName} (@{user.Username}) в {update.Message.Chat.Id}]: {update.Message.Text}", LogType.Info);
                             }
                         }
                         break;
                     }
                 default:
-                    Logger.Write("Recieved Update: " + update.Type, LogType.Info);
+                    Logger.Write("Получено обновление: " + update.Type, LogType.Info);
                     break;
             }
         }
@@ -100,7 +100,7 @@ namespace PolyChessTGBot.Bot
             var message = exception switch
             {
                 ApiRequestException apiRequestException
-                    => $"[Telegram Bot Error]:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
+                    => $"[Telegram Ошибка]:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
                 _ => exception.ToString()
             };
 

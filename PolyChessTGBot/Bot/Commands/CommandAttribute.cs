@@ -11,11 +11,14 @@ namespace PolyChessTGBot.Bot.Commands
 
         public BotCommandScopeType ScopeType { get; }
 
-        public CommandAttribute(string name, string description, BotCommandScopeType scopeType = BotCommandScopeType.Default)
+        public bool Visible { get; }
+
+        public CommandAttribute(string name, string description, BotCommandScopeType scopeType = BotCommandScopeType.Default, bool visible = false)
         {
             Name = name;
             Description = description;
             ScopeType = scopeType;
+            Visible = visible;
         }
     }
 }

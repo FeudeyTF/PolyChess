@@ -1,6 +1,5 @@
 using PolyChessTGBot.Bot.Commands;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -8,11 +7,11 @@ namespace PolyChessTGBot
 {
     public class BotCommands
     {
-        [Command("question", "Синтаксис: /question \"вопрос\". Команда отправит вопрос напрямую Павлу")]
+        [Command("question", "Синтаксис: /question \"вопрос\". Команда отправит вопрос напрямую Павлу", visible: true)]
         public async Task Question(CommandArgs args)
         {
             string question = string.Join(" ", args.Parameters);
-            if(!string.IsNullOrEmpty(question))
+            if (!string.IsNullOrEmpty(question))
             {
                 List<string> message = new()
                 {
@@ -28,11 +27,42 @@ namespace PolyChessTGBot
             else
                 await args.Reply("Неправильно введён вопрос!");
         }
-        
+
         [Command("cstats", "Покажет характеристики канала")]
         public async Task Stats(CommandArgs args)
         {
             await args.Reply($"Айди канала: {args.Message.Chat.Id}");
+        }
+
+        [Command("users", "Покажет характеристики канала")]
+        public async Task GetUsers(CommandArgs args)
+        {
+            List<User> users = new();
+            using var reader = Program.Data.SelectQuery("SELECT * FROM Users");
+            while (reader.Read())
+                users.Add(new(reader.Get<int>("TelegramID"), reader.Get("Name"), reader.Get<int>("Year")));
+            await args.Reply($"Пользователи: {string.Join("\n", users)}");
+        }
+
+        private struct User
+        {
+            public long TelegramID;
+
+            public string Name;
+
+            public long Year;
+
+            public User(long telegramID, string name, long year)
+            {
+                TelegramID = telegramID;
+                Name = name;
+                Year = year;
+            }
+
+            public override string ToString()
+            {
+                return $"{Name} ({TelegramID}), Курс - {Year}";
+            }
         }
     }
 }

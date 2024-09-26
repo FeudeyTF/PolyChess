@@ -17,13 +17,16 @@ namespace PolyChessTGBot.Bot.Commands
 
         public BotCommandScopeType ScopeType;
 
-		public Command(string[] names, string description, BotCommandScopeType scopeType, CommandDelegate commandDelegate)
+        public bool Visible;
+
+        public Command(string[] names, string description, BotCommandScopeType scopeType, bool visible, CommandDelegate commandDelegate)
 		{
             Names = names;
             Description = description;
             Delegate = commandDelegate;
             ScopeType = scopeType;
-		}
+            Visible = visible;
+        }
 
         public BotCommand ToTelegramCommand()
         {

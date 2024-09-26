@@ -27,7 +27,7 @@ namespace PolyChessTGBot.Bot
                 commandDelegate = (CommandDelegate)Delegate.CreateDelegate(typeof(CommandDelegate), null, method);
                 if (commandDelegate != null)
                 {
-                    var command = new Command(new[] { commandAttribute.Name }, commandAttribute.Description, commandAttribute.ScopeType, commandDelegate);
+                    var command = new Command(new[] { commandAttribute.Name }, commandAttribute.Description, commandAttribute.ScopeType, commandAttribute.Visible, commandDelegate);
 
                     var equals = Commands.Where(c => c.Names.Contains(command.Name));
                     if (equals.Any())
@@ -57,7 +57,7 @@ namespace PolyChessTGBot.Bot
             foreach (var command in Commands)
                 if (command.Names.Contains(commandName))
                 {
-                    Program.Logger.Write($"Received command: {message.Text}. Arguments: {string.Join(", ", args.Parameters)}", LogType.Info);
+                    Program.Logger.Write($"Получена команда: `{message.Text}`. Аргументы: {string.Join(", ", args.Parameters)}", LogType.Info);
                     try
                     {
                         await command.Delegate(args);
@@ -74,11 +74,14 @@ namespace PolyChessTGBot.Bot
         {
             Dictionary<BotCommandScopeType, List<BotCommand>> commands = new();
             foreach (var command in Commands)
-                if (commands.TryGetValue(command.ScopeType, out var list))
-                    list.Add(command.ToTelegramCommand());
-                else
-                    commands.Add(command.ScopeType, new() { command.ToTelegramCommand() });
-            foreach(var commandList in commands)
+                if(command.Visible)
+                { 
+                    if (commands.TryGetValue(command.ScopeType, out var list))
+                        list.Add(command.ToTelegramCommand());
+                    else
+                        commands.Add(command.ScopeType, new() { command.ToTelegramCommand() });
+                }
+            foreach (var commandList in commands)
             await Program.Bot.Telegram.SetMyCommandsAsync(commandList.Value, Utils.GetScopeByType(commandList.Key));
         }
     }

@@ -1,10 +1,11 @@
 ﻿using Microsoft.Data.Sqlite;
-using PolyChessTGBot.Logs;
 
 namespace PolyChessTGBot.Database
 {
     internal class PolyData
     {
+        public string DatabaseName => DB.Database;
+
         private readonly SqliteConnection DB;
 
         public PolyData(string path)
@@ -14,7 +15,19 @@ namespace PolyChessTGBot.Database
             if(dirName != null)
                 Directory.CreateDirectory(dirName);
             DB = new(string.Format("Data Source={0}", sqlPath));
-            Program.Logger.Write($"Database {DB.Database} connected!", LogType.Info);
+        }
+
+        public void LoadTables()
+        {
+            Query("CREATE TABLE IF NOT EXISTS Users (" +
+                  "TelegramID      INTEGER PRIMARY KEY, " +
+                  "Name            TEXT, " +
+                  "Year            INTEGER" +
+                  ")");
+            Query("CREATE TABLE IF NOT EXISTS Attendance (" +
+                  "LessonDate      INTEGER PRIMARY KEY, " +
+                  "UserID          INTEGER" +
+                  ")");
         }
 
         public int Query(string query, params object[] args)
@@ -25,15 +38,12 @@ namespace PolyChessTGBot.Database
             using SqliteCommand dbCommand = db.CreateCommand();
             dbCommand.CommandText = query;
             for (int i = 0; i < args.Length; i++)
-            {
-                Console.WriteLine(6);
                 AddParameter(dbCommand, "@" + i, args[i] ?? DBNull.Value);
-            }
 
             return dbCommand.ExecuteNonQuery();
         }
 
-        public QueryResult QueryReader(string query, params object[] args)
+        public QueryResult SelectQuery(string query, params object[] args)
         {
             SqliteConnection db = Clone();
             db.Open();
