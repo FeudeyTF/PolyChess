@@ -1,8 +1,7 @@
 ﻿using PolyChessTGBot.Bot;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Logs;
-using PolyChessTGBot.Logs.LogTypes;
-using System.Data.Common;
+using PolyChessTGBot.Logs.Types;
 
 namespace PolyChessTGBot
 {
@@ -29,6 +28,7 @@ namespace PolyChessTGBot
             if(string.IsNullOrEmpty(MainConfig.BotToken))
             {
                 Logger.Write("Обнаружен пустой токен в конфиге!", LogType.Error);
+                Console.ReadLine();
                 Environment.Exit(0);
             }
 

@@ -9,9 +9,9 @@ namespace PolyChessTGBot.Bot
 {
     internal class PolyBot
     {
-        public readonly TelegramBotClient RealBot;
+        public readonly TelegramBotClient Telegram;
 
-        public User? BotUser;
+        public User? TelegramUser;
 
         private readonly ReceiverOptions BotReceiverOptions;
 
@@ -22,7 +22,7 @@ namespace PolyChessTGBot.Bot
         public PolyBot(ILog logger)
         {
             CommandRegistrator = new();
-            RealBot = new TelegramBotClient(Program.MainConfig.BotToken);
+            Telegram = new TelegramBotClient(Program.MainConfig.BotToken);
             BotReceiverOptions = new ReceiverOptions
             {
                 AllowedUpdates = new[]
@@ -40,8 +40,8 @@ namespace PolyChessTGBot.Bot
 
             try
             {
-                RealBot.StartReceiving(UpdateHandler, ErrorHandler, BotReceiverOptions, cancellationTokenSource.Token);
-                BotUser = await RealBot.GetMeAsync();
+                Telegram.StartReceiving(UpdateHandler, ErrorHandler, BotReceiverOptions, cancellationTokenSource.Token);
+                TelegramUser = await Telegram.GetMeAsync();
             }
             catch (Exception)
             {
@@ -49,7 +49,7 @@ namespace PolyChessTGBot.Bot
                 Environment.Exit(0);
             }
 
-            Logger.Write($"{BotUser.FirstName} запущен!", LogType.Info);
+            Logger.Write($"{TelegramUser.FirstName} запущен!", LogType.Info);
             CommandRegistrator.RegisterCommands<BotCommands>();
             await CommandRegistrator.RegisterCommandsInTelegram();
 
@@ -79,7 +79,7 @@ namespace PolyChessTGBot.Bot
                                         {
                                             var userId = inlineKeyBoard.First().CallbackData;
                                             if (long.TryParse(userId, out long realUserId))
-                                                await RealBot.SendTextMessageAsync(realUserId, $"❗️Получен **ответ** на ваш вопрос от {user.FirstName} {user.LastName}:\n{update.Message.Text}".RemoveBadSymbols(), cancellationToken: token, parseMode: ParseMode.MarkdownV2);
+                                                await Telegram.SendTextMessageAsync(realUserId, $"❗️Получен **ответ** на ваш вопрос от {user.FirstName} {user.LastName}:\n{update.Message.Text}".RemoveBadSymbols(), cancellationToken: token, parseMode: ParseMode.MarkdownV2);
                                         }
                                     }
                                 }
@@ -106,7 +106,7 @@ namespace PolyChessTGBot.Bot
 
             Logger.Write(message, LogType.Error);
             foreach (var debugChatID in Program.MainConfig.DebugChats)
-                await RealBot.SendTextMessageAsync(debugChatID, message, cancellationToken: token);
+                await Telegram.SendTextMessageAsync(debugChatID, message, cancellationToken: token);
         }
     }
 }

@@ -1,4 +1,4 @@
-namespace PolyChessTGBot.Logs.LogTypes
+namespace PolyChessTGBot.Logs.Types
 {
     public class TextLog : ILog, IDisposable
     {
