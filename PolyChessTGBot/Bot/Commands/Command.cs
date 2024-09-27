@@ -3,7 +3,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace PolyChessTGBot.Bot.Commands
 {
-	internal delegate Task CommandDelegate(CommandArgs args);
+    internal delegate Task CommandDelegate(CommandArgs args);
 
     internal class Command
     {
@@ -20,7 +20,7 @@ namespace PolyChessTGBot.Bot.Commands
         public bool Visible;
 
         public Command(string[] names, string description, BotCommandScopeType scopeType, bool visible, CommandDelegate commandDelegate)
-		{
+        {
             Names = names;
             Description = description;
             Delegate = commandDelegate;

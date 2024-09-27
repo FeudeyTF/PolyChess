@@ -12,7 +12,7 @@ namespace PolyChessTGBot.Database
         {
             string sqlPath = Path.Combine(Environment.CurrentDirectory, path);
             var dirName = Path.GetDirectoryName(sqlPath);
-            if(dirName != null)
+            if (dirName != null)
                 Directory.CreateDirectory(dirName);
             DB = new(string.Format("Data Source={0}", sqlPath));
         }
@@ -65,6 +65,6 @@ namespace PolyChessTGBot.Database
         }
 
         public SqliteConnection Clone()
-            => new() { ConnectionString = DB.ConnectionString};
+            => new() { ConnectionString = DB.ConnectionString };
     }
 }

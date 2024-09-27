@@ -1,9 +1,9 @@
-﻿using Telegram.Bot.Polling;
+﻿using PolyChessTGBot.Logs;
 using Telegram.Bot;
-using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types;
-using PolyChessTGBot.Logs;
 using Telegram.Bot.Exceptions;
+using Telegram.Bot.Polling;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace PolyChessTGBot.Bot
 {
@@ -75,7 +75,7 @@ namespace PolyChessTGBot.Bot
                                     if (update.Message.ReplyToMessage.ReplyMarkup.InlineKeyboard.Any())
                                     {
                                         var inlineKeyBoard = update.Message.ReplyToMessage.ReplyMarkup.InlineKeyboard.First();
-                                        if(inlineKeyBoard.Any())
+                                        if (inlineKeyBoard.Any())
                                         {
                                             var userId = inlineKeyBoard.First().CallbackData;
                                             if (long.TryParse(userId, out long realUserId))

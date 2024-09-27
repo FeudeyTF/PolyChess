@@ -1,6 +1,6 @@
-using System.Reflection;
 using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Logs;
+using System.Reflection;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -74,15 +74,15 @@ namespace PolyChessTGBot.Bot
         {
             Dictionary<BotCommandScopeType, List<BotCommand>> commands = new();
             foreach (var command in Commands)
-                if(command.Visible)
-                { 
+                if (command.Visible)
+                {
                     if (commands.TryGetValue(command.ScopeType, out var list))
                         list.Add(command.ToTelegramCommand());
                     else
                         commands.Add(command.ScopeType, new() { command.ToTelegramCommand() });
                 }
             foreach (var commandList in commands)
-            await Program.Bot.Telegram.SetMyCommandsAsync(commandList.Value, Utils.GetScopeByType(commandList.Key));
+                await Program.Bot.Telegram.SetMyCommandsAsync(commandList.Value, Utils.GetScopeByType(commandList.Key));
         }
     }
 }

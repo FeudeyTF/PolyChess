@@ -27,7 +27,7 @@ namespace PolyChessTGBot
                 File.WriteAllText(path, JsonConvert.SerializeObject(emptyConfig, Formatting.Indented));
 
             var parsedConfig = JsonConvert.DeserializeObject<ConfigFile>(File.ReadAllText(path));
-            if(parsedConfig != null)
+            if (parsedConfig != null)
                 return parsedConfig;
             return emptyConfig;
         }

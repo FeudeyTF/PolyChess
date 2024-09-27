@@ -27,7 +27,7 @@ namespace PolyChessTGBot
 
         public async static Task Main(string[] args)
         {
-            if(string.IsNullOrEmpty(MainConfig.BotToken))
+            if (string.IsNullOrEmpty(MainConfig.BotToken))
             {
                 Logger.Write("Обнаружен пустой токен в конфиге!", LogType.Error);
                 Console.ReadLine();
@@ -57,7 +57,7 @@ namespace PolyChessTGBot
                 string commandName = index < 0 ? text.ToLower() : text[..index].ToLower();
                 List<string> parameters = index < 0 ? new() : Utils.ParseParameters(text[index..]);
                 Logger.Write($"Была введена команда '{commandName}'. Аргументы: '{string.Join(", ", parameters)}'", LogType.Info);
-                switch(commandName.ToLower())
+                switch (commandName.ToLower())
                 {
                     case "exit":
                         Environment.Exit(0);

@@ -10,7 +10,7 @@ namespace PolyChessTGBot.Logs.Types
         {
             string path = Path.Combine(Environment.CurrentDirectory, folder);
             string filePath = Path.Combine(path, filename);
-            if(!Directory.Exists(path))
+            if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
             if (!File.Exists(filePath))
                 File.Create(filePath).Close();
@@ -27,7 +27,7 @@ namespace PolyChessTGBot.Logs.Types
             Console.ResetColor();
 
             LogWriter.WriteLine(logEntry);
-		    LogWriter.Flush();
+            LogWriter.Flush();
         }
 
         private ConsoleColor GetColor(LogType log)
@@ -42,10 +42,10 @@ namespace PolyChessTGBot.Logs.Types
             };
         }
 
-		public void Dispose()
-		{
-			LogWriter?.Dispose();
+        public void Dispose()
+        {
+            LogWriter?.Dispose();
             GC.SuppressFinalize(this);
-		}
+        }
     }
 }
