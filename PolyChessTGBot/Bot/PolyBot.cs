@@ -17,7 +17,7 @@ namespace PolyChessTGBot.Bot
 
         private readonly CommandRegistrator CommandRegistrator;
 
-        private ILog Logger;
+        private readonly ILog Logger;
 
         public PolyBot(ILog logger)
         {
@@ -70,16 +70,29 @@ namespace PolyChessTGBot.Bot
                                 if (text != null && text.StartsWith('/'))
                                     await CommandRegistrator.ExecuteCommand(text, update.Message, user);
 
-                                if (update.Message.ReplyToMessage != null && update.Message.ReplyToMessage.ReplyMarkup != null)
+                                if (update.Message.Chat.Id == Program.MainConfig.QuestionChannel && update.Message.ReplyToMessage != null && update.Message.ReplyToMessage.ReplyMarkup != null)
                                 {
                                     if (update.Message.ReplyToMessage.ReplyMarkup.InlineKeyboard.Any())
                                     {
                                         var inlineKeyBoard = update.Message.ReplyToMessage.ReplyMarkup.InlineKeyboard.First();
                                         if (inlineKeyBoard.Any())
                                         {
-                                            var userId = inlineKeyBoard.First().CallbackData;
-                                            if (long.TryParse(userId, out long realUserId))
-                                                await Telegram.SendTextMessageAsync(realUserId, $"❗️Получен **ответ** на ваш вопрос от {user.FirstName} {user.LastName}:\n{update.Message.Text}".RemoveBadSymbols(), cancellationToken: token, parseMode: ParseMode.MarkdownV2);
+                                            var dataButton = inlineKeyBoard.First();
+                                            if (!string.IsNullOrEmpty(dataButton.CallbackData))
+                                            {
+                                                var data = Utils.ParseDataString(dataButton.CallbackData);
+                                                if(data != null)
+                                                {
+                                                    var userIDlong = data.Get<long>("ID");
+                                                    var userIDint = data.Get<int>("ID");
+                                                    var questionChannelID = data.Get<int>("ChannelID");
+                                                    if((userIDlong != default || userIDint != default) && questionChannelID != default)
+                                                    {
+                                                        var userID = userIDlong == default ? userIDint : userIDlong;
+                                                        await Telegram.SendTextMessageAsync(userID, $"❗️Получен **ответ** на ваш вопрос от {user.FirstName} {user.LastName}:\n{update.Message.Text}".RemoveBadSymbols(), replyToMessageId: questionChannelID, cancellationToken: token, parseMode: ParseMode.MarkdownV2);
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }

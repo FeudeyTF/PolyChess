@@ -21,7 +21,8 @@ namespace PolyChessTGBot
                     $"🕑**Дата отправки:** {args.Message.Date:G}",
                     $"❓**Вопрос:**\n{question}"
                 };
-                InlineKeyboardMarkup uesrInfo = new(new InlineKeyboardButton("Данные") { CallbackData = args.User.Id.ToString() });
+                var data = Utils.GetDataString("QuestionDataID", ("ID", args.User.Id), ("ChannelID", args.Message.MessageId));
+                InlineKeyboardMarkup uesrInfo = new(new InlineKeyboardButton("Данные") { CallbackData = data });
                 await args.Bot.SendTextMessageAsync(Program.MainConfig.QuestionChannel, string.Join("\n", message).RemoveBadSymbols(), parseMode: ParseMode.MarkdownV2, replyMarkup: uesrInfo);
             }
             else

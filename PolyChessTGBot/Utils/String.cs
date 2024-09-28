@@ -1,26 +1,13 @@
 using System.Text;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 
 namespace PolyChessTGBot
 {
-    public static class Utils
+    public static partial class Utils
     {
         public static string RemoveBadSymbols(this string message) =>
             message.Replace(".", @"\.")
                    .Replace("!", @"\!")
                    .Replace("-", @"\-");
-
-        public static BotCommandScope GetScopeByType(BotCommandScopeType type)
-        {
-            return type switch
-            {
-                BotCommandScopeType.AllChatAdministrators => BotCommandScope.AllChatAdministrators(),
-                BotCommandScopeType.AllGroupChats => BotCommandScope.AllGroupChats(),
-                BotCommandScopeType.AllPrivateChats => BotCommandScope.AllPrivateChats(),
-                _ => BotCommandScope.Default()
-            };
-        }
 
         public static List<string> ParseParameters(string message)
         {
