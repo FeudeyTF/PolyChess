@@ -28,7 +28,7 @@ namespace PolyChessTGBot.Database
                   "LessonDate      INTEGER PRIMARY KEY, " +
                   "UserID          INTEGER" +
                   ")");
-            Query("CREATE TABLE IF NOT EXISTS QnA (" +
+            Query("CREATE TABLE IF NOT EXISTS FAQ (" +
                   "ID              INTEGER PRIMARY KEY AUTOINCREMENT, " +
                   "Question        Text," +
                   "Answer          Text" +
@@ -73,13 +73,13 @@ namespace PolyChessTGBot.Database
             => new() { ConnectionString = DB.ConnectionString };
     }
 
-    public struct QnAEntry
+    public struct FAQEntry
     {
         public string Question;
 
         public string Answer;
 
-        public QnAEntry(string question, string answer)
+        public FAQEntry(string question, string answer)
         {
             Question = question;
             Answer = answer;

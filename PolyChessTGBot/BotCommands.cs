@@ -10,11 +10,11 @@ namespace PolyChessTGBot
 {
     public class BotCommands
     {
-        internal readonly ListMessage<QnAEntry> QnAMessage;
+        internal readonly ListMessage<FAQEntry> FAQMessage;
 
         public BotCommands()
         {
-            QnAMessage = new("QnA", GetValues, ProccessString)
+            FAQMessage = new("FAQ", GetValues, ProccessString)
             {
                 Header = "❓<b>FAQ</b> шахмат❓ Все самые <b>часто задаваемые</b> вопросы собраны в одном месте:"
             };
@@ -43,38 +43,38 @@ namespace PolyChessTGBot
                 await args.Reply("Неправильно введён вопрос!");
         }
 
-        [Command("qna", "Выдаёт список с FAQ", visible: true)]
-        public async Task QnA(CommandArgs args)
+        [Command("FAQ", "Выдаёт список с FAQ", visible: true)]
+        public async Task FAQ(CommandArgs args)
         {
-            await QnAMessage.Send(args.Bot, args.Message.Chat.Id);
+            await FAQMessage.Send(args.Bot, args.Message.Chat.Id);
         }
 
-        private List<QnAEntry> GetValues()
+        private List<FAQEntry> GetValues()
         {
-            using var reader = Program.Data.SelectQuery("SELECT * FROM QnA");
-            List<QnAEntry> questions = new();
+            using var reader = Program.Data.SelectQuery("SELECT * FROM FAQ");
+            List<FAQEntry> questions = new();
             while (reader.Read())
                 questions.Add(new(reader.Get("Question"), reader.Get("Answer")));
             return questions;
         }
 
-        private string ProccessString(QnAEntry entry, int index)
+        private string ProccessString(FAQEntry entry, int index)
         {
             return $"{index + 1}) <b>{entry.Question}</b>\n - {entry.Answer}";
         }
 
-        [Command("addqna", "Создаёт частозадаваемый вопрос")]
-        public async Task AddQnA(CommandArgs args)
+        [Command("addfaq", "Создаёт частозадаваемый вопрос")]
+        public async Task AddFAQ(CommandArgs args)
         {
             if (args.Parameters.Count == 2)
             {
                 var question = args.Parameters[0];
                 var answer = args.Parameters[1];
-                Program.Data.Query("INSERT INTO QnA (Question, Answer) VALUES (@0, @1)", question, answer);
+                Program.Data.Query("INSERT INTO FAQ (Question, Answer) VALUES (@0, @1)", question, answer);
                 await args.Reply($"Вопрос <b>{question}</b> и ответ на него <b>{answer}</b> были успешно добавлены", parseMode: ParseMode.Html);
             }
             else
-                await args.Reply("Ошибка синтаксиса! Правильно: /addqna \"вопрос\" \"ответ\"");
+                await args.Reply("Ошибка синтаксиса! Правильно: /addFAQ \"вопрос\" \"ответ\"");
         }
 
         [Command("cstats", "Покажет характеристики канала")]
