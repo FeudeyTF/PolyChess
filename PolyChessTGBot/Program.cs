@@ -35,7 +35,6 @@ namespace PolyChessTGBot
             }
 
             await Bot.LoadBot();
-
             while (true)
             {
                 var text = Console.ReadLine();

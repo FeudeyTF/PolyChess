@@ -28,6 +28,7 @@ namespace PolyChessTGBot.Bot
         public PolyBot(ILog logger)
         {
             Telegram = new TelegramBotClient(Program.MainConfig.BotToken);
+            
             BotReceiverOptions = new ReceiverOptions
             {
                 ThrowPendingUpdates = true,
@@ -41,7 +42,6 @@ namespace PolyChessTGBot.Bot
         public async Task LoadBot()
         {
             using var cancellationTokenSource = new CancellationTokenSource();
-
             try
             {
                 Telegram.StartReceiving(UpdateHandler, ErrorHandler, BotReceiverOptions, cancellationTokenSource.Token);
@@ -54,11 +54,12 @@ namespace PolyChessTGBot.Bot
             }
 
             Telegram.OnApiResponseReceived += HandleApiResponseRecieved;
-            Telegram.OnMakingApiRequest += HandleMakingApiRequest; ;
+            Telegram.OnMakingApiRequest += HandleMakingApiRequest;
 
             Logger.Write($"{TelegramUser.FirstName} запущен!", LogType.Info);
             CommandRegistrator.RegisterCommands(Commands);
             ButtonRegistrator.RegisterButtons();
+            
             await CommandRegistrator.RegisterCommandsInTelegram();
         }
 
@@ -69,44 +70,7 @@ namespace PolyChessTGBot.Bot
                 case UpdateType.Message:
                     {
                         if (update.Message != null)
-                        {
-                            var user = update.Message.From;
-                            if (user != null)
-                            {
-                                var text = update.Message.Text;
-                                if (text != null && text.StartsWith('/'))
-                                    await CommandRegistrator.ExecuteCommand(text, update.Message, user);
-
-                                if (update.Message.Chat.Id == Program.MainConfig.QuestionChannel && update.Message.ReplyToMessage != null && update.Message.ReplyToMessage.ReplyMarkup != null)
-                                {
-                                    if (update.Message.ReplyToMessage.ReplyMarkup.InlineKeyboard.Any())
-                                    {
-                                        var inlineKeyBoard = update.Message.ReplyToMessage.ReplyMarkup.InlineKeyboard.First();
-                                        if (inlineKeyBoard.Any())
-                                        {
-                                            var dataButton = inlineKeyBoard.First();
-                                            if (!string.IsNullOrEmpty(dataButton.CallbackData))
-                                            {
-                                                var data = TelegramButtonData.ParseDataString(dataButton.CallbackData);
-                                                if(data != null)
-                                                {
-                                                    var userIDlong = data.Get<long>("ID");
-                                                    var userIDint = data.Get<int>("ID");
-                                                    var questionChannelID = data.Get<int>("ChannelID");
-                                                    if((userIDlong != default || userIDint != default) && questionChannelID != default)
-                                                    {
-                                                        var userID = userIDlong == default ? userIDint : userIDlong;
-                                                        await Telegram.SendTextMessageAsync(userID, $"❗️Получен **ответ** на ваш вопрос от {user.FirstName} {user.LastName}:\n{update.Message.Text}".RemoveBadSymbols(), replyToMessageId: questionChannelID, cancellationToken: token, parseMode: ParseMode.MarkdownV2);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Logger.Write($"Получено сообщение: [{user.FirstName} {user.LastName} (@{user.Username}) в {update.Message.Chat.Id}]: {update.Message.Text}", LogType.Info);
-                            }
-                        }
+                            await MessageRecieveHandler(update.Message, token);
                         break;
                     }
                 case UpdateType.CallbackQuery:
@@ -130,6 +94,45 @@ namespace PolyChessTGBot.Bot
             }
         }
 
+        private async Task MessageRecieveHandler(Message message, CancellationToken token)
+        {
+            var user = message.From;
+            if (user != null)
+            {
+                var text = message.Text;
+                if (text != null && text.StartsWith('/'))
+                    await CommandRegistrator.ExecuteCommand(text, message, user);
+
+                if (message.Chat.Id == Program.MainConfig.QuestionChannel && message.ReplyToMessage != null && message.ReplyToMessage.ReplyMarkup != null)
+                {
+                    if (message.ReplyToMessage.ReplyMarkup.InlineKeyboard.Any())
+                    {
+                        var inlineKeyBoard = message.ReplyToMessage.ReplyMarkup.InlineKeyboard.First();
+                        if (inlineKeyBoard.Any())
+                        {
+                            var dataButton = inlineKeyBoard.First();
+                            if (!string.IsNullOrEmpty(dataButton.CallbackData))
+                            {
+                                var data = TelegramButtonData.ParseDataString(dataButton.CallbackData);
+                                if (data != null)
+                                {
+                                    var userIDlong = data.Get<long>("ID");
+                                    var userIDint = data.Get<int>("ID");
+                                    var questionChannelID = data.Get<int>("ChannelID");
+                                    if ((userIDlong != default || userIDint != default) && questionChannelID != default)
+                                    {
+                                        var userID = userIDlong == default ? userIDint : userIDlong;
+                                        await Telegram.SendTextMessageAsync(userID, $"❗️Получен **ответ** на ваш вопрос от {user.FirstName} {user.LastName}:\n{message.Text}".RemoveBadSymbols(), replyToMessageId: questionChannelID, cancellationToken: token, parseMode: ParseMode.MarkdownV2);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Logger.Write($"Получено сообщение: [{user.FirstName} {user.LastName} (@{user.Username}) в {message.Chat.Id}]: {message.Text}", LogType.Info);
+            }
+        }
+
         private async Task ErrorHandler(ITelegramBotClient client, Exception exception, CancellationToken token)
         {
             var message = exception switch
@@ -143,18 +146,16 @@ namespace PolyChessTGBot.Bot
                 await Telegram.SendTextMessageAsync(debugChatID, message, cancellationToken: token);
         }
 
-        private ValueTask HandleMakingApiRequest(ITelegramBotClient bot, ApiRequestEventArgs args, CancellationToken cancellationToken = default)
+        private async ValueTask HandleMakingApiRequest(ITelegramBotClient bot, ApiRequestEventArgs args, CancellationToken cancellationToken = default)
         {
             if (Program.MainConfig.ShowApiResponseLogs)
-                Console.WriteLine("MAKING API REQUEST: " + args.HttpRequestMessage);
-            return new ValueTask();
+                Console.WriteLine("MAKING API REQUEST: " + (await args.HttpRequestMessage.Content.ReadAsStringAsync()));
         }
 
-        private ValueTask HandleApiResponseRecieved(ITelegramBotClient bot, ApiResponseEventArgs args, CancellationToken cancellationToken = default)
+        private async ValueTask HandleApiResponseRecieved(ITelegramBotClient bot, ApiResponseEventArgs args, CancellationToken cancellationToken = default)
         {
             if (Program.MainConfig.ShowApiResponseLogs)
-                Console.WriteLine("RECIEVING API RESPONSE: " + args.ResponseMessage);
-            return new ValueTask();
+                Console.WriteLine("RECIEVING API RESPONSE: " + (await args.ResponseMessage.Content.ReadAsStringAsync()));
         }
     }
 }
