@@ -80,7 +80,7 @@ namespace PolyChessTGBot.Bot
                         if (data != null)
                         {
                             var args = new ButtonArgs(data.ButtonID, update.CallbackQuery, data);
-                            await Commands.QnAMessage.TryUpdate(data.ButtonID, args);
+                            await Commands.FAQMessage.TryUpdate(data.ButtonID, args);
                             foreach (var button in ButtonRegistrator.Buttons)
                                 if (data.ButtonID == button.ID)
                                     await button.Delegate(new ButtonArgs(data.ButtonID, update.CallbackQuery, data));
@@ -148,7 +148,7 @@ namespace PolyChessTGBot.Bot
 
         private async ValueTask HandleMakingApiRequest(ITelegramBotClient bot, ApiRequestEventArgs args, CancellationToken cancellationToken = default)
         {
-            if (Program.MainConfig.ShowApiResponseLogs)
+            if (args.HttpRequestMessage != null && args.HttpRequestMessage.Content != null && Program.MainConfig.ShowApiResponseLogs)
                 Console.WriteLine("MAKING API REQUEST: " + (await args.HttpRequestMessage.Content.ReadAsStringAsync()));
         }
 
