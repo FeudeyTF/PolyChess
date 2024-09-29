@@ -136,7 +136,6 @@ namespace PolyChessTGBot.Bot
                     => $"[Telegram Ошибка]:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
                 _ => exception.ToString()
             };
-
             Logger.Write(message, LogType.Error);
             foreach (var debugChatID in Program.MainConfig.DebugChats)
                 await Telegram.SendTextMessageAsync(debugChatID, message, cancellationToken: token);

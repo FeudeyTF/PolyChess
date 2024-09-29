@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using PolyChessTGBot.Bot.Buttons;
-using PolyChessTGBot.Database;
+﻿using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Externsions;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
@@ -114,7 +112,6 @@ namespace PolyChessTGBot.Bot.Messages
                     message += Footer;
                     await args.Bot.EditMessageTextAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, message, replyMarkup: GenerateKeyBoard(page - 1, pages), parseMode: ParseMode.Html);
                 }
-                           
             }
         }
     }

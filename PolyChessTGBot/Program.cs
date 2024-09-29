@@ -56,13 +56,15 @@ namespace PolyChessTGBot
                 }
                 string commandName = index < 0 ? text.ToLower() : text[..index].ToLower();
                 List<string> parameters = index < 0 ? new() : Utils.ParseParameters(text[index..]);
-                Logger.Write($"Была введена команда '{commandName}'. Аргументы: '{string.Join(", ", parameters)}'", LogType.Info);
                 switch (commandName.ToLower())
                 {
                     case "exit":
                         Environment.Exit(0);
                         break;
+                    default:
+                        continue;
                 }
+                Logger.Write($"Была введена команда '{commandName}'. Аргументы: '{string.Join(", ", parameters)}'", LogType.Info);
             }
         }
     }
