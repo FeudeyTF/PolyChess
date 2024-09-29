@@ -65,6 +65,47 @@ namespace PolyChessTGBot
                         MainConfig = ConfigFile.Load("Main");
                         Console.WriteLine("Перезагрузка конфига прошла успешно!");
                         break;
+                    case "setconfig":
+                        if (parameters.Count == 2)
+                        {
+                            var field = MainConfig.GetType().GetField(parameters[0]);
+                            if (field != null)
+                            {
+                                object? parameter = null;
+                                switch(field.FieldType.Name)
+                                {
+                                    case "Int32":
+                                        if (int.TryParse(parameters[1], out int intValue))
+                                            parameter = intValue;
+                                        else
+                                            Console.WriteLine("Неверный тип данных! Тип данных: int");
+                                        break;
+                                    case "Int64":
+                                        if (long.TryParse(parameters[1], out long longValue))
+                                            parameter = longValue;
+                                        else
+                                            Console.WriteLine("Неверный тип данных! Тип данных: long");
+                                        break;
+                                    case "String":
+                                        parameter = parameters[1];
+                                        break;
+                                }
+                                if(parameter == null)
+                                {
+                                    Console.WriteLine("Тип параметра не поддерживается ввода!");
+                                    continue;
+                                }
+
+                                field.SetValue(MainConfig, parameter);
+                                MainConfig.Save("Main", true);
+                                Console.WriteLine($"Параметр '{parameters[0]}' успешно установлен на '{parameters[1]}'!");
+                            }
+                            else
+                                Console.WriteLine($"Параметр '{parameters[0]}' не был найден!");
+                        }
+                        else
+                            Console.WriteLine("Неправильный синтаксис! Правильно: /setconfig <name> <value>");
+                        break;
                     default:
                         continue;
                 }
