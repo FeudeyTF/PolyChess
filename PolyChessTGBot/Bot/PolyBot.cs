@@ -1,5 +1,7 @@
-﻿using PolyChessTGBot.Logs;
+﻿using PolyChessTGBot.Bot.Buttons;
+using PolyChessTGBot.Logs;
 using Telegram.Bot;
+using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -17,21 +19,23 @@ namespace PolyChessTGBot.Bot
 
         private readonly CommandRegistrator CommandRegistrator;
 
+        private readonly ButtonsRegistrator ButtonRegistrator;
+
         private readonly ILog Logger;
+
+        private BotCommands Commands;
 
         public PolyBot(ILog logger)
         {
-            CommandRegistrator = new();
             Telegram = new TelegramBotClient(Program.MainConfig.BotToken);
             BotReceiverOptions = new ReceiverOptions
             {
-                AllowedUpdates = new[]
-                {
-                    UpdateType.Message,
-                },
                 ThrowPendingUpdates = true,
             };
             Logger = logger;
+            CommandRegistrator = new();
+            ButtonRegistrator = new();
+            Commands = new();
         }
 
         public async Task LoadBot()
@@ -50,7 +54,8 @@ namespace PolyChessTGBot.Bot
             }
 
             Logger.Write($"{TelegramUser.FirstName} запущен!", LogType.Info);
-            CommandRegistrator.RegisterCommands<BotCommands>();
+            CommandRegistrator.RegisterCommands(Commands);
+            ButtonRegistrator.RegisterButtons();
             await CommandRegistrator.RegisterCommandsInTelegram();
 
         }
@@ -80,7 +85,7 @@ namespace PolyChessTGBot.Bot
                                             var dataButton = inlineKeyBoard.First();
                                             if (!string.IsNullOrEmpty(dataButton.CallbackData))
                                             {
-                                                var data = Utils.ParseDataString(dataButton.CallbackData);
+                                                var data = TelegramButtonData.ParseDataString(dataButton.CallbackData);
                                                 if(data != null)
                                                 {
                                                     var userIDlong = data.Get<long>("ID");
@@ -102,6 +107,21 @@ namespace PolyChessTGBot.Bot
                         }
                         break;
                     }
+                case UpdateType.CallbackQuery:
+                    if(update.CallbackQuery != null && update.CallbackQuery.Data != null)
+                    {
+                        var data = TelegramButtonData.ParseDataString(update.CallbackQuery.Data);
+                        if (data != null)
+                        {
+                            var args = new ButtonArgs(data.ButtonID, update.CallbackQuery, data);
+                            await Commands.QnAMessage.TryUpdate(data.ButtonID, args);
+                            foreach (var button in ButtonRegistrator.Buttons)
+                                if (data.ButtonID == button.ID)
+                                    await button.Delegate(new ButtonArgs(data.ButtonID, update.CallbackQuery, data));
+
+                        }
+                    }
+                    break;
                 default:
                     Logger.Write("Получено обновление: " + update.Type, LogType.Info);
                     break;

@@ -1,4 +1,7 @@
+using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Bot.Commands;
+using PolyChessTGBot.Bot.Messages;
+using PolyChessTGBot.Database;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -7,6 +10,16 @@ namespace PolyChessTGBot
 {
     public class BotCommands
     {
+        internal readonly ListMessage<QnAEntry> QnAMessage;
+
+        public BotCommands()
+        {
+            QnAMessage = new("QnA", GetValues, ProccessString)
+            {
+                Header = "❓<b>FAQ</b> шахмат❓ Все самые <b>часто задаваемые</b> вопросы собраны в одном месте:"
+            };
+        }
+
         [Command("question", "Синтаксис: /question \"вопрос\". Команда отправит вопрос напрямую Павлу", visible: true)]
         public async Task Question(CommandArgs args)
         {
@@ -21,13 +34,47 @@ namespace PolyChessTGBot
                     $"🕑**Дата отправки:** {args.Message.Date:G}",
                     $"❓**Вопрос:**\n{question}"
                 };
-                var data = Utils.GetDataString("QuestionDataID", ("ID", args.User.Id), ("ChannelID", args.Message.MessageId));
+                var data = TelegramButtonData.GetDataString("QuestionDataID", ("ID", args.User.Id), ("ChannelID", args.Message.MessageId));
                 InlineKeyboardMarkup uesrInfo = new(new InlineKeyboardButton("Данные") { CallbackData = data });
                 await args.Bot.SendTextMessageAsync(Program.MainConfig.QuestionChannel, string.Join("\n", message).RemoveBadSymbols(), parseMode: ParseMode.MarkdownV2, replyMarkup: uesrInfo);
                 await args.Reply("Ваш вопрос был успешно отправлен!");
             }
             else
                 await args.Reply("Неправильно введён вопрос!");
+        }
+
+        [Command("qna", "Выдаёт список с FAQ", visible: true)]
+        public async Task QnA(CommandArgs args)
+        {
+            await QnAMessage.Send(args.Bot, args.Message.Chat.Id);
+        }
+
+        private List<QnAEntry> GetValues()
+        {
+            using var reader = Program.Data.SelectQuery("SELECT * FROM QnA");
+            List<QnAEntry> questions = new();
+            while (reader.Read())
+                questions.Add(new(reader.Get("Question"), reader.Get("Answer")));
+            return questions;
+        }
+
+        private string ProccessString(QnAEntry entry, int index)
+        {
+            return $"{index + 1}) <b>{entry.Question}</b>\n - {entry.Answer}";
+        }
+
+        [Command("addqna", "Создаёт частозадаваемый вопрос")]
+        public async Task AddQnA(CommandArgs args)
+        {
+            if (args.Parameters.Count == 2)
+            {
+                var question = args.Parameters[0];
+                var answer = args.Parameters[1];
+                Program.Data.Query("INSERT INTO QnA (Question, Answer) VALUES (@0, @1)", question, answer);
+                await args.Reply($"Вопрос <b>{question}</b> и ответ на него <b>{answer}</b> были успешно добавлены", parseMode: ParseMode.Html);
+            }
+            else
+                await args.Reply("Ошибка синтаксиса! Правильно: /addqna \"вопрос\" \"ответ\"");
         }
 
         [Command("cstats", "Покажет характеристики канала")]

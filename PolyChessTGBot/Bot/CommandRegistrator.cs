@@ -16,15 +16,15 @@ namespace PolyChessTGBot.Bot
             Commands = new();
         }
 
-        public void RegisterCommands<TCommandClass>(BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
+        public void RegisterCommands(object obj, BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
         {
-            foreach (var method in typeof(TCommandClass).GetMethods(flags))
+            foreach (var method in obj.GetType().GetMethods(flags))
             {
                 var commandAttribute = method.GetCustomAttribute<CommandAttribute>();
                 if (commandAttribute == null)
                     continue;
                 CommandDelegate? commandDelegate = null;
-                commandDelegate = (CommandDelegate)Delegate.CreateDelegate(typeof(CommandDelegate), null, method);
+                commandDelegate = (CommandDelegate)Delegate.CreateDelegate(typeof(CommandDelegate), obj, method);
                 if (commandDelegate != null)
                 {
                     var command = new Command(new[] { commandAttribute.Name }, commandAttribute.Description, commandAttribute.ScopeType, commandAttribute.Visible, commandDelegate);

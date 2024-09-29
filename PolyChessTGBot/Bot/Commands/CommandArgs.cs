@@ -1,5 +1,7 @@
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PolyChessTGBot.Bot.Commands
 {
@@ -21,9 +23,20 @@ namespace PolyChessTGBot.Bot.Commands
             Bot = bot;
         }
 
-        public async Task Reply(string message)
+        public async Task Reply(
+            string message,
+            int? messageThreadId = default,
+            ParseMode parseMode = default,
+            IEnumerable<MessageEntity>? entities = default,
+            bool disableWebPagePreview = default,
+            bool disableNotification = default,
+            bool protectContent = default,
+            bool allowSendingWithoutReply = default,
+            IReplyMarkup? replyMarkup = default,
+            CancellationToken cancellationToken = default
+            )
         {
-            await Bot.SendTextMessageAsync(Message.Chat.Id, message, replyToMessageId: Message.MessageId);
+            await Bot.SendTextMessageAsync(Message.Chat.Id, message, messageThreadId, parseMode, entities, disableWebPagePreview, disableNotification, protectContent, Message.MessageId, allowSendingWithoutReply, replyMarkup, cancellationToken);
         }
     }
 }
