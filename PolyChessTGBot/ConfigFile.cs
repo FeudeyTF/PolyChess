@@ -14,6 +14,8 @@ namespace PolyChessTGBot
 
         public List<int> DebugChats = new();
 
+        public bool ShowApiResponseLogs = false;
+
         public static ConfigFile Load(string name)
         {
             string configFolder = Path.Combine(Environment.CurrentDirectory, "Configs");

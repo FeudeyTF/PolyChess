@@ -7,7 +7,7 @@ namespace PolyChessTGBot
 {
     public static class Program
     {
-        public static readonly ConfigFile MainConfig;
+        public static ConfigFile MainConfig { get; private set; }
 
         public static readonly TextLog Logger;
 
@@ -60,6 +60,10 @@ namespace PolyChessTGBot
                 {
                     case "exit":
                         Environment.Exit(0);
+                        break;
+                    case "reload":
+                        MainConfig = ConfigFile.Load("Main");
+                        Console.WriteLine("Перезагрузка конфига прошла успешно!");
                         break;
                     default:
                         continue;

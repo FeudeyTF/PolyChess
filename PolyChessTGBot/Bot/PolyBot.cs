@@ -53,11 +53,13 @@ namespace PolyChessTGBot.Bot
                 Environment.Exit(0);
             }
 
+            Telegram.OnApiResponseReceived += HandleApiResponseRecieved;
+            Telegram.OnMakingApiRequest += HandleMakingApiRequest; ;
+
             Logger.Write($"{TelegramUser.FirstName} запущен!", LogType.Info);
             CommandRegistrator.RegisterCommands(Commands);
             ButtonRegistrator.RegisterButtons();
             await CommandRegistrator.RegisterCommandsInTelegram();
-
         }
 
         private async Task UpdateHandler(ITelegramBotClient client, Update update, CancellationToken token)
@@ -139,6 +141,20 @@ namespace PolyChessTGBot.Bot
             Logger.Write(message, LogType.Error);
             foreach (var debugChatID in Program.MainConfig.DebugChats)
                 await Telegram.SendTextMessageAsync(debugChatID, message, cancellationToken: token);
+        }
+
+        private ValueTask HandleMakingApiRequest(ITelegramBotClient bot, ApiRequestEventArgs args, CancellationToken cancellationToken = default)
+        {
+            if (Program.MainConfig.ShowApiResponseLogs)
+                Console.WriteLine("MAKING API REQUEST: " + args.HttpRequestMessage);
+            return new ValueTask();
+        }
+
+        private ValueTask HandleApiResponseRecieved(ITelegramBotClient bot, ApiResponseEventArgs args, CancellationToken cancellationToken = default)
+        {
+            if (Program.MainConfig.ShowApiResponseLogs)
+                Console.WriteLine("RECIEVING API RESPONSE: " + args.ResponseMessage);
+            return new ValueTask();
         }
     }
 }
