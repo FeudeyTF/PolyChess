@@ -1,11 +1,10 @@
-using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Logs;
 using System.Reflection;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
-namespace PolyChessTGBot.Bot
+namespace PolyChessTGBot.Bot.Commands
 {
     internal class CommandRegistrator
     {

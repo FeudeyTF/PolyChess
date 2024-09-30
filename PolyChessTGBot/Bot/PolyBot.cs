@@ -1,4 +1,5 @@
 ﻿using PolyChessTGBot.Bot.Buttons;
+using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Logs;
 using Telegram.Bot;
 using Telegram.Bot.Args;

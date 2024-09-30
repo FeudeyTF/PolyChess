@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
-using PolyChessTGBot.Bot.Buttons;
 
-namespace PolyChessTGBot.Bot
+namespace PolyChessTGBot.Bot.Buttons
 {
     internal class ButtonsRegistrator
     {
@@ -14,8 +13,8 @@ namespace PolyChessTGBot.Bot
 
         public void RegisterButtons(BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
         {
-            foreach(var type in Assembly.GetExecutingAssembly().GetTypes())
-                if(type != null)
+            foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
+                if (type != null)
                     foreach (var method in type.GetMethods(flags))
                     {
                         var buttonAttribute = method.GetCustomAttribute<ButtonAttribute>();
