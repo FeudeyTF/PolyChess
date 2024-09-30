@@ -69,7 +69,7 @@ namespace PolyChessTGBot.Bot.Messages
             return new(movingButtons);
         }
 
-        public async Task TryUpdate(string buttonID, ButtonArgs args)
+        public async Task TryUpdate(string buttonID, ButtonInteractArgs args)
         {
             if (buttonID == "Next" + ID)
                 await NextButton(args);
@@ -77,7 +77,7 @@ namespace PolyChessTGBot.Bot.Messages
                 await PreviousButton(args);
         }
 
-        public async Task NextButton(ButtonArgs args)
+        public async Task NextButton(ButtonInteractArgs args)
         {
             if (args.Query != null && args.Query.Message != null)
             {
@@ -96,7 +96,7 @@ namespace PolyChessTGBot.Bot.Messages
             }
         }
 
-        public async Task PreviousButton(ButtonArgs args)
+        public async Task PreviousButton(ButtonInteractArgs args)
         {
             if (args.Query != null && args.Query.Message != null)
             {

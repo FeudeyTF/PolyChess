@@ -79,11 +79,11 @@ namespace PolyChessTGBot.Bot
                         var data = TelegramButtonData.ParseDataString(update.CallbackQuery.Data);
                         if (data != null)
                         {
-                            var args = new ButtonArgs(data.ButtonID, update.CallbackQuery, data);
+                            var args = new ButtonInteractArgs(data.ButtonID, update.CallbackQuery, data);
                             await Commands.FAQMessage.TryUpdate(data.ButtonID, args);
                             foreach (var button in ButtonRegistrator.Buttons)
                                 if (data.ButtonID == button.ID)
-                                    await button.Delegate(new ButtonArgs(data.ButtonID, update.CallbackQuery, data));
+                                    await button.Delegate(new ButtonInteractArgs(data.ButtonID, update.CallbackQuery, data));
 
                         }
                     }

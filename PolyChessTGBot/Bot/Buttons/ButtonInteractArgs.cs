@@ -3,7 +3,7 @@ using Telegram.Bot.Types;
 
 namespace PolyChessTGBot.Bot.Buttons
 {
-    internal class ButtonArgs
+    internal class ButtonInteractArgs
     {
         public TelegramBotClient Bot => Program.Bot.Telegram;
 
@@ -13,7 +13,7 @@ namespace PolyChessTGBot.Bot.Buttons
 
         private readonly TelegramButtonData Data;
 
-        public ButtonArgs(string id, CallbackQuery query, TelegramButtonData data)
+        public ButtonInteractArgs(string id, CallbackQuery query, TelegramButtonData data)
         {
             ButtonID = id;
             Data = data;
