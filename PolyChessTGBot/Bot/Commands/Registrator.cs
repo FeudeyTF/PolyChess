@@ -56,7 +56,7 @@ namespace PolyChessTGBot.Bot.Commands
             foreach (var command in Commands)
                 if (command.Names.Contains(commandName))
                 {
-                    Program.Logger.Write($"Получена команда: `{message.Text}`. Аргументы: {string.Join(", ", args.Parameters)}", LogType.Info);
+                    Program.Logger.Write($"Получена команда: '{message.Text}'. Аргументы: {string.Join(", ", args.Parameters)}", LogType.Info);
                     try
                     {
                         await command.Delegate(args);
