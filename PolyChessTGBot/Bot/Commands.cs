@@ -12,12 +12,26 @@ namespace PolyChessTGBot.Bot
     {
         internal readonly ListMessage<FAQEntry> FAQMessage;
 
+        internal readonly ListMessage<HelpLink> HelpMessage;
+
+        private readonly List<FAQEntry> FAQEntries;
+
+        private readonly List<HelpLink> HelpLinks;
+
         public BotCommands()
         {
-            FAQMessage = new("FAQ", GetValues, ProccessString)
+            FAQMessage = new("FAQ", GetFAQValues, GetFAQString)
             {
                 Header = "❓<b>FAQ</b> шахмат❓ Все самые <b>часто задаваемые</b> вопросы собраны в одном месте:"
             };
+
+            HelpMessage = new("Help", GetHelpLinksValue, ConvertHelpLinkToString, 1, false, "Далее", "Назад")
+            {
+                GetDocumentID = GetHelpLinkDocumentID
+            };
+
+            FAQEntries = Program.Data.GetFAQEntries();
+            HelpLinks = Program.Data.GetHelpLinks();
         }
 
         [Command("question", "Синтаксис: /question \"вопрос\". Команда отправит вопрос напрямую Павлу", visible: true)]
@@ -43,22 +57,62 @@ namespace PolyChessTGBot.Bot
                 await args.Reply("Неправильно введён вопрос!");
         }
 
+        [Command("help", "Выдаёт список с полезными материалами", visible: true)]
+        public async Task SendHelpLinks(CommandArgs args)
+        {
+            await HelpMessage.Send(args.Bot, args.Message.Chat.Id);
+        }
+
+        private List<HelpLink> GetHelpLinksValue() => HelpLinks;
+
+        private string ConvertHelpLinkToString(HelpLink link, int index)
+        {
+            return $"<b>{link.Title}</b>\n{link.Text}\n<i>{link.Footer}</i>";
+        }
+
+        private string? GetHelpLinkDocumentID(HelpLink link) => link.FileID;
+
+        [Command("getfileinfo", "Выдаёт список с FAQ")]
+        public async Task GetFileInfo(CommandArgs args)
+        {
+            if (args.Message.ReplyToMessage != null)
+            {
+                if(args.Message.ReplyToMessage.Document != null)
+                {
+                    var document = args.Message.ReplyToMessage.Document;
+                    string message = $"Информация о файле '{document.FileName}'\n";
+                    message += $"Имя: {document.FileName}\n";
+                    message += $"Размер: {document.FileSize}\n";
+                    message += $"Unique ID: {document.FileUniqueId}\n";
+                    message += $"Поле: {document.FileId}";
+                    await args.Reply(message);
+                }
+                else if (args.Message.ReplyToMessage.Video != null)
+                {
+                    var document = args.Message.ReplyToMessage.Video;
+                    string message = $"Информация о видео '{document.FileName}'\n";
+                    message += $"Имя: {document.FileName}\n";
+                    message += $"Размер: {document.FileSize}\n";
+                    message += $"Unique ID: {document.FileUniqueId}\n";
+                    message += $"Поле: {document.FileId}";
+                    await args.Reply(message);
+                }
+                else
+                    await args.Reply("Нужно ответить на сообщение с файлом!");
+            }
+            else
+                await args.Reply("Нужно ответить на сообщение с файлом!");
+        }
+
         [Command("faq", "Выдаёт список с FAQ", visible: true)]
         public async Task FAQ(CommandArgs args)
         {
             await FAQMessage.Send(args.Bot, args.Message.Chat.Id);
         }
 
-        private List<FAQEntry> GetValues()
-        {
-            using var reader = Program.Data.SelectQuery("SELECT * FROM FAQ");
-            List<FAQEntry> questions = new();
-            while (reader.Read())
-                questions.Add(new(reader.Get("Question"), reader.Get("Answer")));
-            return questions;
-        }
+        private List<FAQEntry> GetFAQValues() => FAQEntries;
 
-        private string ProccessString(FAQEntry entry, int index)
+        private string GetFAQString(FAQEntry entry, int index)
         {
             return $"{index + 1}) <b>{entry.Question}</b>\n - {entry.Answer}";
         }
@@ -68,10 +122,12 @@ namespace PolyChessTGBot.Bot
         {
             if (args.Parameters.Count == 2)
             {
-                var question = args.Parameters[0];
-                var answer = args.Parameters[1];
-                Program.Data.Query("INSERT INTO FAQ (Question, Answer) VALUES (@0, @1)", question, answer);
-                await args.Reply($"Вопрос <b>{question}</b> и ответ на него <b>{answer}</b> были успешно добавлены", parseMode: ParseMode.Html);
+                FAQEntry entry = new(default, args.Parameters[0], args.Parameters[1]);
+                string text = "INSERT INTO FAQ (Question, Answer) VALUES (@0, @1);";
+                int id = Program.Data.QueryScalar<int>(text + "SELECT CAST(last_insert_rowid() as INT);", entry.Question, entry.Answer);
+                entry.ID = id;
+                FAQEntries.Add(entry);
+                await args.Reply($"Вопрос <b>{entry.Question}</b> и ответ на него <b>{entry.Answer}</b> были успешно добавлены", parseMode: ParseMode.Html);
             }
             else
                 await args.Reply("Ошибка синтаксиса! Правильно: /addFAQ \"вопрос\" \"ответ\"");
@@ -83,7 +139,7 @@ namespace PolyChessTGBot.Bot
             await args.Reply($"Айди канала: {args.Message.Chat.Id}");
         }
 
-        [Command("users", "Покажет характеристики канала")]
+        [Command("users", "Покажет пользователей")]
         public async Task GetUsers(CommandArgs args)
         {
             List<User> users = new();

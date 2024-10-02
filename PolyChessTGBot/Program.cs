@@ -22,10 +22,10 @@ namespace PolyChessTGBot
         {
             MainConfig = ConfigFile.Load("Main");
             Logger = new(DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".log", MainConfig.LogsFolder);
-            Bot = new(Logger);
             Data = new(MainConfig.DatabasePath);
             Data.LoadTables();
             Logger.Write($"База данных '{Data.DatabaseName}' подключена!", LogType.Info);
+            Bot = new(Logger);
             if (MainConfig.Socket.StartSocketServer)
                 Socket = new(MainConfig.Socket.Port, Logger);
         }

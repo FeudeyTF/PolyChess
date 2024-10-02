@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.Sqlite;
+using System.Data;
 
 namespace PolyChessTGBot.Database
 {
@@ -33,6 +34,31 @@ namespace PolyChessTGBot.Database
                   "Question        Text," +
                   "Answer          Text" +
                   ")");
+            Query("CREATE TABLE IF NOT EXISTS HelpMessage (" +
+                  "ID              INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                  "Title           Text," +
+                  "Text            Text," +
+                  "Footer          Text," +
+                  "FileID          Text" +
+                  ")");
+        }
+
+        public List<HelpLink> GetHelpLinks()
+        {
+            using var reader = SelectQuery("SELECT * FROM HelpLinks");
+            List<HelpLink> links = new();
+            while (reader.Read())
+                links.Add(new(reader.Get<int>("ID"), reader.Get("Title"), reader.Get("Text"), reader.Get("Footer"), reader.Get("FileID")));
+            return links;
+        }
+
+        public List<FAQEntry> GetFAQEntries()
+        {
+            using var reader = SelectQuery("SELECT * FROM FAQ");
+            List<FAQEntry> questions = new();
+            while (reader.Read())
+                questions.Add(new(reader.Get<int>("ID"), reader.Get("Question"), reader.Get("Answer")));
+            return questions;
         }
 
         public int Query(string query, params object[] args)
@@ -40,7 +66,8 @@ namespace PolyChessTGBot.Database
             using SqliteConnection db = Clone();
             db.Open();
 
-            using SqliteCommand dbCommand = db.CreateCommand();
+            using SqliteCommand dbCommand
+                = db.CreateCommand();
             dbCommand.CommandText = query;
             for (int i = 0; i < args.Length; i++)
                 AddParameter(dbCommand, "@" + i, args[i] ?? DBNull.Value);
@@ -60,6 +87,27 @@ namespace PolyChessTGBot.Database
             return new QueryResult(db, command.ExecuteReader(), command);
         }
 
+        public T? QueryScalar<T>(string query, params object[] args)
+        {
+            using var db = Clone();
+            db.Open();
+            using var commad = db.CreateCommand();
+            commad.CommandText = query;
+            for (int i = 0; i < args.Length; i++)
+                AddParameter(commad, "@" + i, args[i]);
+
+            object? output = commad.ExecuteScalar();
+            if (output != null && output.GetType() != typeof(T))
+            {
+                if (typeof(IConvertible).IsAssignableFrom(output.GetType()))
+                {
+                    return (T)Convert.ChangeType(output, typeof(T));
+                }
+            }
+
+            return (T?)output;
+        }
+
         private SqliteParameter AddParameter(SqliteCommand command, string name, object data)
         {
             SqliteParameter dbDataParameter = command.CreateParameter();
@@ -71,18 +119,5 @@ namespace PolyChessTGBot.Database
 
         public SqliteConnection Clone()
             => new() { ConnectionString = DB.ConnectionString };
-    }
-
-    public struct FAQEntry
-    {
-        public string Question;
-
-        public string Answer;
-
-        public FAQEntry(string question, string answer)
-        {
-            Question = question;
-            Answer = answer;
-        }
     }
 }

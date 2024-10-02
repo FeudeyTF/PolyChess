@@ -1,6 +1,7 @@
 ﻿using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Externsions;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -18,16 +19,28 @@ namespace PolyChessTGBot.Bot.Messages
 
         public Func<TValue, int, string> ProcessString;
 
+        public Func<TValue, string?>? GetDocumentID;
+
         public int ValuesPerPage;
 
-        public ListMessage(string id, Func<List<TValue>> getValues, Func<TValue, int, string> processString)
+        public bool ShowPagesCount;
+
+        public string NextButtonText;
+
+        public string PreviousButtonText;
+
+
+        public ListMessage(string id, Func<List<TValue>> getValues, Func<TValue, int, string> processString, int valuesPerPage = 10, bool showPagesCount = true, string nextButtonText = "➡️", string previousButtonText = "⬅️")
         {
+            ID = id;
             Header = "";
             Footer = "";
-            ValuesPerPage = 10;
-            ID = id;
+            ValuesPerPage = valuesPerPage;
             GetValues = getValues;
             ProcessString = processString;
+            ShowPagesCount = showPagesCount;
+            NextButtonText = nextButtonText;
+            PreviousButtonText = previousButtonText;
         }
 
         public async Task Send(TelegramBotClient bot, long channelID)
@@ -37,7 +50,18 @@ namespace PolyChessTGBot.Bot.Messages
             for (int i = 0; i < (values.Count > ValuesPerPage ? ValuesPerPage : values.Count); i++)
                 message += ProcessString(values[i], i) + "\n";
             message += Footer;
-            await bot.SendTextMessageAsync(channelID, message, replyMarkup: GenerateKeyBoard(1, GetPagesCount(values.Count)), parseMode: ParseMode.Html);
+            bool sentDocumentMessage = false;
+            if (GetDocumentID != null && values.Count > 0)
+            {
+                var document = GetDocumentID(values[0]);
+                if (!string.IsNullOrEmpty(document))
+                {
+                    sentDocumentMessage = true;
+                    await bot.SendDocumentAsync(channelID, new InputFileId(document), replyMarkup: GenerateKeyBoard(1, GetPagesCount(values.Count)), caption: message, parseMode: ParseMode.Html);
+                }
+            }
+            if(!sentDocumentMessage)
+                await bot.SendTextMessageAsync(channelID, message, replyMarkup: GenerateKeyBoard(1, GetPagesCount(values.Count)), parseMode: ParseMode.Html);
         }
 
         private int GetPagesCount(int count)
@@ -54,18 +78,19 @@ namespace PolyChessTGBot.Bot.Messages
         {
             if (pages == 1)
                 return null;
-            InlineKeyboardButton nextButton = new("➡️");
+            InlineKeyboardButton nextButton = new(NextButtonText);
             nextButton.SetData("Next" + ID, ("Page", page));
             InlineKeyboardButton pageButton = new($"{page}/{pages}");
             pageButton.SetData("Page" + ID);
-            InlineKeyboardButton prevButton = new("⬅️");
+            InlineKeyboardButton prevButton = new(PreviousButtonText);
             prevButton.SetData("Prev" + ID, ("Page", page));
             List<InlineKeyboardButton> movingButtons = new()
             {
                 prevButton,
-                pageButton,
                 nextButton
             };
+            if (ShowPagesCount)
+                movingButtons.Insert(1, pageButton);
             return new(movingButtons);
         }
 
@@ -91,7 +116,18 @@ namespace PolyChessTGBot.Bot.Messages
                     for (int i = startIndex; i < startIndex + (values.Count - startIndex > ValuesPerPage ? ValuesPerPage : values.Count - startIndex); i++)
                         message += ProcessString(values[i], i) + "\n";
                     message += Footer;
-                    await args.Bot.EditMessageTextAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, message, replyMarkup: GenerateKeyBoard(page + 1, pages), parseMode: ParseMode.Html);
+                    bool editedMessageWithFile = false;
+                    if(GetDocumentID != null && values.Count > startIndex)
+                    {
+                        var document = GetDocumentID(values[startIndex]);
+                        if (!string.IsNullOrEmpty(document))
+                        {
+                            editedMessageWithFile = true;
+                            await args.Bot.EditMessageMediaAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, new InputMediaDocument(new InputFileId(document)) { Caption = message, ParseMode = ParseMode.Html }, GenerateKeyBoard(page + 1, pages));
+                        }
+                    }
+                    if(!editedMessageWithFile)
+                        await args.Bot.EditMessageTextAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, message, replyMarkup: GenerateKeyBoard(page + 1, pages), parseMode: ParseMode.Html);
                 }
             }
         }
@@ -110,7 +146,18 @@ namespace PolyChessTGBot.Bot.Messages
                     for (int i = startIndex; i < startIndex + (values.Count - startIndex > ValuesPerPage ? ValuesPerPage : values.Count - startIndex); i++)
                         message += ProcessString(values[i], i) + "\n";
                     message += Footer;
-                    await args.Bot.EditMessageTextAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, message, replyMarkup: GenerateKeyBoard(page - 1, pages), parseMode: ParseMode.Html);
+                    bool editedMessageWithFile = false;
+                    if (GetDocumentID != null && values.Count > startIndex)
+                    {
+                        var document = GetDocumentID(values[startIndex]);
+                        if (!string.IsNullOrEmpty(document))
+                        {
+                            editedMessageWithFile = true;
+                            await args.Bot.EditMessageMediaAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, new InputMediaDocument(new InputFileId(document)) { Caption = message, ParseMode = ParseMode.Html }, replyMarkup: GenerateKeyBoard(page - 1, pages));
+                        }
+                    }
+                    if (!editedMessageWithFile)
+                        await args.Bot.EditMessageTextAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, message, replyMarkup: GenerateKeyBoard(page - 1, pages), parseMode: ParseMode.Html);
                 }
             }
         }

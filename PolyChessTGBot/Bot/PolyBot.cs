@@ -60,8 +60,6 @@ namespace PolyChessTGBot.Bot
             Logger.Write($"{TelegramUser.FirstName} запущен!", LogType.Info);
             CommandRegistrator.RegisterCommands(Commands);
             ButtonRegistrator.RegisterButtons();
-            foreach (var c in CommandRegistrator.Commands)
-                Console.WriteLine(c.Name);
             //await CommandRegistrator.RegisterCommandsInTelegram();
         }
 
@@ -83,6 +81,7 @@ namespace PolyChessTGBot.Bot
                         {
                             var args = new ButtonInteractArgs(data.ButtonID, update.CallbackQuery, data);
                             await Commands.FAQMessage.TryUpdate(data.ButtonID, args);
+                            await Commands.HelpMessage.TryUpdate(data.ButtonID, args);
                             foreach (var button in ButtonRegistrator.Buttons)
                                 if (data.ButtonID == button.ID)
                                     await button.Delegate(new ButtonInteractArgs(data.ButtonID, update.CallbackQuery, data));
