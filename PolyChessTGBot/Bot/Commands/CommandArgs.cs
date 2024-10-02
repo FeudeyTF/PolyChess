@@ -26,7 +26,7 @@ namespace PolyChessTGBot.Bot.Commands
         public async Task Reply(
             string message,
             int? messageThreadId = default,
-            ParseMode parseMode = default,
+            ParseMode parseMode = ParseMode.Markdown,
             IEnumerable<MessageEntity>? entities = default,
             bool disableWebPagePreview = default,
             bool disableNotification = default,

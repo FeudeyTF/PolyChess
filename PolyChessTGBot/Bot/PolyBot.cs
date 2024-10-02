@@ -60,8 +60,9 @@ namespace PolyChessTGBot.Bot
             Logger.Write($"{TelegramUser.FirstName} запущен!", LogType.Info);
             CommandRegistrator.RegisterCommands(Commands);
             ButtonRegistrator.RegisterButtons();
-            
-            await CommandRegistrator.RegisterCommandsInTelegram();
+            foreach (var c in CommandRegistrator.Commands)
+                Console.WriteLine(c.Name);
+            //await CommandRegistrator.RegisterCommandsInTelegram();
         }
 
         private async Task UpdateHandler(ITelegramBotClient client, Update update, CancellationToken token)

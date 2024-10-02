@@ -28,22 +28,22 @@ namespace PolyChessTGBot.Bot
             {
                 List<string> message = new()
                 {
-                    "**__Вопрос от пользователя!__**🙋‍♂️",
-                    $"👤**Ник пользователя:** @{args.User.Username}",
-                    $"👤**Имя пользователя:** {args.User.FirstName} {args.User.LastName}",
-                    $"🕑**Дата отправки:** {args.Message.Date:G}",
-                    $"❓**Вопрос:**\n{question}"
+                    "<b><u>Вопрос от пользователя!</u></b>🙋‍♂️",
+                    $"👤<b>Ник пользователя:</b> @{args.User.Username}",
+                    $"👤<b>Имя пользователя:</b> {args.User.FirstName} {args.User.LastName}",
+                    $"🕑<b>Дата отправки:</b> {args.Message.Date:G}",
+                    $"❓<b>Вопрос:</b>\n{question}"
                 };
                 var data = TelegramButtonData.GetDataString("QuestionDataID", ("ID", args.User.Id), ("ChannelID", args.Message.MessageId));
                 InlineKeyboardMarkup uesrInfo = new(new InlineKeyboardButton("Данные") { CallbackData = data });
-                await args.Bot.SendTextMessageAsync(Program.MainConfig.QuestionChannel, string.Join("\n", message).RemoveBadSymbols(), parseMode: ParseMode.MarkdownV2, replyMarkup: uesrInfo);
+                await args.Bot.SendTextMessageAsync(Program.MainConfig.QuestionChannel, string.Join("\n", message).RemoveBadSymbols(), parseMode: ParseMode.Html, replyMarkup: uesrInfo);
                 await args.Reply("Ваш вопрос был успешно отправлен!");
             }
             else
                 await args.Reply("Неправильно введён вопрос!");
         }
 
-        [Command("FAQ", "Выдаёт список с FAQ", visible: true)]
+        [Command("faq", "Выдаёт список с FAQ", visible: true)]
         public async Task FAQ(CommandArgs args)
         {
             await FAQMessage.Send(args.Bot, args.Message.Chat.Id);

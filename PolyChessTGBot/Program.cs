@@ -2,6 +2,7 @@
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Logs;
 using PolyChessTGBot.Logs.Types;
+using PolyChessTGBot.Sockets;
 
 namespace PolyChessTGBot
 {
@@ -15,6 +16,8 @@ namespace PolyChessTGBot
 
         internal static PolyData Data;
 
+        internal static readonly SocketServer? Socket;
+
         static Program()
         {
             MainConfig = ConfigFile.Load("Main");
@@ -23,6 +26,8 @@ namespace PolyChessTGBot
             Data = new(MainConfig.DatabasePath);
             Data.LoadTables();
             Logger.Write($"База данных '{Data.DatabaseName}' подключена!", LogType.Info);
+            if (MainConfig.Socket.StartSocketServer)
+                Socket = new(MainConfig.Socket.Port, Logger);
         }
 
         public async static Task Main(string[] args)
@@ -35,6 +40,9 @@ namespace PolyChessTGBot
             }
 
             await Bot.LoadBot();
+
+            Socket?.StartListening();
+
             while (true)
             {
                 var text = Console.ReadLine();
@@ -63,6 +71,15 @@ namespace PolyChessTGBot
                     case "reload":
                         MainConfig = ConfigFile.Load("Main");
                         Console.WriteLine("Перезагрузка конфига прошла успешно!");
+                        break;
+                    case "send":
+                        if (parameters.Count > 0)
+                            if (Socket != null)
+                                await Socket.SendMessage(string.Join(" ", parameters));
+                            else
+                                Console.WriteLine("Сокет выключен!");
+                        else
+                            Console.WriteLine("Неправильный синтаксис! Правильно: /send <message>");
                         break;
                     case "setconfig":
                         if (parameters.Count == 2)

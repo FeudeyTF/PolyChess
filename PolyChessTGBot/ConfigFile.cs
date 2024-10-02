@@ -16,6 +16,8 @@ namespace PolyChessTGBot
 
         public bool ShowApiResponseLogs = false;
 
+        public SocketSettings Socket = new();
+
         public static ConfigFile Load(string name)
         {
             ConfigFile emptyConfig = new();
@@ -36,5 +38,12 @@ namespace PolyChessTGBot
                 File.WriteAllText(path, JsonConvert.SerializeObject(this, Formatting.Indented));
             return path;
         }
+    }
+
+    public class SocketSettings
+    {
+        public bool StartSocketServer;
+
+        public int Port = 8081;
     }
 }
