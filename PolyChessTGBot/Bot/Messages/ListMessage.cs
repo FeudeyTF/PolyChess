@@ -17,7 +17,7 @@ namespace PolyChessTGBot.Bot.Messages
 
         public Func<List<TValue>> GetValues;
 
-        public Func<TValue, int, string> ProcessString;
+        public Func<TValue, int, string> ConvertValueToString;
 
         public Func<TValue, string?>? GetDocumentID;
 
@@ -37,7 +37,7 @@ namespace PolyChessTGBot.Bot.Messages
             Footer = "";
             ValuesPerPage = valuesPerPage;
             GetValues = getValues;
-            ProcessString = processString;
+            ConvertValueToString = processString;
             ShowPagesCount = showPagesCount;
             NextButtonText = nextButtonText;
             PreviousButtonText = previousButtonText;
@@ -48,7 +48,7 @@ namespace PolyChessTGBot.Bot.Messages
             var values = GetValues();
             string message = Header + "\n";
             for (int i = 0; i < (values.Count > ValuesPerPage ? ValuesPerPage : values.Count); i++)
-                message += ProcessString(values[i], i) + "\n";
+                message += ConvertValueToString(values[i], i) + "\n";
             message += Footer;
             bool sentDocumentMessage = false;
             if (GetDocumentID != null && values.Count > 0)
@@ -84,13 +84,13 @@ namespace PolyChessTGBot.Bot.Messages
             pageButton.SetData("Page" + ID);
             InlineKeyboardButton prevButton = new(PreviousButtonText);
             prevButton.SetData("Prev" + ID, ("Page", page));
-            List<InlineKeyboardButton> movingButtons = new()
-            {
-                prevButton,
-                nextButton
-            };
+            List<InlineKeyboardButton> movingButtons = new();
+            if (page != 1)
+                movingButtons.Add(prevButton);
             if (ShowPagesCount)
-                movingButtons.Insert(1, pageButton);
+                movingButtons.Add(pageButton);
+            if (page != pages)
+                movingButtons.Add(nextButton);
             return new(movingButtons);
         }
 
@@ -114,7 +114,7 @@ namespace PolyChessTGBot.Bot.Messages
                     string message = Header + "\n";
                     int startIndex = page * ValuesPerPage;
                     for (int i = startIndex; i < startIndex + (values.Count - startIndex > ValuesPerPage ? ValuesPerPage : values.Count - startIndex); i++)
-                        message += ProcessString(values[i], i) + "\n";
+                        message += ConvertValueToString(values[i], i) + "\n";
                     message += Footer;
                     bool editedMessageWithFile = false;
                     if(GetDocumentID != null && values.Count > startIndex)
@@ -144,7 +144,7 @@ namespace PolyChessTGBot.Bot.Messages
                     string message = Header + "\n";
                     int startIndex = (page - 2) * ValuesPerPage;
                     for (int i = startIndex; i < startIndex + (values.Count - startIndex > ValuesPerPage ? ValuesPerPage : values.Count - startIndex); i++)
-                        message += ProcessString(values[i], i) + "\n";
+                        message += ConvertValueToString(values[i], i) + "\n";
                     message += Footer;
                     bool editedMessageWithFile = false;
                     if (GetDocumentID != null && values.Count > startIndex)

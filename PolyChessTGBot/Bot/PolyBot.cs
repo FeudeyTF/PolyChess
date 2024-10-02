@@ -60,7 +60,8 @@ namespace PolyChessTGBot.Bot
             Logger.Write($"{TelegramUser.FirstName} запущен!", LogType.Info);
             CommandRegistrator.RegisterCommands(Commands);
             ButtonRegistrator.RegisterButtons();
-            //await CommandRegistrator.RegisterCommandsInTelegram();
+            await Telegram.DeleteMyCommandsAsync();
+            await CommandRegistrator.RegisterCommandsInTelegram();
         }
 
         private async Task UpdateHandler(ITelegramBotClient client, Update update, CancellationToken token)
@@ -85,7 +86,6 @@ namespace PolyChessTGBot.Bot
                             foreach (var button in ButtonRegistrator.Buttons)
                                 if (data.ButtonID == button.ID)
                                     await button.Delegate(new ButtonInteractArgs(data.ButtonID, update.CallbackQuery, data));
-
                         }
                     }
                     break;

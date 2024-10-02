@@ -20,12 +20,12 @@ namespace PolyChessTGBot.Bot
 
         public BotCommands()
         {
-            FAQMessage = new("FAQ", GetFAQValues, GetFAQString)
+            FAQMessage = new("FAQ", GetFAQValues, ConvertFAQEntryToString)
             {
                 Header = "❓<b>FAQ</b> шахмат❓ Все самые <b>часто задаваемые</b> вопросы собраны в одном месте:"
             };
 
-            HelpMessage = new("Help", GetHelpLinksValue, ConvertHelpLinkToString, 1, false, "Далее", "Назад")
+            HelpMessage = new("Help", GetHelpLinksValue, ConvertHelpLinkToString, 1, false, "Далее ➡️", "⬅️ Назад")
             {
                 GetDocumentID = GetHelpLinkDocumentID
             };
@@ -34,7 +34,7 @@ namespace PolyChessTGBot.Bot
             HelpLinks = Program.Data.GetHelpLinks();
         }
 
-        [Command("question", "Синтаксис: /question \"вопрос\". Команда отправит вопрос напрямую Павлу", visible: true)]
+        [Command("question", "Синтаксис: /question \"вопрос\". Команда отправит вопрос напрямую Павлу", true)]
         public async Task Question(CommandArgs args)
         {
             string question = string.Join(" ", args.Parameters);
@@ -57,7 +57,7 @@ namespace PolyChessTGBot.Bot
                 await args.Reply("Неправильно введён вопрос!");
         }
 
-        [Command("help", "Выдаёт список с полезными материалами", visible: true)]
+        [Command("help", "Выдаёт список с полезными материалами", true)]
         public async Task SendHelpLinks(CommandArgs args)
         {
             await HelpMessage.Send(args.Bot, args.Message.Chat.Id);
@@ -72,29 +72,30 @@ namespace PolyChessTGBot.Bot
 
         private string? GetHelpLinkDocumentID(HelpLink link) => link.FileID;
 
-        [Command("getfileinfo", "Выдаёт список с FAQ")]
+        [Command("fileinfo", "Выдаёт информацию о файле")]
         public async Task GetFileInfo(CommandArgs args)
         {
             if (args.Message.ReplyToMessage != null)
             {
-                if(args.Message.ReplyToMessage.Document != null)
+                DocumentInfo? documentInfo = null;
+                if (args.Message.ReplyToMessage.Document != null)
                 {
                     var document = args.Message.ReplyToMessage.Document;
-                    string message = $"Информация о файле '{document.FileName}'\n";
-                    message += $"Имя: {document.FileName}\n";
-                    message += $"Размер: {document.FileSize}\n";
-                    message += $"Unique ID: {document.FileUniqueId}\n";
-                    message += $"Поле: {document.FileId}";
-                    await args.Reply(message);
+                    documentInfo = new(document.FileName, document.FileSize, document.FileId, document.FileUniqueId);
                 }
                 else if (args.Message.ReplyToMessage.Video != null)
                 {
                     var document = args.Message.ReplyToMessage.Video;
-                    string message = $"Информация о видео '{document.FileName}'\n";
-                    message += $"Имя: {document.FileName}\n";
-                    message += $"Размер: {document.FileSize}\n";
-                    message += $"Unique ID: {document.FileUniqueId}\n";
-                    message += $"Поле: {document.FileId}";
+                    documentInfo = new(document.FileName, document.FileSize, document.FileId, document.FileUniqueId);
+                }
+
+                if(documentInfo.HasValue)
+                {
+                    string message = $"Информация о файле '{documentInfo.Value.FileName}'\n";
+                    message += $"Имя: {documentInfo.Value.FileName}\n";
+                    message += $"Размер: {documentInfo.Value.FileSize}\n";
+                    message += $"Unique ID: {documentInfo.Value.FileUniqueId}\n";
+                    message += $"File ID: {documentInfo.Value.FileID}";
                     await args.Reply(message);
                 }
                 else
@@ -104,7 +105,26 @@ namespace PolyChessTGBot.Bot
                 await args.Reply("Нужно ответить на сообщение с файлом!");
         }
 
-        [Command("faq", "Выдаёт список с FAQ", visible: true)]
+        private struct DocumentInfo
+        {
+            public string? FileName;
+
+            public long? FileSize;
+
+            public string FileID;
+
+            public string FileUniqueId;
+
+            public DocumentInfo(string? fileName, long? fileSize, string fileID, string fileUniqueID)
+            {
+                FileName = fileName;
+                FileSize = fileSize;
+                FileID = fileID;
+                FileUniqueId = fileUniqueID;
+            }
+        }
+
+        [Command("faq", "Выдаёт список с FAQ", true)]
         public async Task FAQ(CommandArgs args)
         {
             await FAQMessage.Send(args.Bot, args.Message.Chat.Id);
@@ -112,7 +132,7 @@ namespace PolyChessTGBot.Bot
 
         private List<FAQEntry> GetFAQValues() => FAQEntries;
 
-        private string GetFAQString(FAQEntry entry, int index)
+        private string ConvertFAQEntryToString(FAQEntry entry, int index)
         {
             return $"{index + 1}) <b>{entry.Question}</b>\n - {entry.Answer}";
         }
