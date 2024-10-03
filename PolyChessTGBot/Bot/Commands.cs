@@ -34,20 +34,34 @@ namespace PolyChessTGBot.Bot
             HelpLinks = Program.Data.GetHelpLinks();
         }
 
+        [Command("version", "Отправляет информацию о боте", true)]
+        public async Task Version(CommandArgs args)
+        {
+            List<string> message =
+            [
+                "🛠<b>Информация о боте</b>🛠",
+                $"👨🏻‍💻<b>Разработчик:</b> {Program.MainConfig.BotAuthor}",
+                $"🔀<b>Версия бота:</b> v.{Program.Version}",
+                $"🕐<b>Дата последнего обновления:</b> Неизвестно",
+                $"⏱<b>Время работы:</b> {(DateTime.Now - Program.Started).ToString(@"%d' дн. '%m' мин. '%s' сек.'")}"
+            ];
+            await args.Reply(string.Join("\n", message), parseMode: ParseMode.Html);
+        }
+
         [Command("question", "Синтаксис: /question \"вопрос\". Команда отправит вопрос напрямую Павлу", true)]
         public async Task Question(CommandArgs args)
         {
             string question = string.Join(" ", args.Parameters);
             if (!string.IsNullOrEmpty(question))
             {
-                List<string> message = new()
-                {
-                    "<b><u>Вопрос от пользователя!</u></b>🙋‍♂️",
+                List<string> message =
+                [
+                    "<b><u>Вопрос от пользователя!</u></b>🙋‍",
                     $"👤<b>Ник пользователя:</b> @{args.User.Username}",
                     $"👤<b>Имя пользователя:</b> {args.User.FirstName} {args.User.LastName}",
                     $"🕑<b>Дата отправки:</b> {args.Message.Date:G}",
                     $"❓<b>Вопрос:</b>\n{question}"
-                };
+                ];
                 var data = TelegramButtonData.GetDataString("QuestionDataID", ("ID", args.User.Id), ("ChannelID", args.Message.MessageId));
                 InlineKeyboardMarkup uesrInfo = new(new InlineKeyboardButton("Данные") { CallbackData = data });
                 await args.Bot.SendTextMessageAsync(Program.MainConfig.QuestionChannel, string.Join("\n", message).RemoveBadSymbols(), parseMode: ParseMode.Html, replyMarkup: uesrInfo);

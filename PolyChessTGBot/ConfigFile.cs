@@ -4,13 +4,15 @@ namespace PolyChessTGBot
 {
     public class ConfigFile
     {
-        public string BotToken = "";
+        public string BotToken = string.Empty;
 
         public long QuestionChannel;
 
         public string LogsFolder = "Logs";
 
         public string DatabasePath = "data.sqlite";
+
+        public string BotAuthor = string.Empty;
 
         public List<int> DebugChats = [];
 

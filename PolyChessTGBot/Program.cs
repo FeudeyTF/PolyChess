@@ -8,7 +8,9 @@ namespace PolyChessTGBot
 {
     public static class Program
     {
-        public readonly static Version Version = new(0, 1, 16);
+        public readonly static Version Version = new(0, 1, 18);
+
+        public readonly static DateTime Started;
 
         public static ConfigFile MainConfig { get; private set; }
 
@@ -22,6 +24,7 @@ namespace PolyChessTGBot
 
         static Program()
         {
+            Started = DateTime.Now;
             MainConfig = ConfigFile.Load("Main");
             Logger = new(DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".log", MainConfig.LogsFolder);
             Data = new(MainConfig.DatabasePath);

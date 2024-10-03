@@ -33,7 +33,7 @@ namespace PolyChessTGBot.Database
                   "Question        Text," +
                   "Answer          Text" +
                   ")");
-            Query("CREATE TABLE IF NOT EXISTS HelpMessage (" +
+            Query("CREATE TABLE IF NOT EXISTS HelpLinks (" +
                   "ID              INTEGER PRIMARY KEY AUTOINCREMENT, " +
                   "Title           Text," +
                   "Text            Text," +
