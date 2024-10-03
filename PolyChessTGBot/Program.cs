@@ -8,6 +8,8 @@ namespace PolyChessTGBot
 {
     public static class Program
     {
+        public readonly static Version Version = new(0, 1, 16);
+
         public static ConfigFile MainConfig { get; private set; }
 
         public static readonly TextLog Logger;
