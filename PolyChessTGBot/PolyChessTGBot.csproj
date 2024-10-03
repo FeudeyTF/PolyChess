@@ -20,12 +20,6 @@
   <ItemGroup>
     <Content Include="bot.ico" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="HttpServer">
-      <HintPath>..\ref\HttpServer.dll</HintPath>
-    </Reference>
-  </ItemGroup>
   
   <ItemGroup>
     <PackageReference Include="Fleck" Version="1.2.0" />
