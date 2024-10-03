@@ -105,23 +105,15 @@ namespace PolyChessTGBot.Bot
                 await args.Reply("Нужно ответить на сообщение с файлом!");
         }
 
-        private struct DocumentInfo
+        private struct DocumentInfo(string? fileName, long? fileSize, string fileID, string fileUniqueID)
         {
-            public string? FileName;
+            public string? FileName = fileName;
 
-            public long? FileSize;
+            public long? FileSize = fileSize;
 
-            public string FileID;
+            public string FileID = fileID;
 
-            public string FileUniqueId;
-
-            public DocumentInfo(string? fileName, long? fileSize, string fileID, string fileUniqueID)
-            {
-                FileName = fileName;
-                FileSize = fileSize;
-                FileID = fileID;
-                FileUniqueId = fileUniqueID;
-            }
+            public string FileUniqueId = fileUniqueID;
         }
 
         [Command("faq", "Выдаёт список с FAQ", true)]
@@ -162,27 +154,20 @@ namespace PolyChessTGBot.Bot
         [Command("users", "Покажет пользователей")]
         public async Task GetUsers(CommandArgs args)
         {
-            List<User> users = new();
+            List<User> users = [];
             using var reader = Program.Data.SelectQuery("SELECT * FROM Users");
             while (reader.Read())
                 users.Add(new(reader.Get<int>("TelegramID"), reader.Get("Name"), reader.Get<int>("Year")));
             await args.Reply($"Пользователи: {string.Join("\n", users)}");
         }
 
-        private struct User
+        private struct User(long telegramID, string name, long year)
         {
-            public long TelegramID;
+            public long TelegramID = telegramID;
 
-            public string Name;
+            public string Name = name;
 
-            public long Year;
-
-            public User(long telegramID, string name, long year)
-            {
-                TelegramID = telegramID;
-                Name = name;
-                Year = year;
-            }
+            public long Year = year;
 
             public override string ToString()
             {

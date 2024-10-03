@@ -1,40 +1,24 @@
 ﻿namespace PolyChessTGBot.Database
 {
-    public struct FAQEntry
+    public struct FAQEntry(int id, string question, string answer)
     {
-        public int ID;
+        public int ID = id;
 
-        public string Question;
+        public string Question = question;
 
-        public string Answer;
-
-        public FAQEntry(int id, string question, string answer)
-        {
-            ID = id;
-            Question = question;
-            Answer = answer;
-        }
+        public string Answer = answer;
     }
 
-    public struct HelpLink
+    public struct HelpLink(int id, string title, string text, string footer, string fileID)
     {
-        public int ID;
+        public int ID = id;
 
-        public string Title;
+        public string Title = title;
 
-        public string Text;
+        public string Text = text;
 
-        public string Footer;
+        public string Footer = footer;
 
-        public string? FileID;
-
-        public HelpLink(int id, string title, string text, string footer, string fileID)
-        {
-            ID = id;
-            Title = title;
-            Text = text;
-            Footer = footer;
-            FileID = fileID;
-        }
+        public string? FileID = fileID;
     }
 }

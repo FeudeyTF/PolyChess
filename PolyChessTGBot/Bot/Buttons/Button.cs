@@ -1,15 +1,9 @@
 ﻿namespace PolyChessTGBot.Bot.Buttons
 {
-    internal class Button
+    internal class Button(string id, ButtonDelegate handler)
     {
-        public string ID;
+        public string ID = id;
 
-        public ButtonDelegate Delegate;
-
-        public Button(string id, ButtonDelegate handler)
-        {
-            ID = id;
-            Delegate = handler;
-        }
+        public ButtonDelegate Delegate = handler;
     }
 }

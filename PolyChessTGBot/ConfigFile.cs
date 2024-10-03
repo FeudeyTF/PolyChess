@@ -12,7 +12,7 @@ namespace PolyChessTGBot
 
         public string DatabasePath = "data.sqlite";
 
-        public List<int> DebugChats = new();
+        public List<int> DebugChats = [];
 
         public bool ShowApiResponseLogs = false;
 

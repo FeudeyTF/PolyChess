@@ -8,7 +8,7 @@ namespace PolyChessTGBot.Bot.Buttons
 
         public ButtonsRegistrator()
         {
-            Buttons = new();
+            Buttons = [];
         }
 
         public void RegisterButtons(BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)

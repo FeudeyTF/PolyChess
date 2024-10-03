@@ -91,9 +91,9 @@ namespace PolyChessTGBot.Database
 
         public IDbCommand? Command { get; protected set; }
 
-        public QueryResult(IDbConnection conn, IDataReader reader, IDbCommand command)
+        public QueryResult(IDbConnection connection, IDataReader reader, IDbCommand command)
         {
-            Connection = conn;
+            Connection = connection;
             Reader = reader;
             Command = command;
         }

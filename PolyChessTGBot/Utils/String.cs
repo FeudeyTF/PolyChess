@@ -11,8 +11,8 @@ namespace PolyChessTGBot
 
         public static List<string> ParseParameters(string message)
         {
-            var result = new List<string>();
-            var sb = new StringBuilder();
+            List<string> result = [];
+            StringBuilder sb = new();
             bool instr = false;
             for (int i = 0; i < message.Length; i++)
             {

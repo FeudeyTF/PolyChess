@@ -12,7 +12,7 @@ namespace PolyChessTGBot.Bot.Commands
 
         public CommandRegistrator()
         {
-            Commands = new();
+            Commands = [];
         }
 
         public void RegisterCommands(object obj, BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)

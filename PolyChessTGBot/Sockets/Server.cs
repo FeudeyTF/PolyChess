@@ -15,7 +15,7 @@ namespace PolyChessTGBot.Sockets
         {
             Server = new($"ws://0.0.0.0:{port}");
             Logger = logger;
-            Clients = new();
+            Clients = [];
         }
 
         public void StartListening()

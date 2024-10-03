@@ -28,9 +28,8 @@ namespace PolyChessTGBot.Bot
 
         public PolyBot(ILog logger)
         {
-            Telegram = new TelegramBotClient(Program.MainConfig.BotToken);
-            
-            BotReceiverOptions = new ReceiverOptions
+            Telegram = new(Program.MainConfig.BotToken);
+            BotReceiverOptions = new()
             {
                 ThrowPendingUpdates = true,
             };
