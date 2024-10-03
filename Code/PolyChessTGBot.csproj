@@ -1,11 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <ApplicationIcon>bot.ico</ApplicationIcon>
+    <ApplicationIcon>..\Icons\AppIcon.ico</ApplicationIcon>
     <DebugType>embedded</DebugType>
   </PropertyGroup>
 
@@ -17,10 +17,6 @@
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Content Include="bot.ico" />
-  </ItemGroup>
-  
   <ItemGroup>
     <PackageReference Include="Fleck" Version="1.2.0" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.11" />

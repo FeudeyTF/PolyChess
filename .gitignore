@@ -1,5 +1,5 @@
-/PolyChessTGBot/bin/*
-/PolyChessTGBot/obj/*
+/Code/bin/*
+/Code/obj/*
 /.vs/*
-/PolyChessTGBot/Properties/*
-/PolyChessTGBot/PolyChessTGBot.csproj.user
+/Code/Properties/*
+/Code/PolyChessTGBot.csproj.user
