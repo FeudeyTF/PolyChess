@@ -24,7 +24,7 @@ namespace PolyChessTGBot.Bot
 
         private readonly ILog Logger;
 
-        private BotCommands Commands;
+        private readonly BotCommands Commands;
 
         public PolyBot(ILog logger)
         {
@@ -140,6 +140,8 @@ namespace PolyChessTGBot.Bot
             {
                 ApiRequestException apiRequestException
                     => $"[Telegram Ошибка]:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
+                RequestException =>
+                    "Потеряно соединение с ботом. Переподключение...",
                 _ => exception.ToString()
             };
             Logger.Write(message, LogType.Error);
@@ -150,13 +152,13 @@ namespace PolyChessTGBot.Bot
         private async ValueTask HandleMakingApiRequest(ITelegramBotClient bot, ApiRequestEventArgs args, CancellationToken cancellationToken = default)
         {
             if (args.HttpRequestMessage != null && args.HttpRequestMessage.Content != null && Program.MainConfig.ShowApiResponseLogs)
-                Console.WriteLine("MAKING API REQUEST: " + (await args.HttpRequestMessage.Content.ReadAsStringAsync()));
+                Console.WriteLine("MAKING API REQUEST:\n" + (await args.HttpRequestMessage.Content.ReadAsStringAsync()));
         }
 
         private async ValueTask HandleApiResponseRecieved(ITelegramBotClient bot, ApiResponseEventArgs args, CancellationToken cancellationToken = default)
         {
             if (Program.MainConfig.ShowApiResponseLogs)
-                Console.WriteLine("RECIEVING API RESPONSE: " + (await args.ResponseMessage.Content.ReadAsStringAsync()));
+                Console.WriteLine("RECIEVING API RESPONSE:\n" + (await args.ResponseMessage.Content.ReadAsStringAsync()));
         }
     }
 }

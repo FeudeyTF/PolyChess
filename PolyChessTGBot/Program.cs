@@ -123,9 +123,10 @@ namespace PolyChessTGBot
                             Console.WriteLine("Неправильный синтаксис! Правильно: /setconfig <name> <value>");
                         break;
                     default:
+                        Console.WriteLine($"Команда '{commandName.ToLower()}' не найдена!");
                         continue;
                 }
-                Logger.Write($"Была введена команда '{commandName}'. Аргументы: '{string.Join(", ", parameters)}'", LogType.Info);
+                Logger.Write($"Была введена команда '{commandName}'. {(parameters.Count > 0 ? $"Аргументы: '{string.Join(", ", parameters)}'" : "Аргументов нет")}", LogType.Info);
             }
         }
     }

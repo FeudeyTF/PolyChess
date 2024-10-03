@@ -20,7 +20,7 @@ namespace PolyChessTGBot.Logs.Types
         public void Write(string message, LogType type)
         {
             LogWriter ??= new(Filename);
-            string logEntry = type.ToString().ToUpper() + ": " + message;
+            string logEntry = $"{DateTime.Now:G} {type.ToString().ToUpper()}: {message}";
 
             Console.ForegroundColor = GetColor(type);
             Console.WriteLine(logEntry);
@@ -30,7 +30,7 @@ namespace PolyChessTGBot.Logs.Types
             LogWriter.Flush();
         }
 
-        private ConsoleColor GetColor(LogType log)
+        public static ConsoleColor GetColor(LogType log)
         {
             return log switch
             {
