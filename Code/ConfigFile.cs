@@ -20,6 +20,8 @@ namespace PolyChessTGBot
 
         public SocketSettings Socket = new();
 
+        public int[] SkippingApiRequestErrors = [];
+
         public static ConfigFile Load(string name)
         {
             ConfigFile emptyConfig = new();

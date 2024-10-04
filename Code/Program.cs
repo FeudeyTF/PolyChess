@@ -8,7 +8,7 @@ namespace PolyChessTGBot
 {
     public static class Program
     {
-        public readonly static Version Version = new(0, 2, 0);
+        public readonly static Version Version = new(0, 2, 0, 1);
 
         public readonly static DateTime Started;
 
@@ -67,7 +67,7 @@ namespace PolyChessTGBot
                     }
                 }
                 string commandName = index < 0 ? text.ToLower() : text[..index].ToLower();
-                List<string> parameters = index < 0 ? new() : Utils.ParseParameters(text[index..]);
+                List<string> parameters = index < 0 ? [] : Utils.ParseParameters(text[index..]);
                 switch (commandName.ToLower())
                 {
                     case "exit":

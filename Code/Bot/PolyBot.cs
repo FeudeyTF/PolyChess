@@ -138,14 +138,20 @@ namespace PolyChessTGBot.Bot
             var message = exception switch
             {
                 ApiRequestException apiRequestException
-                    => $"[Telegram Ошибка]:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
+                    => !Program.MainConfig.SkippingApiRequestErrors.Contains(apiRequestException.ErrorCode) ?
+                        $"[Telegram Ошибка] [{apiRequestException.ErrorCode}]: {apiRequestException.Message}" :
+                        "",
+                    
                 RequestException =>
                     "Потеряно соединение с ботом. Переподключение...",
                 _ => exception.ToString()
             };
-            Logger.Write(message, LogType.Error);
-            foreach (var debugChatID in Program.MainConfig.DebugChats)
-                await Telegram.SendTextMessageAsync(debugChatID, message, cancellationToken: token);
+            if(!string.IsNullOrEmpty(message))
+            {
+                Logger.Write(message, LogType.Error);
+                foreach (var debugChatID in Program.MainConfig.DebugChats)
+                    await Telegram.SendTextMessageAsync(debugChatID, message, cancellationToken: token);
+            }
         }
 
         private async ValueTask HandleMakingApiRequest(ITelegramBotClient bot, ApiRequestEventArgs args, CancellationToken cancellationToken = default)
