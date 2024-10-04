@@ -45,7 +45,7 @@ namespace PolyChessTGBot.Database
         public List<HelpLink> GetHelpLinks()
         {
             using var reader = SelectQuery("SELECT * FROM HelpLinks");
-            List<HelpLink> links = new();
+            List<HelpLink> links = [];
             while (reader.Read())
                 links.Add(new(reader.Get<int>("ID"), reader.Get("Title"), reader.Get("Text"), reader.Get("Footer"), reader.Get("FileID")));
             return links;
@@ -54,7 +54,7 @@ namespace PolyChessTGBot.Database
         public List<FAQEntry> GetFAQEntries()
         {
             using var reader = SelectQuery("SELECT * FROM FAQ");
-            List<FAQEntry> questions = new();
+            List<FAQEntry> questions = [];
             while (reader.Read())
                 questions.Add(new(reader.Get<int>("ID"), reader.Get("Question"), reader.Get("Answer")));
             return questions;

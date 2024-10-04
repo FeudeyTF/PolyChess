@@ -1,5 +1,6 @@
 ﻿using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Externsions;
+using PolyChessTGBot.Hooks;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -29,8 +30,9 @@ namespace PolyChessTGBot.Bot.Messages
 
         public string PreviousButtonText;
 
+        public List<List<ListMessageButton<List<TValue>>>> AdditionalKeyboards;
 
-        public ListMessage(string id, Func<List<TValue>> getValues, Func<TValue, int, string> processString, int valuesPerPage = 10, bool showPagesCount = true, string nextButtonText = "➡️", string previousButtonText = "⬅️")
+        public ListMessage(string id, Func<List<TValue>> getValues, Func<TValue, int, string> processString, int valuesPerPage = 10, bool showPagesCount = true, string nextButtonText = "➡️", string previousButtonText = "⬅️", List<List<ListMessageButton<List<TValue>>>>? additionalKeyboards = default)
         {
             ID = id;
             Header = "";
@@ -41,27 +43,43 @@ namespace PolyChessTGBot.Bot.Messages
             ShowPagesCount = showPagesCount;
             NextButtonText = nextButtonText;
             PreviousButtonText = previousButtonText;
+            AdditionalKeyboards = additionalKeyboards ?? [];
+            ButtonHooks.OnButtonInteract += HandleButtonInteract;
+        }
+
+        private async Task HandleButtonInteract(ButtonInteractArgs args)
+        {
+            await TryUpdate(args.ButtonID, args);
         }
 
         public async Task Send(TelegramBotClient bot, long channelID)
         {
             var values = GetValues();
-            string message = Header + "\n";
-            for (int i = 0; i < (values.Count > ValuesPerPage ? ValuesPerPage : values.Count); i++)
-                message += ConvertValueToString(values[i], i) + "\n";
-            message += Footer;
-            bool sentDocumentMessage = false;
-            if (GetDocumentID != null && values.Count > 0)
+            if (values.Count != 0)
             {
-                var document = GetDocumentID(values[0]);
-                if (!string.IsNullOrEmpty(document))
+                string message = Header + "\n";
+                for (int i = 0; i < (values.Count > ValuesPerPage ? ValuesPerPage : values.Count); i++)
+                    message += ConvertValueToString(values[i], i) + "\n";
+                message += Footer;
+                bool sentDocumentMessage = false;
+
+                InlineKeyboardMarkup markup = GenerateKeyBoard(1, GetPagesCount(values.Count));
+
+                if (GetDocumentID != null && values.Count > 0)
                 {
-                    sentDocumentMessage = true;
-                    await bot.SendDocumentAsync(channelID, new InputFileId(document), replyMarkup: GenerateKeyBoard(1, GetPagesCount(values.Count)), caption: message, parseMode: ParseMode.Html);
+                    var document = GetDocumentID(values[0]);
+                    if (!string.IsNullOrEmpty(document))
+                    {
+                        sentDocumentMessage = true;
+
+                        await bot.SendDocumentAsync(channelID, new InputFileId(document), replyMarkup: markup, caption: message, parseMode: ParseMode.Html);
+                    }
                 }
+                if (!sentDocumentMessage)
+                    await bot.SendTextMessageAsync(channelID, message, replyMarkup: markup, parseMode: ParseMode.Html);
             }
-            if(!sentDocumentMessage)
-                await bot.SendTextMessageAsync(channelID, message, replyMarkup: GenerateKeyBoard(1, GetPagesCount(values.Count)), parseMode: ParseMode.Html);
+            else
+                await bot.SendTextMessageAsync(channelID, "Данных нет", parseMode: ParseMode.Html);
         }
 
         private int GetPagesCount(int count)
@@ -74,24 +92,46 @@ namespace PolyChessTGBot.Bot.Messages
                 return count / ValuesPerPage + 1;
         }
 
-        private InlineKeyboardMarkup? GenerateKeyBoard(int page, int pages)
+        private InlineKeyboardMarkup GenerateKeyBoard(int page, int pages)
         {
             if (pages == 1)
-                return null;
+                return new(GenerateAdditionalKeyboards(page));
+
+            List<List<InlineKeyboardButton>> buttons = [];
             InlineKeyboardButton nextButton = new(NextButtonText);
             nextButton.SetData("Next" + ID, ("Page", page));
             InlineKeyboardButton pageButton = new($"{page}/{pages}");
-            pageButton.SetData("Page" + ID);
+            pageButton.SetData("Page" + ID, ("Page", page));
             InlineKeyboardButton prevButton = new(PreviousButtonText);
             prevButton.SetData("Prev" + ID, ("Page", page));
-            List<InlineKeyboardButton> movingButtons = new();
+            List<InlineKeyboardButton> movingButtons = [];
             if (page != 1)
                 movingButtons.Add(prevButton);
             if (ShowPagesCount)
                 movingButtons.Add(pageButton);
             if (page != pages)
                 movingButtons.Add(nextButton);
-            return new(movingButtons);
+            buttons.Add(movingButtons);
+            foreach (var keyboard in GenerateAdditionalKeyboards(page))
+                buttons.Add(keyboard);
+            return new(buttons);
+        }
+
+        private List<List<InlineKeyboardButton>> GenerateAdditionalKeyboards(int page)
+        {
+            List<List<InlineKeyboardButton>> buttons = [];
+            foreach (var keyboard in AdditionalKeyboards)
+            {
+                List<InlineKeyboardButton> additionalButtons = [];
+                foreach (var b in keyboard)
+                {
+                    InlineKeyboardButton additionalButton = new(b.Name);
+                    additionalButton.SetData(b.ID + ID, ("Page", page));
+                    additionalButtons.Add(additionalButton);
+                }
+                buttons.Add(additionalButtons);
+            }
+            return buttons;
         }
 
         public async Task TryUpdate(string buttonID, ButtonInteractArgs args)
@@ -100,6 +140,13 @@ namespace PolyChessTGBot.Bot.Messages
                 await NextButton(args);
             else if (buttonID == "Prev" + ID)
                 await PreviousButton(args);
+            else
+            {
+                foreach (var keyboard in AdditionalKeyboards)
+                    foreach(var button in keyboard)
+                        if (button.ID + ID == args.ButtonID)
+                            await button.Delegate(args, FindValues(args.Get<int>("Page")));
+            }
         }
 
         public async Task NextButton(ButtonInteractArgs args)
@@ -116,6 +163,8 @@ namespace PolyChessTGBot.Bot.Messages
                     for (int i = startIndex; i < startIndex + (values.Count - startIndex > ValuesPerPage ? ValuesPerPage : values.Count - startIndex); i++)
                         message += ConvertValueToString(values[i], i) + "\n";
                     message += Footer;
+
+                    InlineKeyboardMarkup markup = GenerateKeyBoard(page + 1, GetPagesCount(values.Count)); ;
                     bool editedMessageWithFile = false;
                     if(GetDocumentID != null && values.Count > startIndex)
                     {
@@ -123,11 +172,11 @@ namespace PolyChessTGBot.Bot.Messages
                         if (!string.IsNullOrEmpty(document))
                         {
                             editedMessageWithFile = true;
-                            await args.Bot.EditMessageMediaAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, new InputMediaDocument(new InputFileId(document)) { Caption = message, ParseMode = ParseMode.Html }, GenerateKeyBoard(page + 1, pages));
+                            await args.Bot.EditMessageMediaAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, new InputMediaDocument(new InputFileId(document)) { Caption = message, ParseMode = ParseMode.Html }, markup);
                         }
                     }
                     if(!editedMessageWithFile)
-                        await args.Bot.EditMessageTextAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, message, replyMarkup: GenerateKeyBoard(page + 1, pages), parseMode: ParseMode.Html);
+                        await args.Bot.EditMessageTextAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, message, replyMarkup: markup, parseMode: ParseMode.Html);
                 }
             }
         }
@@ -147,19 +196,56 @@ namespace PolyChessTGBot.Bot.Messages
                         message += ConvertValueToString(values[i], i) + "\n";
                     message += Footer;
                     bool editedMessageWithFile = false;
+
+                    InlineKeyboardMarkup markup = GenerateKeyBoard(page - 1, GetPagesCount(values.Count));
+
                     if (GetDocumentID != null && values.Count > startIndex)
                     {
                         var document = GetDocumentID(values[startIndex]);
                         if (!string.IsNullOrEmpty(document))
                         {
                             editedMessageWithFile = true;
-                            await args.Bot.EditMessageMediaAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, new InputMediaDocument(new InputFileId(document)) { Caption = message, ParseMode = ParseMode.Html }, replyMarkup: GenerateKeyBoard(page - 1, pages));
+                            await args.Bot.EditMessageMediaAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, new InputMediaDocument(new InputFileId(document)) { Caption = message, ParseMode = ParseMode.Html }, replyMarkup: markup);
                         }
                     }
                     if (!editedMessageWithFile)
-                        await args.Bot.EditMessageTextAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, message, replyMarkup: GenerateKeyBoard(page - 1, pages), parseMode: ParseMode.Html);
+                        await args.Bot.EditMessageTextAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, message, replyMarkup: markup, parseMode: ParseMode.Html);
                 }
             }
+        }
+
+        public TValue? FindValue(int index)
+        {
+            var values = GetValues();
+            if (values.Count > index)
+                return values[index];
+            return default;
+        }
+
+        public List<TValue> FindValues(int page)
+        {
+            List<TValue> result = [];
+            var values = GetValues();
+            int startIndex = (page - 1) * ValuesPerPage;
+            for (int i = startIndex; i < startIndex + (values.Count - startIndex > ValuesPerPage ? ValuesPerPage : values.Count - startIndex); i++)
+                result.Add(values[i]);
+            return result;
+        }
+    }
+
+    internal class ListMessageButton<TValue>
+    {
+        public string Name;
+
+        public string ID;
+
+        public Func<ButtonInteractArgs, TValue, Task> Delegate;
+
+        public ListMessageButton(string name, string id, Func<ButtonInteractArgs, TValue, Task> handler)
+        {
+            Name = name;
+            ID = id;
+            Delegate = handler;
         }
     }
 }

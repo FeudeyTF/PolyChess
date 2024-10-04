@@ -14,6 +14,10 @@ namespace PolyChessTGBot.Bot
 
         internal readonly ListMessage<HelpLink> HelpMessage;
 
+        internal readonly ListMessage<HelpLink> HelpAdmin;
+
+        internal readonly ListMessage<FAQEntry> FAQAdmin;
+
         private readonly List<FAQEntry> FAQEntries;
 
         private readonly List<HelpLink> HelpLinks;
@@ -29,6 +33,13 @@ namespace PolyChessTGBot.Bot
             {
                 GetDocumentID = GetHelpLinkDocumentID
             };
+
+            FAQAdmin = new("adminFAQ", GetFAQValues, ConvertFAQEntryToString, 1, additionalKeyboards: [[new("🗑Удалить", "Delete", HandleFAQDelete)]]);
+
+            HelpAdmin = new("adminHelp", GetHelpLinksValue, ConvertHelpLinkToString, 1, false, "Далее ➡️", "⬅️ Назад", [[new("🗑Удалить", "Delete", HandleHelpLinkDelete)]])
+            {
+                GetDocumentID = GetHelpLinkDocumentID
+            }; 
 
             FAQEntries = Program.Data.GetFAQEntries();
             HelpLinks = Program.Data.GetHelpLinks();
@@ -72,9 +83,60 @@ namespace PolyChessTGBot.Bot
         }
 
         [Command("help", "Выдаёт список с полезными материалами", true)]
-        public async Task SendHelpLinks(CommandArgs args)
+        private async Task SendHelpLinks(CommandArgs args)
         {
             await HelpMessage.Send(args.Bot, args.Message.Chat.Id);
+        }
+
+        [Command("admin", "Работает с полезными ссылками")]
+        private async Task AdminHelpLinks(CommandArgs args)
+        {
+            if (args.Parameters.Count > 0)
+            {
+                var adminType = args.Parameters[0].ToLower();
+                if (adminType.StartsWith('f'))
+                    await FAQAdmin.Send(args.Bot, args.Message.Chat.Id);
+                else if (adminType.StartsWith('h'))
+                    await HelpAdmin.Send(args.Bot, args.Message.Chat.Id);
+                else
+                    await args.Reply("Панель не найдена! Попробуйте /admin faq/helplinks");
+            }
+            else
+                await args.Reply("Неправильный синтаксис! Правильно: /admin faq/helplinks");
+        }
+
+        private async Task HandleHelpLinkDelete(ButtonInteractArgs args, List<HelpLink> links)
+        {
+            if (links.Count != 0)
+            {
+                var link = links[0];
+                HelpLinks.Remove(link);
+                Program.Data.Query("DELETE FROM HelpLinks WHERE ID=@0", link.ID);
+                if (args.Query.Message != null)
+                {
+                    await args.Bot.DeleteMessageAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId);
+                    await args.Bot.SendTextMessageAsync(args.Query.Message.Chat.Id, "Полезная ссылка была успешно удалена!");
+                }
+            }
+            else
+                await args.Reply("Не найдено полезных ссылок!");
+        }
+
+        private async Task HandleFAQDelete(ButtonInteractArgs args, List<FAQEntry> links)
+        {
+            if (links.Count != 0)
+            {
+                var link = links[0];
+                FAQEntries.Remove(link);
+                Program.Data.Query("DELETE FROM FAQ WHERE ID=@0", link.ID);
+                if (args.Query.Message != null)
+                {
+                    await args.Bot.DeleteMessageAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId);
+                    await args.Bot.SendTextMessageAsync(args.Query.Message.Chat.Id, "Вопрос был успешно удалён!");
+                }
+            }
+            else
+                await args.Reply("Не найдено полезных ссылок!");
         }
 
         private List<HelpLink> GetHelpLinksValue() => HelpLinks;
@@ -110,13 +172,13 @@ namespace PolyChessTGBot.Bot
                     message += $"Размер: {documentInfo.Value.FileSize}\n";
                     message += $"Unique ID: {documentInfo.Value.FileUniqueId}\n";
                     message += $"File ID: {documentInfo.Value.FileID}";
-                    await args.Reply(message);
+                    await args.Reply(message, parseMode: ParseMode.Html);
                 }
                 else
-                    await args.Reply("Нужно ответить на сообщение с файлом!");
+                    await args.Reply("Нужно ответить на сообщение с файлом!", parseMode: ParseMode.Html);
             }
             else
-                await args.Reply("Нужно ответить на сообщение с файлом!");
+                await args.Reply("Нужно ответить на сообщение с файлом!", parseMode: ParseMode.Html);
         }
 
         private struct DocumentInfo(string? fileName, long? fileSize, string fileID, string fileUniqueID)
