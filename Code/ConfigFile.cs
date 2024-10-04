@@ -22,6 +22,8 @@ namespace PolyChessTGBot
 
         public int[] SkippingApiRequestErrors = [];
 
+        public long[] Admins = [];
+
         public static ConfigFile Load(string name)
         {
             ConfigFile emptyConfig = new();

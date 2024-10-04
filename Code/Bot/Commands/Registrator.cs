@@ -26,7 +26,7 @@ namespace PolyChessTGBot.Bot.Commands
                 commandDelegate = (CommandDelegate)Delegate.CreateDelegate(typeof(CommandDelegate), obj, method);
                 if (commandDelegate != null)
                 {
-                    var command = new Command(new[] { commandAttribute.Name }, commandAttribute.Description, commandAttribute.ScopeType, commandAttribute.Visible, commandDelegate);
+                    var command = new Command([commandAttribute.Name], commandAttribute.Description, commandAttribute.ScopeType, commandAttribute.Visible, commandAttribute.Admin, commandDelegate);
 
                     var equals = Commands.Where(c => c.Names.Contains(command.Name));
                     if (equals.Any())
@@ -59,7 +59,15 @@ namespace PolyChessTGBot.Bot.Commands
                     Program.Logger.Write($"Получена команда: '{message.Text}'. {(args.Parameters.Count > 0 ? $"Аргументы: {string.Join(", ", args.Parameters)}" : "Аргументов нет")}", LogType.Info);
                     try
                     {
-                        await command.Delegate(args);
+                        if (command.AdminCommand)
+                        {
+                            if (Program.MainConfig.Admins.Contains(user.Id))
+                                await command.Delegate(args);
+                            else
+                                await args.Reply("Эта команда доступна только админам!");
+                        }
+                        else
+                            await command.Delegate(args);
                     }
                     catch (Exception e)
                     {

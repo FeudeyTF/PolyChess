@@ -88,7 +88,7 @@ namespace PolyChessTGBot.Bot
             await HelpMessage.Send(args.Bot, args.Message.Chat.Id);
         }
 
-        [Command("admin", "Работает с полезными ссылками")]
+        [Command("admin", "Работает с полезными ссылками", admin: true)]
         private async Task AdminHelpLinks(CommandArgs args)
         {
             if (args.Parameters.Count > 0)
@@ -148,7 +148,7 @@ namespace PolyChessTGBot.Bot
 
         private string? GetHelpLinkDocumentID(HelpLink link) => link.FileID;
 
-        [Command("fileinfo", "Выдаёт информацию о файле")]
+        [Command("fileinfo", "Выдаёт информацию о файле", admin: true)]
         public async Task GetFileInfo(CommandArgs args)
         {
             if (args.Message.ReplyToMessage != null)
@@ -205,7 +205,7 @@ namespace PolyChessTGBot.Bot
             return $"{index + 1}) <b>{entry.Question}</b>\n - {entry.Answer}";
         }
 
-        [Command("addfaq", "Создаёт частозадаваемый вопрос")]
+        [Command("addfaq", "Создаёт частозадаваемый вопрос", admin: true)]
         public async Task AddFAQ(CommandArgs args)
         {
             if (args.Parameters.Count == 2)
@@ -221,13 +221,13 @@ namespace PolyChessTGBot.Bot
                 await args.Reply("Ошибка синтаксиса! Правильно: /addFAQ \"вопрос\" \"ответ\"");
         }
 
-        [Command("cstats", "Покажет характеристики канала")]
+        [Command("cstats", "Покажет характеристики канала", admin: true)]
         public async Task Stats(CommandArgs args)
         {
             await args.Reply($"Айди канала: {args.Message.Chat.Id}");
         }
 
-        [Command("users", "Покажет пользователей")]
+        [Command("users", "Покажет пользователей", admin: true)]
         public async Task GetUsers(CommandArgs args)
         {
             List<User> users = [];
