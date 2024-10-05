@@ -54,7 +54,7 @@ namespace PolyChessTGBot.Bot
                 $"👨🏻‍💻<b>Разработчик:</b> {Program.MainConfig.BotAuthor}",
                 $"🔀<b>Версия бота:</b> v.{Program.Version}",
                 $"🕐<b>Дата последнего обновления:</b> Неизвестно",
-                $"⏱<b>Время работы:</b> {(DateTime.Now - Program.Started).ToString(@"%d' дн. '%m' мин. '%s' сек.'")}"
+                $"⏱<b>Время работы:</b> {(DateTime.Now - Program.Started).ToString("%d' дн. '%h' ч. '%m' мин. '%s' сек.'")}"
             ];
             await args.Reply(string.Join("\n", message), parseMode: ParseMode.Html);
         }
@@ -136,7 +136,7 @@ namespace PolyChessTGBot.Bot
                 }
             }
             else
-                await args.Reply("Не найдено полезных ссылок!");
+                await args.Reply("Не найдено вопросов!");
         }
 
         private List<HelpLink> GetHelpLinksValue() => HelpLinks;
@@ -245,7 +245,7 @@ namespace PolyChessTGBot.Bot
 
             public long Year = year;
 
-            public override string ToString()
+            public override readonly string ToString()
             {
                 return $"{Name} ({TelegramID}), Курс - {Year}";
             }
