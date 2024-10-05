@@ -9,7 +9,7 @@
         public string Answer = answer;
     }
 
-    public struct HelpLink(int id, string title, string text, string footer, string fileID)
+    public struct HelpLink(int id, string title, string text, string footer, string? fileID)
     {
         public int ID = id;
 

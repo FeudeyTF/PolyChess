@@ -221,6 +221,28 @@ namespace PolyChessTGBot.Bot
                 await args.Reply("Ошибка синтаксиса! Правильно: /addFAQ \"вопрос\" \"ответ\"");
         }
 
+        [Command("addhelp", "Создаёт частозадаваемый вопрос", admin: true)]
+        public async Task AddHelpLink(CommandArgs args)
+        {
+            if (args.Parameters.Count == 2)
+            {
+                if (args.Message.Document != null)
+                {
+                    HelpLink link = new(default, args.Parameters[0], args.Parameters[1], "", args.Message.Document.FileId);
+                    string text = "INSERT INTO HelpLinks (Title, Text, Footer, FileID) VALUES (@0, @1, @2, @3);";
+                    int id = Program.Data.QueryScalar<int>(text + "SELECT CAST(last_insert_rowid() as INT);", link.Title, link.Text, link.Footer, link.FileID == null ? DBNull.Value : link.FileID);
+                    link.ID = id;
+                    HelpLinks.Add(link);
+                    await args.Reply($"Полезная ссылка была успешно добавлена!", parseMode: ParseMode.Html);
+                }
+                else
+                    await args.Reply("К полезной ссылке нужно прикрепить файл! Для этого прикрепите его к сообщеию с командой");
+            }
+            else
+                await args.Reply("Ошибка синтаксиса! Правильно: /addhelp \"название\" \"текст\". Чтобы добавить файл - прикрепите его к сообщению с командой");
+
+        }
+
         [Command("cstats", "Покажет характеристики канала", admin: true)]
         public async Task Stats(CommandArgs args)
         {
