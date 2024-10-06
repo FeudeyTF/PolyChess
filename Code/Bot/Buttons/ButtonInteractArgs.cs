@@ -1,4 +1,6 @@
-﻿using Telegram.Bot;
+﻿using PolyChessTGBot.Bot.Messages;
+using PolyChessTGBot.Externsions;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -25,21 +27,10 @@ namespace PolyChessTGBot.Bot.Buttons
         public TValue? Get<TValue>(string parameter)
             => Data.Get<TValue>(parameter);
 
-        public async Task Reply(
-            string message,
-            int? messageThreadId = default,
-            ParseMode parseMode = ParseMode.Markdown,
-            IEnumerable<MessageEntity>? entities = default,
-            bool disableWebPagePreview = default,
-            bool disableNotification = default,
-            bool protectContent = default,
-            bool allowSendingWithoutReply = default,
-            IReplyMarkup? replyMarkup = default,
-            CancellationToken cancellationToken = default
-            )
+        public async Task Reply(TelegramMessageBuilder message)
         {
-            if(Query.Message != null)
-                await Bot.SendTextMessageAsync(Query.Message.Chat.Id, message, messageThreadId, parseMode, entities, disableWebPagePreview, disableNotification, protectContent, Query.Message.MessageId, allowSendingWithoutReply, replyMarkup, cancellationToken);
+            if (Query.Message != null)
+                await Bot.SendMessage(message, Query.Message.Chat.Id);
         }
     }
 }

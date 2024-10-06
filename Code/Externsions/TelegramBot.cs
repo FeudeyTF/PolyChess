@@ -1,0 +1,38 @@
+﻿using PolyChessTGBot.Bot.Messages;
+using Telegram.Bot;
+using Telegram.Bot.Types;
+
+namespace PolyChessTGBot.Externsions
+{
+    public static partial class Extensions
+    {
+        public async static Task SendMessage(this TelegramBotClient bot, TelegramMessageBuilder message, ChatId chatID)
+        {
+            if (message.File != null)
+            {
+                await bot.SendDocumentAsync(chatID, message.File, message.ThreadID, message.Thumbnail, message.Text, message.ParseMode, message.Entities, message.DisableContentTypeDetection, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+            }
+            else if(message.MediaFiles != null)
+            {
+                await bot.SendMediaGroupAsync(chatID, message.MediaFiles, message.ThreadID, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.CancellationToken);
+            }
+            else if (message.Media != null)
+            {
+                if (message.Media is InputMediaPhoto photo)
+                    await bot.SendPhotoAsync(chatID, photo.Media, message.ThreadID, photo.Caption, photo.ParseMode, photo.CaptionEntities, photo.HasSpoiler, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+                else if (message.Media is InputMediaAudio audio)
+                    await bot.SendAudioAsync(chatID, audio.Media, message.ThreadID, audio.Caption, audio.ParseMode, audio.CaptionEntities, audio.Duration, audio.Performer, audio.Title, audio.Thumbnail, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+                else if (message.Media is InputMediaVideo video)
+                    await bot.SendVideoAsync(chatID, video.Media, message.ThreadID, video.Duration, video.Width, video.Height, video.Thumbnail, video.Caption, video.ParseMode, video.CaptionEntities, video.HasSpoiler, video.SupportsStreaming, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+                else if (message.Media is InputMediaAnimation animation)
+                    await bot.SendAnimationAsync(chatID, animation.Media, message.ThreadID, animation.Duration, animation.Width, animation.Height, animation.Thumbnail, animation.Caption, animation.ParseMode, animation.CaptionEntities, animation.HasSpoiler, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+                else if(message.Media is InputMediaDocument document)
+                    await bot.SendDocumentAsync(chatID, document.Media, message.ThreadID, message.Thumbnail, message.Text, message.ParseMode, message.Entities, message.DisableContentTypeDetection, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+            }
+            else
+            {
+                await bot.SendTextMessageAsync(chatID, message.Text, message.ThreadID, message.ParseMode, message.Entities, message.DisableWebPagePreview, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+            }    
+        }
+    }
+}

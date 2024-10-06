@@ -1,7 +1,5 @@
 ﻿using PolyChessTGBot.Hooks;
 using System.Reflection;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using Telegram.Bot.Types;
 
 namespace PolyChessTGBot.Bot.Buttons
 {

@@ -50,7 +50,7 @@ namespace PolyChessTGBot.Bot.Commands
                 }
             }
             string commandName = index < 0 ? commandText.ToLower() : commandText[..index].ToLower();
-            List<string> commandArgs = index < 0 ? new() : Utils.ParseParameters(commandText[index..]);
+            List<string> commandArgs = index < 0 ? []: Utils.ParseParameters(commandText[index..]);
 
             CommandArgs args = new(message, Program.Bot.Telegram, user, commandArgs);
             foreach (var command in Commands)
@@ -86,7 +86,7 @@ namespace PolyChessTGBot.Bot.Commands
                     if (commands.TryGetValue(command.ScopeType, out var list))
                         list.Add(command.ToTelegramCommand());
                     else
-                        commands.Add(command.ScopeType, new() { command.ToTelegramCommand() });
+                        commands.Add(command.ScopeType, [command.ToTelegramCommand()]);
                 }
             foreach (var commandList in commands)
                 await Program.Bot.Telegram.SetMyCommandsAsync(commandList.Value, Utils.GetScopeByType(commandList.Key));

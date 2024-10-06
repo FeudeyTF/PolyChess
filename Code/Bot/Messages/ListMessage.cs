@@ -57,29 +57,23 @@ namespace PolyChessTGBot.Bot.Messages
             var values = GetValues();
             if (values.Count != 0)
             {
-                string message = Header + "\n";
+                string text = Header + "\n";
                 for (int i = 0; i < (values.Count > ValuesPerPage ? ValuesPerPage : values.Count); i++)
-                    message += ConvertValueToString(values[i], i) + "\n";
-                message += Footer;
-                bool sentDocumentMessage = false;
-
-                InlineKeyboardMarkup markup = GenerateKeyBoard(1, GetPagesCount(values.Count));
+                    text += ConvertValueToString(values[i], i) + "\n";
+                text += Footer;
+                TelegramMessageBuilder message = new(text);
+                message.WithMarkup(GenerateKeyBoard(1, GetPagesCount(values.Count)));
 
                 if (GetDocumentID != null && values.Count > 0)
                 {
                     var document = GetDocumentID(values[0]);
                     if (!string.IsNullOrEmpty(document))
-                    {
-                        sentDocumentMessage = true;
-
-                        await bot.SendDocumentAsync(channelID, new InputFileId(document), replyMarkup: markup, caption: message, parseMode: ParseMode.Html);
-                    }
+                        message.WithFile(document);
                 }
-                if (!sentDocumentMessage)
-                    await bot.SendTextMessageAsync(channelID, message, replyMarkup: markup, parseMode: ParseMode.Html);
+                await bot.SendMessage(message, channelID);
             }
             else
-                await bot.SendTextMessageAsync(channelID, "Данных нет", parseMode: ParseMode.Html);
+                await bot.SendMessage("Данных нет", channelID);
         }
 
         private int GetPagesCount(int count)

@@ -1,3 +1,5 @@
+using PolyChessTGBot.Bot.Messages;
+using PolyChessTGBot.Externsions;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -23,20 +25,9 @@ namespace PolyChessTGBot.Bot.Commands
             Bot = bot;
         }
 
-        public async Task Reply(
-            string message,
-            int? messageThreadId = default,
-            ParseMode parseMode = ParseMode.Markdown,
-            IEnumerable<MessageEntity>? entities = default,
-            bool disableWebPagePreview = default,
-            bool disableNotification = default,
-            bool protectContent = default,
-            bool allowSendingWithoutReply = default,
-            IReplyMarkup? replyMarkup = default,
-            CancellationToken cancellationToken = default
-            )
+        public async Task Reply(TelegramMessageBuilder message)
         {
-            await Bot.SendTextMessageAsync(Message.Chat.Id, message, messageThreadId, parseMode, entities, disableWebPagePreview, disableNotification, protectContent, Message.MessageId, allowSendingWithoutReply, replyMarkup, cancellationToken);
+            await Bot.SendMessage(message, Message.Chat.Id);
         }
     }
 }

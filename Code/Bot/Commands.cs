@@ -2,7 +2,9 @@ using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Database;
+using PolyChessTGBot.Externsions;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -56,7 +58,7 @@ namespace PolyChessTGBot.Bot
                 $"🕐<b>Дата последнего обновления:</b> Неизвестно",
                 $"⏱<b>Время работы:</b> {(DateTime.Now - Program.Started).ToString("%d' дн. '%h' ч. '%m' мин. '%s' сек.'")}"
             ];
-            await args.Reply(string.Join("\n", message), parseMode: ParseMode.Html);
+            await args.Reply(string.Join("\n", message));
         }
 
         [Command("question", "Синтаксис: /question \"вопрос\". Команда отправит вопрос напрямую Павлу", true)]
@@ -65,7 +67,7 @@ namespace PolyChessTGBot.Bot
             string question = string.Join(" ", args.Parameters);
             if (!string.IsNullOrEmpty(question))
             {
-                List<string> message =
+                List<string> text =
                 [
                     "<b><u>Вопрос от пользователя!</u></b>🙋‍",
                     $"👤<b>Ник пользователя:</b> @{args.User.Username}",
@@ -75,7 +77,10 @@ namespace PolyChessTGBot.Bot
                 ];
                 var data = TelegramButtonData.GetDataString("QuestionDataID", ("ID", args.User.Id), ("ChannelID", args.Message.MessageId));
                 InlineKeyboardMarkup uesrInfo = new(new InlineKeyboardButton("Данные") { CallbackData = data });
-                await args.Bot.SendTextMessageAsync(Program.MainConfig.QuestionChannel, string.Join("\n", message), parseMode: ParseMode.Html, replyMarkup: uesrInfo);
+                var message = new TelegramMessageBuilder(string.Join("\n", text))
+                    .WithMarkup(uesrInfo);
+
+                await args.Bot.SendMessage(message, Program.MainConfig.QuestionChannel);
                 await args.Reply("Ваш вопрос был успешно отправлен!");
             }
             else
@@ -115,7 +120,7 @@ namespace PolyChessTGBot.Bot
                 if (args.Query.Message != null)
                 {
                     await args.Bot.DeleteMessageAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId);
-                    await args.Bot.SendTextMessageAsync(args.Query.Message.Chat.Id, "Полезная ссылка была успешно удалена!");
+                    await args.Bot.SendMessage("Полезная ссылка была успешно удалена!", args.Query.Message.Chat.Id);
                 }
             }
             else
@@ -132,7 +137,7 @@ namespace PolyChessTGBot.Bot
                 if (args.Query.Message != null)
                 {
                     await args.Bot.DeleteMessageAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId);
-                    await args.Bot.SendTextMessageAsync(args.Query.Message.Chat.Id, "Вопрос был успешно удалён!");
+                    await args.Bot.SendMessage("Вопрос был успешно удалён!", args.Query.Message.Chat.Id);
                 }
             }
             else
@@ -172,13 +177,13 @@ namespace PolyChessTGBot.Bot
                     message += $"Размер: {documentInfo.Value.FileSize}\n";
                     message += $"Unique ID: {documentInfo.Value.FileUniqueId}\n";
                     message += $"File ID: {documentInfo.Value.FileID}";
-                    await args.Reply(message, parseMode: ParseMode.Html);
+                    await args.Reply(message);
                 }
                 else
-                    await args.Reply("Нужно ответить на сообщение с файлом!", parseMode: ParseMode.Html);
+                    await args.Reply("Нужно ответить на сообщение с файлом!");
             }
             else
-                await args.Reply("Нужно ответить на сообщение с файлом!", parseMode: ParseMode.Html);
+                await args.Reply("Нужно ответить на сообщение с файлом!");
         }
 
         private struct DocumentInfo(string? fileName, long? fileSize, string fileID, string fileUniqueID)
@@ -215,7 +220,7 @@ namespace PolyChessTGBot.Bot
                 int id = Program.Data.QueryScalar<int>(text + "SELECT CAST(last_insert_rowid() as INT);", entry.Question, entry.Answer);
                 entry.ID = id;
                 FAQEntries.Add(entry);
-                await args.Reply($"Вопрос <b>{entry.Question}</b> и ответ на него <b>{entry.Answer}</b> были успешно добавлены", parseMode: ParseMode.Html);
+                await args.Reply($"Вопрос <b>{entry.Question}</b> и ответ на него <b>{entry.Answer}</b> были успешно добавлены");
             }
             else
                 await args.Reply("Ошибка синтаксиса! Правильно: /addFAQ \"вопрос\" \"ответ\"");
@@ -233,7 +238,7 @@ namespace PolyChessTGBot.Bot
                     int id = Program.Data.QueryScalar<int>(text + "SELECT CAST(last_insert_rowid() as INT);", link.Title, link.Text, link.Footer, link.FileID == null ? DBNull.Value : link.FileID);
                     link.ID = id;
                     HelpLinks.Add(link);
-                    await args.Reply($"Полезная ссылка была успешно добавлена!", parseMode: ParseMode.Html);
+                    await args.Reply($"Полезная ссылка была успешно добавлена!");
                 }
                 else
                     await args.Reply("К полезной ссылке нужно прикрепить файл! Для этого прикрепите его к сообщеию с командой");

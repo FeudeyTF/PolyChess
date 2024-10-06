@@ -33,9 +33,11 @@ namespace PolyChessTGBot.Bot.Commands
 
         public BotCommand ToTelegramCommand()
         {
-            var result = new BotCommand();
-            result.Command = Name;
-            result.Description = Description;
+            var result = new BotCommand
+            {
+                Command = Name,
+                Description = Description
+            };
             return result;
         }
     }

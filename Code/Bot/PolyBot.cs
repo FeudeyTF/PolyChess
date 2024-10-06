@@ -1,5 +1,7 @@
 ﻿using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Bot.Commands;
+using PolyChessTGBot.Bot.Messages;
+using PolyChessTGBot.Externsions;
 using PolyChessTGBot.Hooks;
 using PolyChessTGBot.Logs;
 using Telegram.Bot;
@@ -124,7 +126,11 @@ namespace PolyChessTGBot.Bot
                                     if ((userIDlong != default || userIDint != default) && questionChannelID != default)
                                     {
                                         var userID = userIDlong == default ? userIDint : userIDlong;
-                                        await Telegram.SendTextMessageAsync(userID, $"❗️Получен **ответ** на ваш вопрос от {user.FirstName} {user.LastName}:\n{message.Text}".RemoveBadSymbols(), replyToMessageId: questionChannelID, cancellationToken: token, parseMode: ParseMode.MarkdownV2);
+                                        var msg = new TelegramMessageBuilder($"❗️Получен **ответ** на ваш вопрос от {user.FirstName} {user.LastName}:\n{message.Text}".RemoveBadSymbols())
+                                            .ReplyTo(questionChannelID)
+                                            .WithParseMode(ParseMode.MarkdownV2)
+                                            .WithToken(token);
+                                        await Telegram.SendMessage(msg, userID);
                                     }
                                 }
                             }
@@ -152,7 +158,7 @@ namespace PolyChessTGBot.Bot
             {
                 Logger.Write(message, LogType.Error);
                 foreach (var debugChatID in Program.MainConfig.DebugChats)
-                    await Telegram.SendTextMessageAsync(debugChatID, message, cancellationToken: token);
+                    await Telegram.SendMessage(new TelegramMessageBuilder(message).WithToken(token), debugChatID);
             }
         }
 
