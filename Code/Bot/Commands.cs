@@ -75,7 +75,7 @@ namespace PolyChessTGBot.Bot
                 ];
                 var data = TelegramButtonData.GetDataString("QuestionDataID", ("ID", args.User.Id), ("ChannelID", args.Message.MessageId));
                 InlineKeyboardMarkup uesrInfo = new(new InlineKeyboardButton("Данные") { CallbackData = data });
-                await args.Bot.SendTextMessageAsync(Program.MainConfig.QuestionChannel, string.Join("\n", message).RemoveBadSymbols(), parseMode: ParseMode.Html, replyMarkup: uesrInfo);
+                await args.Bot.SendTextMessageAsync(Program.MainConfig.QuestionChannel, string.Join("\n", message), parseMode: ParseMode.Html, replyMarkup: uesrInfo);
                 await args.Reply("Ваш вопрос был успешно отправлен!");
             }
             else
