@@ -1,6 +1,7 @@
 ﻿using PolyChessTGBot.Bot.Messages;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PolyChessTGBot.Externsions
 {
@@ -31,8 +32,31 @@ namespace PolyChessTGBot.Externsions
             }
             else
             {
-                await bot.SendTextMessageAsync(chatID, message.Text, message.ThreadID, message.ParseMode, message.Entities, message.DisableWebPagePreview, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+                await bot.SendTextMessageAsync(chatID, message.Text == null ? "" : message.Text, message.ThreadID, message.ParseMode, message.Entities, message.DisableWebPagePreview, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
             }    
+        }
+
+        public async static Task EditMessage(this TelegramBotClient bot, TelegramMessageBuilder message, ChatId chatID, Message oldMessage)
+        {
+            if (message.File != null)
+                message.WithDocument(message.File);
+
+            if (message.Media != null)
+            {
+                await bot.EditMessageMediaAsync(chatID, oldMessage.MessageId, message.Media, message.ReplyMarkup is InlineKeyboardMarkup keyboard ? keyboard : default, message.CancellationToken);
+            }
+            else if (message.Text != null)
+            {
+                InlineKeyboardMarkup? keyboard = message.ReplyMarkup is InlineKeyboardMarkup markup ? markup : default;
+                if (message.Text != oldMessage.Text)
+                {
+                    await bot.EditMessageTextAsync(chatID, oldMessage.MessageId, message.Text, message.ParseMode, message.Entities, message.DisableWebPagePreview, keyboard, message.CancellationToken);
+                }
+                else if(oldMessage.Caption != message.Text)
+                {
+                    await bot.EditMessageCaptionAsync(chatID, oldMessage.MessageId, message.Text, message.ParseMode, message.Entities, keyboard, message.CancellationToken);
+                }
+            }
         }
     }
 }

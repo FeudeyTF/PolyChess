@@ -6,13 +6,13 @@ namespace PolyChessTGBot.Bot.Messages
 {
     public class TelegramMessageBuilder
     {
-        public string Text { get; set; }
+        public string? Text { get; set; }
 
         public int? ThreadID { get; set; }
 
         public ParseMode ParseMode { get; set; }
 
-        public List<MessageEntity>? Entities { get; set; }
+        public MessageEntity[]? Entities { get; set; }
 
         public bool DisableWebPagePreview { get; set; }
 
@@ -39,10 +39,10 @@ namespace PolyChessTGBot.Bot.Messages
         public CancellationToken CancellationToken { get; set; }
 
         public TelegramMessageBuilder(
-            string text,
+            string? text = default,
             int? threadId = default,
             ParseMode parseMode = ParseMode.Html,
-            List<MessageEntity>? entities = default,
+            MessageEntity[]? entities = default,
             bool disableWebPagePreview = default,
             bool disableNotification = default,
             bool protectContent = default,
@@ -270,7 +270,7 @@ namespace PolyChessTGBot.Bot.Messages
         public TelegramMessageBuilder AddEntity(MessageEntity entity)
         {
             Entities ??= [];
-            Entities.Add(entity);
+            Entities.Append(entity);
             return this;
         }
 
@@ -315,5 +315,21 @@ namespace PolyChessTGBot.Bot.Messages
 
         public static implicit operator TelegramMessageBuilder(string text)
             => new(text);
+
+        public static implicit operator TelegramMessageBuilder(Message message)
+        {
+            TelegramMessageBuilder result = new(message.Text)
+            {
+                Entities = message.Entities,
+                ThreadID = message.MessageThreadId
+            };
+            if(message.Video != null)
+            {
+                var video = message.Video;
+                InputFile? thumbnail = video.Thumbnail == null ? null : new InputFileId(video.Thumbnail.FileId);
+                result.WithVideo(video.FileId, default, video.Width, video.Height, video.Duration, thumbnail: thumbnail);
+            }
+            return result;
+        }
     }
 }

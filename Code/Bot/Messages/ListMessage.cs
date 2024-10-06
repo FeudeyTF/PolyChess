@@ -5,6 +5,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace PolyChessTGBot.Bot.Messages
 {
@@ -152,25 +153,20 @@ namespace PolyChessTGBot.Bot.Messages
                 int pages = GetPagesCount(values.Count);
                 if (page > 0 && page < pages)
                 {
-                    string message = Header + "\n";
+                    string text = Header + "\n";
                     int startIndex = page * ValuesPerPage;
                     for (int i = startIndex; i < startIndex + (values.Count - startIndex > ValuesPerPage ? ValuesPerPage : values.Count - startIndex); i++)
-                        message += ConvertValueToString(values[i], i) + "\n";
-                    message += Footer;
-
-                    InlineKeyboardMarkup markup = GenerateKeyBoard(page + 1, GetPagesCount(values.Count)); ;
-                    bool editedMessageWithFile = false;
+                        text += ConvertValueToString(values[i], i) + "\n";
+                    text += Footer;
+                    var message = new TelegramMessageBuilder(text)
+                        .WithMarkup(GenerateKeyBoard(page + 1, GetPagesCount(values.Count)));
                     if(GetDocumentID != null && values.Count > startIndex)
                     {
                         var document = GetDocumentID(values[startIndex]);
                         if (!string.IsNullOrEmpty(document))
-                        {
-                            editedMessageWithFile = true;
-                            await args.Bot.EditMessageMediaAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, new InputMediaDocument(new InputFileId(document)) { Caption = message, ParseMode = ParseMode.Html }, markup);
-                        }
+                            message.WithFile(document);
                     }
-                    if(!editedMessageWithFile)
-                        await args.Bot.EditMessageTextAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, message, replyMarkup: markup, parseMode: ParseMode.Html);
+                    await args.Bot.EditMessage(message, args.Query.Message.Chat.Id, args.Query.Message);
                 }
             }
         }
@@ -184,26 +180,21 @@ namespace PolyChessTGBot.Bot.Messages
                 int pages = GetPagesCount(values.Count);
                 if (page > 1)
                 {
-                    string message = Header + "\n";
+                    string text = Header + "\n";
                     int startIndex = (page - 2) * ValuesPerPage;
                     for (int i = startIndex; i < startIndex + (values.Count - startIndex > ValuesPerPage ? ValuesPerPage : values.Count - startIndex); i++)
-                        message += ConvertValueToString(values[i], i) + "\n";
-                    message += Footer;
-                    bool editedMessageWithFile = false;
-
-                    InlineKeyboardMarkup markup = GenerateKeyBoard(page - 1, GetPagesCount(values.Count));
+                        text += ConvertValueToString(values[i], i) + "\n";
+                    text += Footer;
+                    var message = new TelegramMessageBuilder(text)
+                        .WithMarkup(GenerateKeyBoard(page - 1, GetPagesCount(values.Count)));
 
                     if (GetDocumentID != null && values.Count > startIndex)
                     {
                         var document = GetDocumentID(values[startIndex]);
                         if (!string.IsNullOrEmpty(document))
-                        {
-                            editedMessageWithFile = true;
-                            await args.Bot.EditMessageMediaAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, new InputMediaDocument(new InputFileId(document)) { Caption = message, ParseMode = ParseMode.Html }, replyMarkup: markup);
-                        }
+                            message.WithFile(document);
                     }
-                    if (!editedMessageWithFile)
-                        await args.Bot.EditMessageTextAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId, message, replyMarkup: markup, parseMode: ParseMode.Html);
+                    await args.Bot.EditMessage(message, args.Query.Message.Chat.Id, args.Query.Message);
                 }
             }
         }
