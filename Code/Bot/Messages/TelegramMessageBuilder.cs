@@ -286,9 +286,30 @@ namespace PolyChessTGBot.Bot.Messages
             return this;
         }
 
+        public TelegramMessageBuilder WithKeyboard(InlineKeyboardMarkup keyboard)
+            => WithMarkup(keyboard);
+
         public TelegramMessageBuilder WithMarkup(IReplyMarkup markup)
         {
             ReplyMarkup = markup;
+            return this;
+        }
+
+        public TelegramMessageBuilder AddKeyboard(List<InlineKeyboardButton> keyboard)
+        {
+            if(ReplyMarkup == null)
+                ReplyMarkup = new InlineKeyboardMarkup(keyboard);
+            else if(ReplyMarkup is InlineKeyboardMarkup keyboardMarkup)
+                keyboardMarkup.InlineKeyboard.Append(keyboard);
+            return this;
+        }
+
+        public TelegramMessageBuilder AddButton(InlineKeyboardButton button)
+        {
+            if (ReplyMarkup == null)
+                ReplyMarkup = new InlineKeyboardMarkup(button);
+            else if (ReplyMarkup is InlineKeyboardMarkup keyboardMarkup)
+                keyboardMarkup.InlineKeyboard.Append([button]);
             return this;
         }
 

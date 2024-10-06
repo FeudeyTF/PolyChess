@@ -4,8 +4,6 @@ using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Externsions;
 using Telegram.Bot;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PolyChessTGBot.Bot
@@ -75,11 +73,10 @@ namespace PolyChessTGBot.Bot
                     $"🕑<b>Дата отправки:</b> {args.Message.Date:G}",
                     $"❓<b>Вопрос:</b>\n{question}"
                 ];
-                var data = TelegramButtonData.GetDataString("QuestionDataID", ("ID", args.User.Id), ("ChannelID", args.Message.MessageId));
-                InlineKeyboardMarkup uesrInfo = new(new InlineKeyboardButton("Данные") { CallbackData = data });
+                InlineKeyboardButton button = new("Данные");
+                button.SetData("QuestionDataID", ("ID", args.User.Id), ("ChannelID", args.Message.MessageId));
                 var message = new TelegramMessageBuilder(string.Join("\n", text))
-                    .WithMarkup(uesrInfo);
-
+                    .AddButton(button);
                 await args.Bot.SendMessage(message, Program.MainConfig.QuestionChannel);
                 await args.Reply("Ваш вопрос был успешно отправлен!");
             }
