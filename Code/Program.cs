@@ -8,7 +8,7 @@ namespace PolyChessTGBot
 {
     public static class Program
     {
-        public readonly static Version Version = new(0, 3, 1);
+        public readonly static Version Version = new(0, 3, 1, 1);
 
         public readonly static DateTime Started;
 

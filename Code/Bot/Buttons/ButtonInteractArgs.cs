@@ -2,8 +2,6 @@
 using PolyChessTGBot.Externsions;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PolyChessTGBot.Bot.Buttons
 {
@@ -30,7 +28,7 @@ namespace PolyChessTGBot.Bot.Buttons
         public async Task Reply(TelegramMessageBuilder message)
         {
             if (Query.Message != null)
-                await Bot.SendMessage(message, Query.Message.Chat.Id);
+                await Bot.SendMessage(message.ReplyTo(Query.Message.MessageId), Query.Message.Chat.Id);
         }
     }
 }

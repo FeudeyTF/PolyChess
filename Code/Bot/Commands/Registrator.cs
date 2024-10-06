@@ -74,7 +74,9 @@ namespace PolyChessTGBot.Bot.Commands
                         Program.Logger.Write(e.ToString(), LogType.Error);
                         await args.Reply("Произошла ошибка при выполнении команды! Обратитесь к вашему системному администратору");
                     }
+                    return;
                 }
+            await args.Reply("Команда не была найдена!");
         }
 
         public async Task RegisterCommandsInTelegram()

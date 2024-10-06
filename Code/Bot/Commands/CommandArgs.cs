@@ -27,7 +27,7 @@ namespace PolyChessTGBot.Bot.Commands
 
         public async Task Reply(TelegramMessageBuilder message)
         {
-            await Bot.SendMessage(message, Message.Chat.Id);
+            await Bot.SendMessage(message.ReplyTo(Message.MessageId), Message.Chat.Id);
         }
     }
 }
