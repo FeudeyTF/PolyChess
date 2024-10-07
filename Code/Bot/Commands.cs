@@ -3,6 +3,7 @@ using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Externsions;
+using System.Reflection;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -48,12 +49,15 @@ namespace PolyChessTGBot.Bot
         [Command("version", "Отправляет информацию о боте", true)]
         public async Task Version(CommandArgs args)
         {
+            string exeFilePath = Path.Combine(
+                Environment.CurrentDirectory,
+                Assembly.GetExecutingAssembly().GetName().Name + ".exe");
             List<string> message =
             [
                 "🛠<b>Информация о боте</b>🛠",
                 $"👨🏻‍💻<b>Разработчик:</b> {Program.MainConfig.BotAuthor}",
                 $"🔀<b>Версия бота:</b> v.{Program.Version}",
-                $"🕐<b>Дата последнего обновления:</b> Неизвестно",
+                $"🕐<b>Дата последнего обновления:</b> {File.GetCreationTime(exeFilePath):g}",
                 $"⏱<b>Время работы:</b> {(DateTime.Now - Program.Started).ToString("%d' дн. '%h' ч. '%m' мин. '%s' сек.'")}"
             ];
             await args.Reply(string.Join("\n", message));
