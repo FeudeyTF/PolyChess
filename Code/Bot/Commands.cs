@@ -170,8 +170,13 @@ namespace PolyChessTGBot.Bot
                     var document = args.Message.ReplyToMessage.Video;
                     documentInfo = new(document.FileName, document.FileSize, document.FileId, document.FileUniqueId);
                 }
+                else if (args.Message.ReplyToMessage.Photo != null && args.Message.ReplyToMessage.Photo.Length > 0)
+                {
+                    var photo = args.Message.ReplyToMessage.Photo.First();
+                    documentInfo = new("Noname", photo.FileSize, photo.FileId, photo.FileUniqueId);
+                }
 
-                if(documentInfo.HasValue)
+                if (documentInfo.HasValue)
                 {
                     string message = $"Информация о файле '{documentInfo.Value.FileName}'\n";
                     message += $"Имя: {documentInfo.Value.FileName}\n";
