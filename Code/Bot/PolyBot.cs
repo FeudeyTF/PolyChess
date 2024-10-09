@@ -101,10 +101,10 @@ namespace PolyChessTGBot.Bot
             {
                 var text = message.Text;
                 if (text != null && text.StartsWith('/'))
-                    await CommandRegistrator.ExecuteCommand(text, message, user);
+                    await CommandRegistrator.ExecuteCommand(text, message, user, token);
 
                 if (text == null && message.Caption != null && message.Caption.StartsWith('/'))
-                    await CommandRegistrator.ExecuteCommand(message.Caption, message, user);
+                    await CommandRegistrator.ExecuteCommand(message.Caption, message, user, token);
 
 
                 if (message.Chat.Id == Program.MainConfig.QuestionChannel && message.ReplyToMessage != null && message.ReplyToMessage.ReplyMarkup != null)

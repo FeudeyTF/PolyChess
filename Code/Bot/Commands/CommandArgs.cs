@@ -2,8 +2,6 @@ using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Externsions;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PolyChessTGBot.Bot.Commands
 {
@@ -17,12 +15,15 @@ namespace PolyChessTGBot.Bot.Commands
 
         public List<string> Parameters;
 
-        public CommandArgs(Message message, TelegramBotClient bot, User user, List<string> args)
+        public CancellationToken Token;
+
+        public CommandArgs(Message message, TelegramBotClient bot, User user, List<string> args, CancellationToken token)
         {
             Message = message;
             User = user;
             Parameters = args;
             Bot = bot;
+            Token = token;
         }
 
         public async Task Reply(TelegramMessageBuilder message)

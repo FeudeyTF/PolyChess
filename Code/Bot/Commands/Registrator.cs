@@ -36,7 +36,7 @@ namespace PolyChessTGBot.Bot.Commands
             }
         }
 
-        public async Task ExecuteCommand(string text, Message message, User user)
+        public async Task ExecuteCommand(string text, Message message, User user, CancellationToken token)
         {
             string commandText = text.Remove(0, 1);
 
@@ -52,7 +52,7 @@ namespace PolyChessTGBot.Bot.Commands
             string commandName = index < 0 ? commandText.ToLower() : commandText[..index].ToLower();
             List<string> commandArgs = index < 0 ? []: Utils.ParseParameters(commandText[index..]);
 
-            CommandArgs args = new(message, Program.Bot.Telegram, user, commandArgs);
+            CommandArgs args = new(message, Program.Bot.Telegram, user, commandArgs, token);
             foreach (var command in Commands)
                 if (command.Names.Contains(commandName))
                 {
