@@ -2,10 +2,7 @@
 using PolyChessTGBot.Externsions;
 using PolyChessTGBot.Hooks;
 using Telegram.Bot;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace PolyChessTGBot.Bot.Messages
 {
