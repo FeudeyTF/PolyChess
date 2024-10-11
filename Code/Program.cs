@@ -1,5 +1,6 @@
 ﻿using PolyChessTGBot.Bot;
 using PolyChessTGBot.Database;
+using PolyChessTGBot.Lichess;
 using PolyChessTGBot.Logs;
 using PolyChessTGBot.Logs.Types;
 using PolyChessTGBot.Sockets;
@@ -8,7 +9,7 @@ namespace PolyChessTGBot
 {
     public static class Program
     {
-        public readonly static Version Version = new(0, 3, 1, 7);
+        public readonly static Version Version = new(0, 3, 2, 0);
 
         public readonly static DateTime Started;
 
@@ -22,6 +23,8 @@ namespace PolyChessTGBot
 
         internal static readonly SocketServer? Socket;
 
+        internal static LichessApiClient Lichess;
+
         static Program()
         {
             Started = DateTime.Now;
@@ -31,8 +34,9 @@ namespace PolyChessTGBot
             Data.LoadTables();
             Logger.Write($"База данных '{Data.DatabaseName}' подключена!", LogType.Info);
             Bot = new(Logger);
+            Lichess = new();
             if (MainConfig.Socket.StartSocketServer)
-                Socket = new(MainConfig.Socket.Port, Logger);
+                Socket = new(MainConfig.Socket.Port, Logger); 
         }
 
         public async static Task Main(string[] args)
