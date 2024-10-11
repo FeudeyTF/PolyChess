@@ -22,6 +22,7 @@ namespace PolyChessTGBot.Database
             Query("CREATE TABLE IF NOT EXISTS Users (" +
                   "TelegramID      INTEGER PRIMARY KEY, " +
                   "Name            TEXT, " +
+                  "LichessName     TEXT, " +
                   "Year            INTEGER" +
                   ")");
             Query("CREATE TABLE IF NOT EXISTS Attendance (" +

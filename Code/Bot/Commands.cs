@@ -271,6 +271,55 @@ namespace PolyChessTGBot.Bot
             await args.Reply($"Пользователи: {string.Join("\n", users)}");
         }
 
+        [Command("userinfo", "Покажет пользователя", admin: true)]
+        public async Task GetUserInfo(CommandArgs args)
+        {
+            if (args.Parameters.Count > 0)
+            {
+                string name = string.Join(" ", args.Parameters);
+                using var reader = Program.Data.SelectQuery($"SELECT * FROM Users WHERE Name='{name}'");
+                if (reader.Read())
+                {
+                    var lichessUser = await Program.Lichess.GetUserInfo(reader.Get("LichessName"));
+                    if (lichessUser != null)
+                    {
+                        List<string> text = [
+                            $"Информация об ученике <b>{name}</b>",
+                            $"<b>Имя аккаунта на Lichess:</b> {lichessUser.Username}",
+                            $"<b>Дата регистрации:</b> {lichessUser.RegisterDate:g}",
+                            $"<b>Последний вход:</b> {lichessUser.LastSeenDate:g}",
+                            $"<i><b>Рейтинги</b></i>",
+                        ];
+                        foreach (var perfomance in lichessUser.Perfomance)
+                            text.Add($" - <b>{perfomance.Key.Beautify()}</b>, Сыграно: {perfomance.Value.Games}, Рейтинг: {perfomance.Value.Rating}");
+                        TelegramMessageBuilder message = new(string.Join("\n", text));
+                      
+                        InlineKeyboardButton lastGame = new("🎮Посмотреть последнюю игру");
+                        lastGame.SetData("test");
+                        InlineKeyboardButton lastPuzzle = new("🧩Посмотреть последнюю задачу");
+                        lastPuzzle.SetData("test");
+                        InlineKeyboardButton accountLinkButton =
+                          new("♟Lichess профиль")
+                          {
+                              Url = lichessUser.URL
+                          };
+
+                        message.AddButton(lastGame);
+                        message.AddButton(lastPuzzle);
+                        message.AddButton(accountLinkButton);
+
+                        await args.Reply(message);
+                    }
+                    else
+                        await args.Reply("Аккаунт Lichess не найден!");
+                }
+                else
+                    await args.Reply("Ученик не найден!");
+            }
+            else
+                await args.Reply("Неправильный синтаксис! Правильно: /userinfo \"ник\"");
+        }
+
         private struct User(long telegramID, string name, long year)
         {
             public long TelegramID = telegramID;

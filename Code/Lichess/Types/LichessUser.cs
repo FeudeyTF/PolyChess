@@ -17,7 +17,7 @@ namespace PolyChessTGBot.Lichess.Types
 
         [JsonProperty("createdAt")]
         [JsonConverter(typeof(LichessDateTimeConverter))]
-        public DateTime CreatedDate;
+        public DateTime RegisterDate;
 
         [JsonProperty("seenAt")]
         [JsonConverter(typeof(LichessDateTimeConverter))]

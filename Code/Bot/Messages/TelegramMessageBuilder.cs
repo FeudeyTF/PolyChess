@@ -309,7 +309,7 @@ namespace PolyChessTGBot.Bot.Messages
             if (ReplyMarkup == null)
                 ReplyMarkup = new InlineKeyboardMarkup(button);
             else if (ReplyMarkup is InlineKeyboardMarkup keyboardMarkup)
-                keyboardMarkup.InlineKeyboard.Append([button]);
+                ReplyMarkup = new InlineKeyboardMarkup(keyboardMarkup.InlineKeyboard.Append([button]));
             return this;
         }
 

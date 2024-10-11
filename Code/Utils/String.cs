@@ -9,6 +9,9 @@ namespace PolyChessTGBot
                    .Replace("!", @"\!")
                    .Replace("-", @"\-");
 
+        public static string Beautify(this string str) =>
+            str[0].ToString().ToUpper() + str[1..];
+
         public static List<string> ParseParameters(string message)
         {
             List<string> result = [];
