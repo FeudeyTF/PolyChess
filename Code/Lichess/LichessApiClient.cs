@@ -14,9 +14,22 @@ namespace PolyChessTGBot.Lichess
             HttpClient = new();
         }
 
-        public async Task<LichessUser?> GetUserInfo(string username)
+        public async Task<LichessUser?> GetUserAsync(string username)
         {
             return JsonConvert.DeserializeObject<LichessUser>(await SendRequestAsync("user", username));
+        }
+
+        public async Task<List<Team>> GetUserTeamsAsync(string username)
+        {
+            var teams = JsonConvert.DeserializeObject<List<Team>>(await SendRequestAsync("team", "of", username));
+            if (teams == null)
+                return [];
+            return teams;
+        }
+
+        public async Task<Team?> GetTeamAsync(string id)
+        {
+            return JsonConvert.DeserializeObject<Team>(await SendRequestAsync("team", id));
         }
 
         public async Task<string> SendRequestAsync(params string[] path)

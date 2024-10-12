@@ -1,4 +1,5 @@
-﻿using PolyChessTGBot.Bot.Messages;
+﻿using Newtonsoft.Json;
+using PolyChessTGBot.Bot.Messages;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -32,7 +33,7 @@ namespace PolyChessTGBot.Externsions
             }
             else
             {
-                await bot.SendTextMessageAsync(chatID, message.Text == null ? "" : message.Text, message.ThreadID, message.ParseMode, message.Entities, message.DisableWebPagePreview, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+                await bot.SendTextMessageAsync(chatID, message.Text ?? "", message.ThreadID, message.ParseMode, message.Entities, message.DisableWebPagePreview, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
             }    
         }
 

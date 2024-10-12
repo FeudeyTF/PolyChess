@@ -1,4 +1,5 @@
-﻿using PolyChessTGBot.Bot;
+﻿using Newtonsoft.Json;
+using PolyChessTGBot.Bot;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Lichess;
 using PolyChessTGBot.Logs;
@@ -47,7 +48,6 @@ namespace PolyChessTGBot
                 Console.ReadLine();
                 Environment.Exit(0);
             }
-
             await Bot.LoadBot();
 
             Socket?.StartListening();
