@@ -16,12 +16,12 @@ namespace PolyChessTGBot.Lichess
 
         public async Task<LichessUser?> GetUserAsync(string username)
         {
-            return JsonConvert.DeserializeObject<LichessUser>(await SendRequestAsync("user", username));
+            return await ResolveJSONObject<LichessUser>("user", username);
         }
 
         public async Task<List<Team>> GetUserTeamsAsync(string username)
         {
-            var teams = JsonConvert.DeserializeObject<List<Team>>(await SendRequestAsync("team", "of", username));
+            var teams = await ResolveJSONObject<List<Team>>("team", "of", username);
             if (teams == null)
                 return [];
             return teams;
@@ -29,7 +29,17 @@ namespace PolyChessTGBot.Lichess
 
         public async Task<Team?> GetTeamAsync(string id)
         {
-            return JsonConvert.DeserializeObject<Team>(await SendRequestAsync("team", id));
+            return await ResolveJSONObject<Team>("team", id);
+        }
+
+        public async Task<List<RatingHistoryEntry>?> GetRatingHistory(string name)
+        {
+            return await ResolveJSONObject<List<RatingHistoryEntry>>("user", name, "rating-history");
+        }
+
+        public async Task<TValue?> ResolveJSONObject<TValue>(params string[] path)
+        {
+            return JsonConvert.DeserializeObject<TValue>(await SendRequestAsync(path));
         }
 
         public async Task<string> SendRequestAsync(params string[] path)
