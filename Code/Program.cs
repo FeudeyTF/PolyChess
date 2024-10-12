@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using PolyChessTGBot.Bot;
+﻿using PolyChessTGBot.Bot;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Lichess;
 using PolyChessTGBot.Logs;
@@ -10,9 +9,9 @@ namespace PolyChessTGBot
 {
     public static class Program
     {
-        public readonly static Version Version = new(0, 3, 2, 3);
+        public static readonly Version Version = new(0, 3, 2, 3);
 
-        public readonly static DateTime Started;
+        public static readonly DateTime Started;
 
         public static ConfigFile MainConfig { get; private set; }
 
@@ -40,7 +39,7 @@ namespace PolyChessTGBot
                 Socket = new(MainConfig.Socket.Port, Logger); 
         }
 
-        public async static Task Main(string[] args)
+        public static async Task Main(string[] args)
         {
             if (string.IsNullOrEmpty(MainConfig.BotToken))
             {

@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using PolyChessTGBot.Bot.Messages;
+﻿using PolyChessTGBot.Bot.Messages;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -8,7 +7,7 @@ namespace PolyChessTGBot.Externsions
 {
     public static partial class Extensions
     {
-        public async static Task SendMessage(this TelegramBotClient bot, TelegramMessageBuilder message, ChatId chatID)
+        public static async Task SendMessage(this TelegramBotClient bot, TelegramMessageBuilder message, ChatId chatID)
         {
             if (message.File != null)
             {
@@ -37,7 +36,7 @@ namespace PolyChessTGBot.Externsions
             }    
         }
 
-        public async static Task EditMessage(this TelegramBotClient bot, TelegramMessageBuilder message, ChatId chatID, Message oldMessage)
+        public static async Task EditMessage(this TelegramBotClient bot, TelegramMessageBuilder message, ChatId chatID, Message oldMessage)
         {
             if (message.File != null)
                 message.WithDocument(message.File);

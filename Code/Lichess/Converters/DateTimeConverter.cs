@@ -4,7 +4,7 @@ namespace PolyChessTGBot.Lichess.Converters
 {
     public class LichessDateTimeConverter : JsonConverter<DateTime>
     {
-        private readonly static DateTime UnixStart
+        private static readonly DateTime UnixStart
             = new DateTime(1970, 1, 1) + TimeZoneInfo.Local.BaseUtcOffset;
 
         public override void WriteJson(JsonWriter writer, DateTime value, JsonSerializer serializer)

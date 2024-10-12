@@ -5,10 +5,7 @@ using PolyChessTGBot.Database;
 using PolyChessTGBot.Externsions;
 using PolyChessTGBot.Lichess.Types;
 using System.Reflection;
-using System.Reflection.PortableExecutable;
-using System.Xml.Linq;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using File = System.IO.File;
 

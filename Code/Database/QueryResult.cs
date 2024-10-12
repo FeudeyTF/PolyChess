@@ -13,7 +13,7 @@ namespace PolyChessTGBot.Database
             },
             {
                 typeof (bool?),
-                (s, i) => s.IsDBNull(i) ? null : (object)s.GetBoolean(i)
+                (s, i) => s.IsDBNull(i) ? null : s.GetBoolean(i)
             },
             {
                 typeof (byte),
@@ -21,7 +21,7 @@ namespace PolyChessTGBot.Database
             },
             {
                 typeof (byte?),
-                (s, i) => s.IsDBNull(i) ? null : (object)s.GetByte(i)
+                (s, i) => s.IsDBNull(i) ? null : s.GetByte(i)
             },
             {
                 typeof (Int16),
@@ -29,7 +29,7 @@ namespace PolyChessTGBot.Database
             },
             {
                 typeof (Int16?),
-                (s, i) => s.IsDBNull(i) ? null : (object)s.GetInt16(i)
+                (s, i) => s.IsDBNull(i) ? null : s.GetInt16(i)
             },
             {
                 typeof (Int32),
@@ -37,7 +37,7 @@ namespace PolyChessTGBot.Database
             },
             {
                 typeof (Int32?),
-                (s, i) => s.IsDBNull(i) ? null : (object)s.GetInt32(i)
+                (s, i) => s.IsDBNull(i) ? null : s.GetInt32(i)
             },
             {
                 typeof (Int64),
@@ -45,7 +45,7 @@ namespace PolyChessTGBot.Database
             },
             {
                 typeof (Int64?),
-                (s, i) => s.IsDBNull(i) ? null : (object)s.GetInt64(i)
+                (s, i) => s.IsDBNull(i) ? null : s.GetInt64(i)
             },
             {
                 typeof (string),
@@ -57,7 +57,7 @@ namespace PolyChessTGBot.Database
             },
             {
                 typeof (decimal?),
-                (s, i) => s.IsDBNull(i) ? null : (object)s.GetDecimal(i)
+                (s, i) => s.IsDBNull(i) ? null : s.GetDecimal(i)
             },
             {
                 typeof (float),
@@ -65,7 +65,7 @@ namespace PolyChessTGBot.Database
             },
             {
                 typeof (float?),
-                (s, i) => s.IsDBNull(i) ? null : (object)s.GetFloat(i)
+                (s, i) => s.IsDBNull(i) ? null : s.GetFloat(i)
             },
             {
                 typeof (double),
@@ -73,11 +73,11 @@ namespace PolyChessTGBot.Database
             },
             {
                 typeof (double?),
-                (s, i) => s.IsDBNull(i) ? null : (object)s.GetDouble(i)
+                (s, i) => s.IsDBNull(i) ? null : s.GetDouble(i)
             },
             {
                 typeof (DateTime),
-                (s, i) => s.IsDBNull(i) ? null : (object)s.GetDateTime(i)
+                (s, i) => s.IsDBNull(i) ? null : s.GetDateTime(i)
             },
             {
                 typeof (object),
