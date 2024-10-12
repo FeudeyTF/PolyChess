@@ -302,45 +302,6 @@ namespace PolyChessTGBot.Bot
                 await args.Reply("Неправильный синтаксис! Правильно: /userinfo \"ник\"");
         }
 
-        private async Task<TelegramMessageBuilder> GenerateUserInfo(LichessUser user)
-        {
-            TelegramMessageBuilder message = new();
-            var teams = await Program.Lichess.GetUserTeamsAsync(user.Username);
-            List<string> text = [
-                        $"<b>Имя аккаунта на Lichess:</b> {user.Username}",
-                        $"<b>Дата регистрации:</b> {user.RegisterDate:g}",
-                        $"<b>Последний вход:</b> {user.LastSeenDate:g}",
-                        $"<b>Команды:</b> {user.LastSeenDate:g}",
-                        "<i><b>Команды</b></i>",
-                        ];
-
-            if (teams.Count > 0)
-            {
-                foreach (var team in teams)
-                {
-                    text.Add($" - <b>{team.Name} ({team.MembersCount} участников)</b>");
-                    InlineKeyboardButton teamInfo = new($"👥{team.Name}");
-                    teamInfo.SetData("TeamInfo", ("ID", team.ID));
-                    message.AddButton(teamInfo);
-                }
-            }
-            else
-                text.Add(" - Отсутствуют");
-            text.Add("<i><b>Рейтинги</b></i>");
-            foreach (var perfomance in user.Perfomance)
-                text.Add($" - <b>{perfomance.Key.Beautify()}</b>, Сыграно: {perfomance.Value.Games}, Рейтинг: {perfomance.Value.Rating}");
-
-            message.WithText(string.Join("\n", text));
-
-            InlineKeyboardButton accountLinkButton =
-              new("♟Lichess профиль")
-              {
-                  Url = user.URL
-              };
-            message.AddButton(accountLinkButton);
-            return message;
-        }
-
         [Button("TeamInfo")]
         internal async Task SendTeamInfo(ButtonInteractArgs args)
         {
@@ -350,13 +311,14 @@ namespace PolyChessTGBot.Bot
                 var team = await Program.Lichess.GetTeamAsync(teamID);
                 if (team != null)
                 {
-                    List<string> text = [
-                        $"Информация о команде <b>{team.Name}</b>",
-                        "<b>Описание:</b>",
-                        team.Description,
-                        $"<b>Тип:</b> {(team.Open ? "Открытая" : "Закрытая")}",
-                        $"<b>Лидер:</b> {team.Leader.Name}",
-                        "<i><b>Остальные лидеры</b></i>",
+                    List<string> text = 
+                        [
+                            $"Информация о команде <b>{team.Name}</b>",
+                            "<b>Описание:</b>",
+                            team.Description,
+                            $"<b>Тип:</b> {(team.Open ? "Открытая" : "Закрытая")}",
+                            $"<b>Лидер:</b> {team.Leader.Name}",
+                            "<i><b>Остальные лидеры</b></i>",
                         ];
                     if (team.Leaders.Count > 0)
                     {
@@ -366,8 +328,9 @@ namespace PolyChessTGBot.Bot
                     else
                         text.Add(" - Отсутствуют");
 
-                    TelegramMessageBuilder message = new(string.Join("\n", text));
-                    InlineKeyboardButton leaderInfo = new($"Информация о лидере {team.Leader.Name}");
+                    TelegramMessageBuilder message = string.Join("\n", text);
+                    message.WithoutWebPagePreview();
+                    InlineKeyboardButton leaderInfo = new($"🔍Информация о лидере {team.Leader.Name}");
                     leaderInfo.SetData("UserInfo", ("Name", team.Leader.Name));
                     message.AddButton(leaderInfo);
 
@@ -384,17 +347,55 @@ namespace PolyChessTGBot.Bot
         internal async Task SendUserInfo(ButtonInteractArgs args)
         {
             var name = args.Get<string>("Name");
-            if (string.IsNullOrEmpty(name))
+            if (!string.IsNullOrEmpty(name))
             {
-                await args.Reply("Аккаунт Lichess не найден!");
-                return;
+                var lichessUser = await Program.Lichess.GetUserAsync(name);
+                if (lichessUser != null)
+                    await args.Reply(await GenerateUserInfo(lichessUser));
+                else
+                    await args.Reply("Аккаунт Lichess не найден!");
             }
-            var lichessUser = await Program.Lichess.GetUserAsync(name);
-
-            if (lichessUser != null)
-                await args.Reply(await GenerateUserInfo(lichessUser));
             else
                 await args.Reply("Аккаунт Lichess не найден!");
+        }
+
+        private async Task<TelegramMessageBuilder> GenerateUserInfo(LichessUser user)
+        {
+            var teams = await Program.Lichess.GetUserTeamsAsync(user.Username);
+            TelegramMessageBuilder message = new();
+            List<string> text = 
+                [
+                    $"<b>Имя аккаунта на Lichess:</b> {user.Username}",
+                    $"<b>Дата регистрации:</b> {user.RegisterDate:g}",
+                    $"<b>Последний вход:</b> {user.LastSeenDate:g}",
+                    $"<b>Команды:</b> {user.LastSeenDate:g}",
+                    "<i><b>Команды</b></i>",
+                ];
+
+            if (teams.Count > 0)
+            {
+                foreach (var team in teams)
+                {
+                    text.Add($" - <b>{team.Name} ({team.MembersCount} участников)</b>");
+                    InlineKeyboardButton teamInfo = new($"👥{team.Name}");
+                    teamInfo.SetData("TeamInfo", ("ID", team.ID));
+                    message.AddButton(teamInfo);
+                }
+            }
+            else
+                text.Add(" - Отсутствуют");
+            text.Add("<i><b>Рейтинги</b></i>");
+            foreach (var perfomance in user.Perfomance)
+                text.Add($" - <b>{perfomance.Key.Beautify()}</b>, Сыграно: {perfomance.Value.Games}, Рейтинг: {perfomance.Value.Rating}");
+            message.WithText(string.Join("\n", text));
+            InlineKeyboardButton accountLinkButton =
+              new("♟Lichess профиль")
+              {
+                  Url = user.URL
+              };
+            message.AddButton(accountLinkButton);
+            message.WithoutWebPagePreview();
+            return message;
         }
 
         private struct User(long telegramID, string name, long year)
