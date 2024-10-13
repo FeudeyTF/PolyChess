@@ -32,5 +32,14 @@ namespace PolyChessTGBot.Lichess.Types
         public bool Blocking;
 
         public bool FollowsYou;
+
+        public async Task<Status?> GetStatus(LichessApiClient client)
+        {
+            var statuses = await client.GetPlayersStatus(Username);
+            if (statuses != null && statuses.Count > 0)
+                return statuses.First();
+            else
+                return null;
+        }
     }
 }

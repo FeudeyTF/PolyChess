@@ -3,7 +3,7 @@ using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Externsions;
-using PolyChessTGBot.Lichess.Types;
+using PolyChessTGBot.Lichess.Types.Users;
 using System.Reflection;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;

@@ -9,7 +9,7 @@ namespace PolyChessTGBot.Lichess.Types
         public int Rating;
 
         [JsonProperty("rd")]
-        public int Rd;
+        public int RatingsDeviation;
 
         [JsonProperty("prog")]
         public int Prog;
