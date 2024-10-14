@@ -356,7 +356,7 @@ namespace PolyChessTGBot.Bot
                 await args.Reply("Аккаунт Lichess не найден!");
         }
 
-        private async Task<TelegramMessageBuilder> GenerateUserInfo(LichessUser user)
+        private async Task<TelegramMessageBuilder> GenerateUserInfo(Lichess.Types.User user)
         {
             var teams = await Program.Lichess.GetUserTeamsAsync(user.Username);
             TelegramMessageBuilder message = new();

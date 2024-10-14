@@ -1,4 +1,4 @@
-﻿namespace PolyChessTGBot.Lichess.Types
+﻿namespace PolyChessTGBot.Lichess.Types.Streams
 {
     public class StreamInfo
     {

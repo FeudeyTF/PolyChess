@@ -1,12 +1,13 @@
-﻿using PolyChessTGBot.Lichess.Types;
+﻿using PolyChessTGBot.Lichess.Types.Streams;
+using PolyChessTGBot.Lichess.Types;
 
 namespace PolyChessTGBot.Lichess
 {
     public partial class LichessApiClient
     {
-        public async Task<LichessUser?> GetUserAsync(string username)
+        public async Task<User?> GetUserAsync(string username)
         {
-            return await GetJsonObject<LichessUser>("user", username);
+            return await GetJsonObject<User>("user", username);
         }
 
         public async Task<List<RatingHistoryEntry>?> GetRatingHistory(string name)

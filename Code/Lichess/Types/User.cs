@@ -3,7 +3,7 @@ using PolyChessTGBot.Lichess.Converters;
 
 namespace PolyChessTGBot.Lichess.Types
 {
-    public class LichessUser
+    public class User
     {
         public string ID = string.Empty;
 

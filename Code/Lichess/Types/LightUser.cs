@@ -8,7 +8,7 @@
 
         public string Flair = string.Empty;
 
-        public async Task<LichessUser?> GetFullUser(LichessApiClient client)
+        public async Task<User?> GetFullUser(LichessApiClient client)
             => await client.GetUserAsync(Name);
     }
 }
