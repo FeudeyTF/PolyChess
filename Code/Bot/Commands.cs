@@ -3,9 +3,11 @@ using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Externsions;
-using PolyChessTGBot.Lichess.Types;
+using PolyChessTGBot.Lichess.Types.Arena;
 using System.Reflection;
+using System.Text;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using File = System.IO.File;
 
@@ -13,6 +15,8 @@ namespace PolyChessTGBot.Bot
 {
     public class BotCommands
     {
+        public static readonly string TempPath;
+
         internal readonly ListMessage<FAQEntry> FAQMessage;
 
         internal readonly ListMessage<HelpLink> HelpMessage;
@@ -24,6 +28,17 @@ namespace PolyChessTGBot.Bot
         private readonly List<FAQEntry> FAQEntries;
 
         private readonly List<HelpLink> HelpLinks;
+
+        private Tuple<int, int> DivisionC = new(0, 1300);
+
+        private Tuple<int, int> DivisionB = new(1301, 1800);
+
+        private Tuple<int, int> DivisionA = new(1801, 2100);
+
+        static BotCommands()
+        {
+            TempPath = Path.Combine(Environment.CurrentDirectory, "Temp");
+        }
 
         public BotCommands()
         {
@@ -95,6 +110,7 @@ namespace PolyChessTGBot.Bot
         {
             await HelpMessage.Send(args.Bot, args.Message.Chat.Id);
         }
+
         [Command("savearena", "Выдаёт список с полезными материалами", admin: true)]
         private async Task SaveArena(CommandArgs args)
         {
@@ -117,6 +133,138 @@ namespace PolyChessTGBot.Bot
             }
             else
                 await args.Reply("Неправильный синтаксис! Правильно: /savearena \"ID турнира\"");
+        }
+
+        [Command("arenaresult", "Генерирует таблицу с результатами участников", admin: true)]
+        private async Task GenerateTournamentTable(CommandArgs args)
+        {
+            if (args.Parameters.Count > 0)
+            {
+                var tournamentId = args.Parameters[0];
+                var tournament = await Program.Lichess.GetTournament(tournamentId);
+
+                var directory = Path.Combine(Environment.CurrentDirectory, "Tournaments");
+                if (!Directory.Exists(directory))
+                    Directory.CreateDirectory(directory);
+                var filePath = Path.Combine(directory, tournamentId + ".txt");
+                if (File.Exists(filePath))
+                {
+                    var tournamentSheet = await Program.Lichess.GetTournamentSheet(File.OpenText(filePath));
+                    if (args.Parameters.Count > 1)
+                    {
+                        var stringsToExclude= args.Parameters[1..].Select(p => p.Split(','));
+                        List<string> exclude = [];
+                        foreach (var str in stringsToExclude)
+                            foreach (var str2 in str)
+                                if(!string.IsNullOrEmpty(str2.Trim()))
+                                    exclude.Add(str2.Trim());
+                        tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username))).ToList();
+                    }
+                    if (tournament != null && tournamentSheet != null)
+                    {
+                        List<string> csv = ["Имя;Ник Lichess;Балл"];
+                        List<string> text = [
+                            $"Турнир <b>{tournament.FullName}</b>. Состоялся <b>{tournament.Started:g}</b>",
+                            $"Информация об участнии в турнире"
+                        ];
+                        using var reader = Program.Data.SelectQuery($"SELECT * FROM Users");
+                        Dictionary<string, User?> users = [];
+                        while (reader.Read())
+                            if (!string.IsNullOrEmpty(reader.Get("LichessName")))
+                                users.Add(reader.Get("LichessName"), new(reader.Get<long>("TelegramID"), reader.Get("Name"), reader.Get("LichessName"), reader.Get<int>("Year")));
+
+                        Dictionary<int, List<SheetEntry>> playersInDivision = new()
+                        {
+                            { 1, [] }, // Division A
+                            { 2, [] }, // Division B
+                            { 3, [] }  // Division C
+                        };
+
+                        foreach (var entry in tournamentSheet)
+                        {
+                            if(entry.Rating >= DivisionC.Item1 && entry.Rating <= DivisionC.Item2)
+                            {
+                                if(playersInDivision[3].Count < 3)
+                                    playersInDivision[3].Add(entry);
+                            }
+                            else if (entry.Rating >= DivisionB.Item1 && entry.Rating <= DivisionB.Item2)
+                            {
+                                if (playersInDivision[2].Count < 3)
+                                    playersInDivision[2].Add(entry);
+                            }
+                            else if (entry.Rating >= DivisionA.Item1 && entry.Rating <= DivisionA.Item2)
+                            {
+                                if (playersInDivision[1].Count < 3)
+                                    playersInDivision[1].Add(entry);
+                            }
+                        }
+
+                        for(int i = 1; i < 4; i++)
+                        {
+                            char divisionLetter = i == 1 ? 'A' : i == 2 ? 'B' : 'C';
+                            text.Add($"Игроки дивизиона <b>{divisionLetter}</b>:");
+                            foreach(var entry in playersInDivision[i])
+                                text.Add($"<b> - {entry.Rank}) {entry.Username}</b>. Рейтинг: {entry.Rating}");
+                        }
+                        text.Add("");
+                        text.Add("<b>Остальной рейтинг и баллы за турнир:</b>");
+                        text.Add("");
+                        foreach (var entry in tournamentSheet)
+                        {
+                            bool inDivision = false;
+                            for(int i = 1; i < 4; i++)
+                                if (playersInDivision[i].Contains(entry))
+                                {
+                                    inDivision = true;
+                                    break;
+                                }
+                            if(entry.Sheet != null)
+                            {
+                                int totalScore = -1;
+                                int zeroNumbers = entry.Sheet.Scores.Count(c => c == '0');
+                                int twoNumbers = entry.Sheet.Scores.Count(c => c == '2');
+                                int fourNumbers = entry.Sheet.Scores.Count(c => c == '4');
+                                int total = zeroNumbers + twoNumbers + fourNumbers;
+                                string studentName = "Имя студента не найдено";
+                                if (users.TryGetValue(entry.Username, out User? student) && student.HasValue)
+                                    studentName = student.Value.Name;
+
+                                if (inDivision)
+                                    totalScore = 1;
+                                else if (total >= 7 && twoNumbers >= 1)
+                                    totalScore = 0;
+                                
+                                if(totalScore != -1)
+                                    csv.Add($"{studentName};{entry.Username};{totalScore}");
+                                text.Add($"<b>{entry.Rank}) {entry.Username}</b>, {studentName}. Балл: {(totalScore == -1 ? "-" : totalScore)}");
+                            }
+                        }
+
+                        TelegramMessageBuilder message = "Файл с таблицей результатов";
+                        if (!Directory.Exists(TempPath))
+                            Directory.CreateDirectory(TempPath);
+                        var csvFilePath = Path.Combine(TempPath, tournament.ID + "result.csv");
+                        if (File.Exists(csvFilePath))
+                            File.Delete(csvFilePath);
+                        using (var streamWriter = new StreamWriter(File.Create(csvFilePath), Encoding.UTF8))
+                        {
+                            foreach (var entry in csv)
+                                streamWriter.WriteLine(entry);
+                            streamWriter.Close();
+                        }
+                        using var stream = File.Open(csvFilePath, FileMode.Open);
+                        message.WithFile(stream, "Table.csv");
+                        await args.Reply(string.Join('\n', text));
+                        await args.Reply(message);
+                    }
+                    else
+                        await args.Reply("Турнир не был найден!");
+                }
+                else
+                    await args.Reply("Турнир не сохранён с помощью команды /savearena!");
+            }
+            else
+                await args.Reply("Неправильный синтаксис! Правильно: /arenaresult \"ID турнира\"");
         }
 
         [Command("getplayerscore", "Помогает узнать, прошёл ли человек турнир", admin: true)]
@@ -360,7 +508,6 @@ namespace PolyChessTGBot.Bot
             }
             else
                 await args.Reply("Ошибка синтаксиса! Правильно: /addhelp \"название\" \"текст\". Чтобы добавить файл - прикрепите его к сообщению с командой");
-
         }
 
         [Command("cstats", "Покажет характеристики канала", admin: true)]
@@ -375,7 +522,7 @@ namespace PolyChessTGBot.Bot
             List<User> users = [];
             using var reader = Program.Data.SelectQuery("SELECT * FROM Users");
             while (reader.Read())
-                users.Add(new(reader.Get<int>("TelegramID"), reader.Get("Name"), reader.Get<int>("Year")));
+                users.Add(new(reader.Get<long>("TelegramID"), reader.Get("Name"), reader.Get("LichessName"), reader.Get<int>("Year")));
             await args.Reply($"Пользователи: {string.Join("\n", users)}");
         }
 
@@ -502,17 +649,19 @@ namespace PolyChessTGBot.Bot
             return message;
         }
 
-        private struct User(long telegramID, string name, long year)
+        private struct User(long telegramID, string name, string lichessName, long year)
         {
             public long TelegramID = telegramID;
 
             public string Name = name;
 
+            public string LichessName = lichessName;
+
             public long Year = year;
 
             public override readonly string ToString()
             {
-                return $"{Name} ({TelegramID}), Курс - {Year}";
+                return $"{Name} '{LichessName}' ({TelegramID}), Курс - {Year}";
             }
         }
     }
