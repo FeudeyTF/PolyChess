@@ -13,5 +13,7 @@
         public string Username = string.Empty;
 
         public int Performance;
+
+        public bool Absent;
     }
 }

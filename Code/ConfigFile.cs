@@ -16,6 +16,8 @@ namespace PolyChessTGBot
 
         public List<int> DebugChats = [];
 
+        public List<string> TopPlayers = [];
+
         public bool ShowApiResponseLogs = false;
 
         public SocketSettings Socket = new();

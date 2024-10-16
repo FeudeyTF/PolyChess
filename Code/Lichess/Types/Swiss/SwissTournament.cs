@@ -26,7 +26,7 @@ namespace PolyChessTGBot.Lichess.Types.Swiss
         public int Round;
 
         [JsonProperty("startsAt")]
-        public DateTime startsAt;
+        public DateTime Started;
 
         public SwissStats Stats = new();
 

@@ -17,12 +17,15 @@ namespace PolyChessTGBot.Lichess
         public async Task<SwissTournament?> GetSwissTournament(string id)
             => await GetJsonObject<SwissTournament>("swiss", id);
 
-        public async Task<List<SwissSheetEntry>?> GetSwissTournamentSheet(string id, int number = -1)
+        public async Task<List<SwissSheetEntry>> GetSwissTournamentSheet(StreamReader reader)
+            => await GetNDJsonObject<SwissSheetEntry>(reader);
+
+        public async Task<List<SwissSheetEntry>> GetSwissTournamentSheet(string id, int number = -1)
             => number == -1 ?
                 await GetNDJsonObject<SwissSheetEntry>("swiss", id, "results") :
                 await GetNDJsonObject<SwissSheetEntry>("swiss", id, "results?nb=" + number);
 
-        public async Task SaveTournamentSheet(string id, string path, bool full = false)
+        public async Task SaveTournamentSheet(string path, string id, bool full = false)
         {
             var stream = await GetFileAsync("tournament", id, "results?sheet=" + full);
             using (var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write))
