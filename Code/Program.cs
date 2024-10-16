@@ -4,6 +4,7 @@ using PolyChessTGBot.Lichess;
 using PolyChessTGBot.Logs;
 using PolyChessTGBot.Logs.Types;
 using PolyChessTGBot.Sockets;
+using System.Reflection;
 
 namespace PolyChessTGBot
 {
@@ -30,6 +31,10 @@ namespace PolyChessTGBot
             Started = DateTime.Now;
             MainConfig = ConfigFile.Load("Main");
             Logger = new(DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".log", MainConfig.LogsFolder);
+            string exeFilePath = Path.Combine(
+                Environment.CurrentDirectory,
+                Assembly.GetExecutingAssembly().GetName().Name + ".exe");
+            Logger.Write($"Программа версии {Version} от {File.GetLastAccessTime(exeFilePath):g}", LogType.Info);
             Data = new(MainConfig.DatabasePath);
             Data.LoadTables();
             Logger.Write($"База данных '{Data.DatabaseName}' подключена!", LogType.Info);
