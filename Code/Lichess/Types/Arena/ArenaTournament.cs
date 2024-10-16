@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using PolyChessTGBot.Lichess.Converters;
 
 namespace PolyChessTGBot.Lichess.Types.Arena
 {
@@ -16,7 +15,7 @@ namespace PolyChessTGBot.Lichess.Types.Arena
 
         public bool PairingsClosed;
 
-        public Stats Stats = new();
+        public ArenaStats Stats = new();
 
         public Standing Standing = new();
 

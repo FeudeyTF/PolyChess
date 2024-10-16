@@ -1,6 +1,6 @@
 ﻿namespace PolyChessTGBot.Lichess.Types.Arena
 {
-    public class Stats
+    public class ArenaStats
     {
         public int Moves;
 

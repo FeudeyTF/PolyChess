@@ -1,42 +1,41 @@
-﻿using Newtonsoft.Json;
-using PolyChessTGBot.Lichess.Types.Arena;
+﻿using PolyChessTGBot.Lichess.Types.Arena;
+using PolyChessTGBot.Lichess.Types.Swiss;
 
 namespace PolyChessTGBot.Lichess
 {
     public partial class LichessApiClient
     {
         public async Task<ArenaTournament?> GetTournament(string id, int page = 1)
-        {
-            return await GetJsonObject<ArenaTournament>("tournament", id);
-        }
+            => await GetJsonObject<ArenaTournament>("tournament", id);
 
-        public async Task<List<SheetEntry>?> GetTournamentSheet(string id, bool full = false)
-            => GetTournamentSheet(await GetFileStringAsync("tournament", id, "results?sheet=" + full));
-
-        public async Task<List<SheetEntry>> GetTournamentSheet(Stream stream)
-        {
-            using var reader = new StreamReader(stream);
-            return await GetTournamentSheet(reader);
-        }
+        public async Task<List<SheetEntry>> GetTournamentSheet(string id, bool full = false)
+            => await GetNDJsonObject<SheetEntry>("tournament", id, "results?sheet=" + full);
 
         public async Task<List<SheetEntry>> GetTournamentSheet(StreamReader reader)
-            => GetTournamentSheet(await reader.ReadToEndAsync());
+            => await GetNDJsonObject<SheetEntry>(reader);
 
-        public List<SheetEntry> GetTournamentSheet(string str)
-        {
-            List<SheetEntry> result = [];
-            foreach (var entry in str.Split('\n'))
-            {
-                var deserializedObject = JsonConvert.DeserializeObject<SheetEntry>(entry);
-                if (deserializedObject != null)
-                    result.Add(deserializedObject);
-            }
-            return result;
-        }
+        public async Task<SwissTournament?> GetSwissTournament(string id)
+            => await GetJsonObject<SwissTournament>("swiss", id);
+
+        public async Task<List<SwissSheetEntry>?> GetSwissTournamentSheet(string id, int number = -1)
+            => number == -1 ?
+                await GetNDJsonObject<SwissSheetEntry>("swiss", id, "results") :
+                await GetNDJsonObject<SwissSheetEntry>("swiss", id, "results?nb=" + number);
 
         public async Task SaveTournamentSheet(string id, string path, bool full = false)
         {
             var stream = await GetFileAsync("tournament", id, "results?sheet=" + full);
+            using (var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write))
+            {
+                stream.CopyTo(fileStream);
+            }
+            stream.Close();
+        }
+
+        public async Task SaveSwissTournamentSheet(string path, string id, int number = -1)
+        {
+            var stream = number == -1 ? await GetFileAsync("swiss", id, "results") :
+                                        await GetFileAsync("swiss", id, "results?nb=" + number); ;
             using (var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write))
             {
                 stream.CopyTo(fileStream);

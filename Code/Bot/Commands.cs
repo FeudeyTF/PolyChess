@@ -7,7 +7,6 @@ using PolyChessTGBot.Lichess.Types.Arena;
 using System.Reflection;
 using System.Text;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using File = System.IO.File;
 

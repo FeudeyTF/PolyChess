@@ -1,5 +1,6 @@
 ﻿using PolyChessTGBot.Bot;
 using PolyChessTGBot.Database;
+using PolyChessTGBot.Externsions;
 using PolyChessTGBot.Lichess;
 using PolyChessTGBot.Logs;
 using PolyChessTGBot.Logs.Types;
@@ -53,9 +54,7 @@ namespace PolyChessTGBot
                 Environment.Exit(0);
             }
             await Bot.LoadBot();
-
             Socket?.StartListening();
-
             while (true)
             {
                 var text = Console.ReadLine();
