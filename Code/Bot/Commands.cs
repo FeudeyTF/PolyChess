@@ -156,6 +156,7 @@ namespace PolyChessTGBot.Bot
             else
                 await args.Reply("Неправильный синтаксис! Правильно: /saveswiss \"ID турнира\"");
         }
+
         [Command("swissresult", "Генерирует таблицу с результатами участников", admin: true)]
         private async Task GenerateSwissTournamentTable(CommandArgs args)
         {
@@ -317,7 +318,7 @@ namespace PolyChessTGBot.Bot
                         List<string> csv = ["Имя;Ник Lichess;Балл"];
                         List<string> text = [
                             $"Турнир <b>{tournament.FullName}</b>. Состоялся <b>{tournament.Started:g}</b>",
-                            $"Информация об участнии в турнире"
+                            $"Информация об участии в турнире"
                         ];
                         using var reader = Program.Data.SelectQuery($"SELECT * FROM Users");
                         Dictionary<string, User?> users = [];
@@ -334,20 +335,23 @@ namespace PolyChessTGBot.Bot
 
                         foreach (var entry in tournamentSheet)
                         {
-                            if(entry.Rating >= DivisionC.Item1 && entry.Rating <= DivisionC.Item2)
+                            if(entry.Team == null || Program.MainConfig.PolytechTeams.Contains(entry.Team))
                             {
-                                if(playersInDivision[3].Count < 3)
-                                    playersInDivision[3].Add(entry);
-                            }
-                            else if (entry.Rating >= DivisionB.Item1 && entry.Rating <= DivisionB.Item2)
-                            {
-                                if (playersInDivision[2].Count < 3)
-                                    playersInDivision[2].Add(entry);
-                            }
-                            else if (entry.Rating >= DivisionA.Item1 && entry.Rating <= DivisionA.Item2)
-                            {
-                                if (playersInDivision[1].Count < 3)
-                                    playersInDivision[1].Add(entry);
+                                if (entry.Rating >= DivisionC.Item1 && entry.Rating <= DivisionC.Item2)
+                                {
+                                    if (playersInDivision[3].Count < 3)
+                                        playersInDivision[3].Add(entry);
+                                }
+                                else if (entry.Rating >= DivisionB.Item1 && entry.Rating <= DivisionB.Item2)
+                                {
+                                    if (playersInDivision[2].Count < 3)
+                                        playersInDivision[2].Add(entry);
+                                }
+                                else if (entry.Rating >= DivisionA.Item1 && entry.Rating <= DivisionA.Item2)
+                                {
+                                    if (playersInDivision[1].Count < 3)
+                                        playersInDivision[1].Add(entry);
+                                }
                             }
                         }
 
@@ -363,32 +367,35 @@ namespace PolyChessTGBot.Bot
                         text.Add("");
                         foreach (var entry in tournamentSheet)
                         {
-                            bool inDivision = false;
-                            for(int i = 1; i < 4; i++)
-                                if (playersInDivision[i].Contains(entry))
-                                {
-                                    inDivision = true;
-                                    break;
-                                }
-                            if(entry.Sheet != null)
+                            if (entry.Team == null || Program.MainConfig.PolytechTeams.Contains(entry.Team))
                             {
-                                int totalScore = -1;
-                                int zeroNumbers = entry.Sheet.Scores.Count(c => c == '0');
-                                int twoNumbers = entry.Sheet.Scores.Count(c => c == '2');
-                                int fourNumbers = entry.Sheet.Scores.Count(c => c == '4');
-                                int total = zeroNumbers + twoNumbers + fourNumbers;
-                                string studentName = "Имя студента не найдено";
-                                if (users.TryGetValue(entry.Username, out User? student) && student.HasValue)
-                                    studentName = student.Value.Name;
+                                bool inDivision = false;
+                                for (int i = 1; i < 4; i++)
+                                    if (playersInDivision[i].Contains(entry))
+                                    {
+                                        inDivision = true;
+                                        break;
+                                    }
+                                if (entry.Sheet != null)
+                                {
+                                    int totalScore = -1;
+                                    int zeroNumbers = entry.Sheet.Scores.Count(c => c == '0');
+                                    int twoNumbers = entry.Sheet.Scores.Count(c => c == '2');
+                                    int fourNumbers = entry.Sheet.Scores.Count(c => c == '4');
+                                    int total = zeroNumbers + twoNumbers + fourNumbers;
+                                    string studentName = "Имя студента не найдено";
+                                    if (users.TryGetValue(entry.Username, out User? student) && student.HasValue)
+                                        studentName = student.Value.Name;
 
-                                if (inDivision)
-                                    totalScore = 1;
-                                else if (total >= 7 && twoNumbers >= 1)
-                                    totalScore = 0;
-                                
-                                if(totalScore != -1)
-                                    csv.Add($"{studentName};{entry.Username};{totalScore}");
-                                text.Add($"<b>{entry.Rank}) {entry.Username}</b>, {studentName}. Балл: {(totalScore == -1 ? "-" : totalScore)}");
+                                    if (inDivision)
+                                        totalScore = 1;
+                                    else if (total >= 7 && twoNumbers >= 1)
+                                        totalScore = 0;
+
+                                    if (totalScore != -1)
+                                        csv.Add($"{studentName};{entry.Username};{totalScore}");
+                                    text.Add($"<b>{entry.Rank}) {entry.Username}</b>, {studentName}. Балл: {(totalScore == -1 ? "-" : totalScore)}");
+                                }
                             }
                         }
 

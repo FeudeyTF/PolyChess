@@ -18,6 +18,8 @@ namespace PolyChessTGBot
 
         public List<string> TopPlayers = [];
 
+        public List<string> PolytechTeams = [];
+
         public bool ShowApiResponseLogs = false;
 
         public SocketSettings Socket = new();
