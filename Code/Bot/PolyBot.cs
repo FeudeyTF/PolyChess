@@ -27,7 +27,7 @@ namespace PolyChessTGBot.Bot
 
         private readonly ILog Logger;
 
-        private readonly BotCommands Commands;
+        private readonly BotCommands.BotCommands Commands;
 
         public PolyBot(ILog logger)
         {
