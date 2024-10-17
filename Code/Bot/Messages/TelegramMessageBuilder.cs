@@ -270,7 +270,7 @@ namespace PolyChessTGBot.Bot.Messages
         public TelegramMessageBuilder AddEntity(MessageEntity entity)
         {
             Entities ??= [];
-            Entities.Append(entity);
+            Entities = [.. Entities, entity];
             return this;
         }
 

@@ -282,7 +282,6 @@ namespace PolyChessTGBot.Bot.BotCommands
                     $"<b>Имя аккаунта на Lichess:</b> {user.Username}",
                     $"<b>Дата регистрации:</b> {user.RegisterDate:g}",
                     $"<b>Последний вход:</b> {user.LastSeenDate:g}",
-                    $"<b>Команды:</b> {user.LastSeenDate:g}",
                     "<i><b>Команды</b></i>",
                 ];
 

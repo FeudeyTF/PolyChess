@@ -9,6 +9,7 @@ namespace PolyChessTGBot.Lichess.Types
 
         public string Username = string.Empty;
 
+        [JsonProperty("perfs")]
         public Dictionary<string, Perfomance> Perfomance = [];
 
         [JsonProperty("createdAt")]

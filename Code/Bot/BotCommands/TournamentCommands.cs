@@ -261,7 +261,6 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                         var tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
 
-
                         foreach(var divison in tournamentRating.Divisions)
                         {
                             text.Add($"Игроки дивизиона <b>{divison.Key}</b>:");
@@ -417,7 +416,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             public List<TournamentUser<TValue>> Players = players;
         }
 
-        private struct TournamentUser<TValue>(User? user, int score, TValue entry)
+        private class TournamentUser<TValue>(User? user, int score, TValue entry)
         {
             public User? User = user;
 
