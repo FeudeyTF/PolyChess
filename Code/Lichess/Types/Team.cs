@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using PolyChessTGBot.Lichess.Types;
 
 namespace PolyChessTGBot.Lichess.Types
 {

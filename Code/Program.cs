@@ -1,6 +1,5 @@
 ﻿using PolyChessTGBot.Bot;
 using PolyChessTGBot.Database;
-using PolyChessTGBot.Externsions;
 using PolyChessTGBot.Lichess;
 using PolyChessTGBot.Logs;
 using PolyChessTGBot.Logs.Types;

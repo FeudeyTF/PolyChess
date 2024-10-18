@@ -336,7 +336,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             return totalScore;
         }
 
-        string GetLichessName(SwissSheetEntry entry)
+        private string GetLichessName(SwissSheetEntry entry)
             => entry.Username;
 
         private string GetLichessName(SheetEntry entry)

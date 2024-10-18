@@ -1,5 +1,5 @@
-﻿using PolyChessTGBot.Lichess.Types.Streams;
-using PolyChessTGBot.Lichess.Types;
+﻿using PolyChessTGBot.Lichess.Types;
+using PolyChessTGBot.Lichess.Types.Streams;
 
 namespace PolyChessTGBot.Lichess
 {
