@@ -180,7 +180,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                         var tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
 
-                        foreach(var division in tournamentRating.Divisions)
+                        foreach (var division in tournamentRating.Divisions)
                         {
                             text.Add($"Игроки дивизиона <b>{division.Key}</b>:");
                             foreach (var entry in division.Value)
@@ -249,7 +249,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                                 if (!string.IsNullOrEmpty(str2.Trim()))
                                     exclude.Add(str2.Trim());
                     }
-                    
+
                     if (tournament != null && tournamentSheet != null)
                     {
                         tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username) || e.Team != null && !Program.MainConfig.PolytechTeams.Contains(e.Team))).ToList();
@@ -261,7 +261,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                         var tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
 
-                        foreach(var divison in tournamentRating.Divisions)
+                        foreach (var divison in tournamentRating.Divisions)
                         {
                             text.Add($"Игроки дивизиона <b>{divison.Key}</b>:");
                             foreach (var entry in divison.Value)
@@ -342,27 +342,22 @@ namespace PolyChessTGBot.Bot.BotCommands
         private string GetLichessName(SheetEntry entry)
             => entry.Username;
 
-        private DivisionType GetTournamentDivision(SwissSheetEntry entry)
+        private DivisionType GetTournamentDivision(int rating)
         {
-            if (DivisionC.InDivision(entry.Rating))
+            if (DivisionC.InDivision(rating))
                 return DivisionType.C;
-            else if (DivisionB.InDivision(entry.Rating))
+            else if (DivisionB.InDivision(rating))
                 return DivisionType.B;
-            else if (DivisionA.InDivision(entry.Rating))
+            else if (DivisionA.InDivision(rating))
                 return DivisionType.A;
             return DivisionType.None;
         }
 
+        private DivisionType GetTournamentDivision(SwissSheetEntry entry)
+            => GetTournamentDivision(entry.Rating);
+
         private DivisionType GetTournamentDivision(SheetEntry entry)
-        {
-            if (DivisionC.InDivision(entry.Rating))
-                return DivisionType.C;
-            else if (DivisionB.InDivision(entry.Rating))
-                return DivisionType.B;
-            else if (DivisionA.InDivision(entry.Rating))
-                return DivisionType.A;
-            return DivisionType.None;
-        }
+            => GetTournamentDivision(entry.Rating);
 
         private static TournamentRating<TValue> GenerateTournamentRating<TValue>(List<TValue> tournament, Func<TValue, DivisionType> getDivision, Func<TValue, string> getLichessName, Func<TValue, bool, int> calculateScore)
         {
@@ -400,7 +395,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                         break;
                     }
                 var score = calculateScore(entry, inDivision);
-                if(users.TryGetValue(getLichessName(entry), out User? founded))
+                if (users.TryGetValue(getLichessName(entry), out User? founded))
                     tournamentUsers.Add(new(founded, score, entry));
                 else
                     tournamentUsers.Add(new(null, score, entry));
@@ -408,6 +403,12 @@ namespace PolyChessTGBot.Bot.BotCommands
 
             return new(playersInDivision, tournamentUsers);
         }
+
+        private string GetTournamentPath(string id)
+            => Path.Combine(Environment.CurrentDirectory, "Tournaments", id + ".txt");
+
+        private string GetSwissTournamentPath(string id)
+            => Path.Combine(Environment.CurrentDirectory, "SwissTournaments", id + ".txt");
 
         private struct TournamentRating<TValue>(Dictionary<DivisionType, List<TValue>> divisions, List<TournamentUser<TValue>> players)
         {

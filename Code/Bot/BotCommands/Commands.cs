@@ -43,9 +43,9 @@ namespace PolyChessTGBot.Bot.BotCommands
             {
                 var adminType = args.Parameters[0].ToLower();
                 if (adminType.StartsWith('f'))
-                    await FAQAdmin.Send(args.Bot, args.Message.Chat.Id);
+                    await FAQAdmin.Send(args.Bot, args.Message.Chat.Id, args.User);
                 else if (adminType.StartsWith('h'))
-                    await HelpAdmin.Send(args.Bot, args.Message.Chat.Id);
+                    await HelpAdmin.Send(args.Bot, args.Message.Chat.Id, args.User);
                 else
                     await args.Reply("Панель не найдена! Попробуйте /admin faq/helplinks");
             }

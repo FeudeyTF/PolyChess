@@ -1,11 +1,10 @@
-﻿using PolyChessTGBot.Bot.Commands;
+﻿using PolyChessTGBot.Bot.Buttons;
+using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Externsions;
 using PolyChessTGBot.Lichess.Types.Arena;
 using PolyChessTGBot.Lichess.Types.Swiss;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using File = System.IO.File;
 
@@ -24,6 +23,8 @@ namespace PolyChessTGBot.Bot.BotCommands
         private readonly List<FAQEntry> FAQEntries;
 
         private readonly List<HelpLink> HelpLinks;
+
+        private readonly ListMessage<TournamentInfo> Tournaments;
 
         public BotCommands()
         {
@@ -44,21 +45,26 @@ namespace PolyChessTGBot.Bot.BotCommands
                 GetDocumentID = GetHelpLinkDocumentID
             };
 
+            Tournaments = new("tournaments", GetTournamentsIDs, TournamentToString, 5, false, "Далее ➡️", "⬅️ Назад")
+            {
+                Header = "<b> - Информация об участии в турнирах!</b>"
+            };
+
             FAQEntries = Program.Data.GetFAQEntries();
             HelpLinks = Program.Data.GetHelpLinks();
         }
 
-        private List<HelpLink> GetHelpLinksValue() => HelpLinks;
+        private async Task<List<HelpLink>> GetHelpLinksValue() => await Task.FromResult(HelpLinks);
 
-        private List<FAQEntry> GetFAQValues() => FAQEntries;
+        private async Task<List<FAQEntry>> GetFAQValues() => await Task.FromResult(FAQEntries);
 
-        private string ConvertHelpLinkToString(HelpLink link, int index)
-            => $"<b>{link.Title}</b>\n{link.Text}\n<i>{link.Footer}</i>";
+        private async Task<string> ConvertHelpLinkToString(HelpLink link, int index, Telegram.Bot.Types.User user)
+            => await Task.FromResult($"<b>{link.Title}</b>\n{link.Text}\n<i>{link.Footer}</i>");
 
         private string? GetHelpLinkDocumentID(HelpLink link) => link.FileID;
 
-        private string ConvertFAQEntryToString(FAQEntry entry, int index)
-            => $"{index + 1}) <b>{entry.Question}</b>\n - {entry.Answer}";
+        private async Task<string> ConvertFAQEntryToString(FAQEntry entry, int index, Telegram.Bot.Types.User user)
+            => await Task.FromResult($"{index + 1}) <b>{entry.Question}</b>\n - {entry.Answer}");
 
         [Command("question", "Синтаксис: /question \"вопрос\". Команда отправит вопрос напрямую Павлу", true)]
         public async Task Question(CommandArgs args)
@@ -88,16 +94,16 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Command("help", "Выдаёт список с полезными материалами", true)]
         private async Task SendHelpLinks(CommandArgs args)
         {
-            await HelpMessage.Send(args.Bot, args.Message.Chat.Id);
+            await HelpMessage.Send(args.Bot, args.Message.Chat.Id, args.User);
         }
 
         [Command("faq", "Выдаёт список с FAQ", true)]
         public async Task FAQ(CommandArgs args)
         {
-            await FAQMessage.Send(args.Bot, args.Message.Chat.Id);
+            await FAQMessage.Send(args.Bot, args.Message.Chat.Id, args.User);
         }
 
-        [Command("myinfo", "Выдаёт информацию об ученике", true)]
+        [Command("me", "Выдаёт информацию об ученике", true)]
         public async Task MyInfo(CommandArgs args)
         {
             using var reader = Program.Data.SelectQuery($"SELECT * FROM Users WHERE TelegramID={args.User.Id}");
@@ -126,29 +132,90 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                         text.Add("");
                         text.Add("📈 <i><b>Рейтинги</b></i>");
-                        text.Add("");
 
                         foreach (var perfomance in lichessUser.Perfomance)
-                            text.Add($" - <b>{perfomance.Key.Beautify()}</b>, Сыграно: {perfomance.Value.Games}, Рейтинг: {perfomance.Value.Rating}");
+                            text.Add($" - <b>{perfomance.Key.Beautify()}</b>, Двизион: <b>{GetTournamentDivision(perfomance.Value.Rating)}</b>, Сыграно: {perfomance.Value.Games}, Рейтинг: {perfomance.Value.Rating}");
 
-                        text.Add("");
-                        text.Add("🤝 <i><b>Обычные турниры</b></i>");
-                        text.Add("");
+                        message.WithoutWebPagePreview();
+                        message.WithText(string.Join("\n", text));
+                        InlineKeyboardButton accountLinkButton =
+                          new("♟Lichess профиль")
+                          {
+                              Url = lichessUser.URL
+                          };
+                        message.AddButton(accountLinkButton);
 
-                        foreach (var file in Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, "Tournaments")))
+                        InlineKeyboardButton viewTournaments = new("💪 Посмотреть баллы за турниры");
+                        viewTournaments.SetData("MeViewTournaments");
+                        message.AddButton(viewTournaments);
+                        await args.Reply(message);
+                    }
+                    else
+                        text.Add($"Ник на Lichess: <b>Аккаунт не найден</b>");
+                }
+                else
+                    text.Add($"Ник на Lichess: <b>Аккаунт не привязан</b>");
+            }
+            else
+                await args.Reply("Информация о Вашем аккаунте не найдена, обратитесь к администратору бота!");
+        }
+
+        [Button("MeViewTournaments")]
+        private async Task ViewTournaments(ButtonInteractArgs args)
+        {
+            if(args.Query.Message != null)
+                await Tournaments.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From);
+        }
+
+        private async Task<List<TournamentInfo>> GetTournamentsIDs()
+        {
+            List<(TournamentInfo Info, DateTime Date)> result = [];
+            foreach (var filePath in Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, "Tournaments")))
+            {
+                var tournament = await Program.Lichess.GetTournament(Path.GetFileName(filePath)[..^4]);
+                if(tournament != null)
+                    result.Add(new(new(tournament.ID, TournamentType.Default), tournament.Started));
+            }
+
+            foreach (var filePath in Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, "SwissTournaments")))
+            {
+                var tournament = await Program.Lichess.GetSwissTournament(Path.GetFileName(filePath)[..^4]);
+                if (tournament != null)
+                    result.Add(new(new(tournament.ID, TournamentType.Swiss), tournament.Started));
+            }
+
+            result = [..from r in result orderby r.Date descending select r];
+            return [..result.Select(r => r.Info)];
+        }
+
+        private async Task<string> TournamentToString(TournamentInfo info, int index, Telegram.Bot.Types.User tgUser)
+        {
+            using var reader = Program.Data.SelectQuery($"SELECT * FROM Users WHERE TelegramID={tgUser.Id}");
+            if (reader.Read())
+            {
+                User user = new(reader.Get<long>("TelegramID"), reader.Get("Name"), reader.Get("LichessName"), reader.Get<int>("Year"));
+                if (!string.IsNullOrEmpty(user.LichessName))
+                {
+                    TelegramMessageBuilder message = new();
+                    var lichessUser = await Program.Lichess.GetUserAsync(user.LichessName);
+                    if (lichessUser != null)
+                    {
+                        List<string> result = [];
+                        if (info.Type == TournamentType.Default || info.Type == TournamentType.Team)
                         {
-                            var tournamentID = Path.GetFileName(file)[..^4];
-                            var tournament = await Program.Lichess.GetTournament(tournamentID);
+                            var tournament = await Program.Lichess.GetTournament(info.ID);
                             if (tournament != null)
                             {
-                                var tournamentSheet = await Program.Lichess.GetTournamentSheet(File.OpenText(file));
+                                if (!File.Exists(GetTournamentPath(info.ID)))
+                                    return "";
+                                var tournamentSheet = await Program.Lichess.GetTournamentSheet(File.OpenText(GetTournamentPath(info.ID)));
                                 if (tournamentSheet != null)
                                 {
                                     List<string> exclude = new(Program.MainConfig.TopPlayers);
                                     tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username) || e.Team != null && !Program.MainConfig.PolytechTeams.Contains(e.Team))).ToList();
                                     var tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
 
-                                    text.Add($"Турнир <b><a href=\"https://lichess.org/tournament/{tournament.ID}\">{tournament.FullName}</a></b>. Состоялся <b>{tournament.Started.AddHours(3):g}</b>");
+                                    result.Add($"\U0001f91d Турнир <b><a href=\"https://lichess.org/tournament/{tournament.ID}\">{tournament.FullName}</a></b>. Состоялся <b>{tournament.Started.AddHours(3):g}</b>");
                                     TournamentUser<SheetEntry>? player = default;
                                     foreach (var p in tournamentRating.Players)
                                     {
@@ -161,12 +228,12 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                                     if (player != default)
                                     {
-                                        text.Add($" - Ранг: <b>{player.TournamentEntry.Rank}</b>");
-                                        text.Add($" - Рейтинг: <b>{player.TournamentEntry.Rating}</b>");
-                                        text.Add($" - Перформанс: <b>{player.TournamentEntry.Performance}</b>");
-                                        text.Add($" - Балл: <b>{(player.Score == -1 ? "Отсутствовал" : player.Score)}</b>");
+                                        result.Add($" - Ранг: <b>{player.TournamentEntry.Rank}</b>");
+                                        result.Add($" - Рейтинг: <b>{player.TournamentEntry.Rating}</b>");
+                                        result.Add($" - Перформанс: <b>{player.TournamentEntry.Performance}</b>");
+                                        result.Add($" - Балл: <b>{(player.Score == -1 ? "Турнир не зачтён" : player.Score)}</b>");
                                         if (player.TournamentEntry.Sheet != null && !string.IsNullOrEmpty(player.TournamentEntry.Sheet.Scores))
-                                            text.Add($" - Итоговая строка: <b>{player.TournamentEntry.Sheet.Scores}</b>");
+                                            result.Add($" - Итоговая строка: <b>{player.TournamentEntry.Sheet.Scores}</b>");
                                         DivisionType division = DivisionType.None;
                                         foreach (var div in tournamentRating.Divisions)
                                             if (div.Value.Any(e => e.Username == lichessUser.Username))
@@ -175,33 +242,29 @@ namespace PolyChessTGBot.Bot.BotCommands
                                                 break;
                                             }
 
-                                        text.Add($" - Двизион: <b>{(division == DivisionType.None ? "Нет" : division)}</b>");
-                                       
+                                        result.Add($" - Дивизион: <b>{(division == DivisionType.None ? "Нет" : division)}</b>");
+
                                     }
                                     else
-                                        text.Add(" - <b>Отсутствовал</b>");
-                                    text.Add("");
+                                        result.Add(" - <b>Отсутствовал</b>");
                                 }
                             }
                         }
-
-                        text.Add("🇨🇭 <i><b>Швейцарские турниры</b></i>");
-                        text.Add("");
-
-                        foreach (var file in Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, "SwissTournaments")))
+                        else
                         {
-                            var tournamentID = Path.GetFileName(file)[..^4];
-                            var tournament = await Program.Lichess.GetSwissTournament(tournamentID);
+                            var tournament = await Program.Lichess.GetSwissTournament(info.ID);
                             if (tournament != null)
                             {
-                                var tournamentSheet = await Program.Lichess.GetSwissTournamentSheet(File.OpenText(file));
+                                if (!File.Exists(GetSwissTournamentPath(info.ID)))
+                                    return string.Empty;
+                                var tournamentSheet = await Program.Lichess.GetSwissTournamentSheet(File.OpenText(GetSwissTournamentPath(info.ID)));
                                 if (tournamentSheet != null)
                                 {
                                     List<string> exclude = new(Program.MainConfig.TopPlayers);
                                     tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username))).ToList();
                                     var tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
 
-                                    text.Add($"Турнир <b><a href=\"https://lichess.org/swiss/{tournament.ID}\">{tournament.Name}</a></b>. Состоялся <b>{tournament.Started.AddHours(3):g}</b>");
+                                    result.Add($"🇨🇭 Турнир <b><a href=\"https://lichess.org/swiss/{tournament.ID}\">{tournament.Name}</a></b>. Состоялся <b>{tournament.Started.AddHours(3):g}</b>");
                                     TournamentUser<SwissSheetEntry>? player = default;
                                     foreach (var p in tournamentRating.Players)
                                     {
@@ -214,11 +277,11 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                                     if (player != default)
                                     {
-                                        text.Add($" - Ранг: <b>{player.TournamentEntry.Rank}</b>");
-                                        text.Add($" - Очки: <b>{player.TournamentEntry.Points}</b>");
-                                        text.Add($" - TieBreak: <b>{player.TournamentEntry.TieBreak}</b>");
-                                        text.Add($" - Перформанс: <b>{player.TournamentEntry.Performance}</b>");
-                                        text.Add($" - Балл: <b>{(player.Score == -1 ? "Отсутствовал" : player.Score)}</b>");
+                                        result.Add($" - Ранг: <b>{player.TournamentEntry.Rank}</b>");
+                                        result.Add($" - Очки: <b>{player.TournamentEntry.Points}</b>");
+                                        result.Add($" - TieBreak: <b>{player.TournamentEntry.TieBreak}</b>");
+                                        result.Add($" - Перформанс: <b>{player.TournamentEntry.Performance}</b>");
+                                        result.Add($" - Балл: <b>{(player.Score == -1 ? "Отсутствовал" : player.Score)}</b>");
                                         DivisionType division = DivisionType.None;
                                         foreach (var div in tournamentRating.Divisions)
                                             if (div.Value.Any(e => e.Username == lichessUser.Username))
@@ -227,33 +290,33 @@ namespace PolyChessTGBot.Bot.BotCommands
                                                 break;
                                             }
 
-                                        text.Add($" - Двизион: <b>{(division == DivisionType.None ? "Нет" : division)}</b>");
+                                        result.Add($" - Дивизион: <b>{(division == DivisionType.None ? "Нет" : division)}</b>");
                                     }
                                     else
-                                        text.Add(" - <b>Отсутствовал</b>");
-                                    text.Add("");
+                                        result.Add(" - <b>Отсутствовал</b>");
                                 }
                             }
                         }
-                        message.WithoutWebPagePreview();
-                        message.WithText(string.Join("\n", text));
-                        InlineKeyboardButton accountLinkButton =
-                          new("♟Lichess профиль")
-                          {
-                              Url = lichessUser.URL
-                          };
-                        message.AddButton(accountLinkButton);
-
-                        await args.Reply(message);
+                        result.Add("");
+                        return string.Join("\n", result);
                     }
-                    else
-                        text.Add($"Ник на Lichess: <b>Аккаунт не найден</b>");
                 }
-                else
-                    text.Add($"Ник на Lichess: <b>Аккаунт не привязан</b>");
             }
-            else
-                await args.Reply("Информация о Вашем аккаунте не найдена, обратитесь к администратору бота!");
+            return string.Empty;
+        }
+
+        private struct TournamentInfo(string id, TournamentType type)
+        {
+            public string ID = id;
+
+            public TournamentType Type = type;
+        }
+
+        private enum TournamentType
+        {
+            Swiss,
+            Default,
+            Team
         }
     }
 }
