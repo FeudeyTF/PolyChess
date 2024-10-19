@@ -16,7 +16,10 @@ namespace PolyChessTGBot.Lichess.Converters
         {
             if (reader.Value == null)
                 return default;
-            return UnixStart.AddSeconds((long)reader.Value / 1000);
+            if (reader.Value is long ticks)
+                return UnixStart.AddSeconds(ticks / 1000);
+            else
+                return (DateTime)reader.Value;
         }
     }
 }

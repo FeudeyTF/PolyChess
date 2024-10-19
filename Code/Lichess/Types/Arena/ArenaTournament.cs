@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using PolyChessTGBot.Lichess.Converters;
 
 namespace PolyChessTGBot.Lichess.Types.Arena
 {
@@ -24,7 +25,12 @@ namespace PolyChessTGBot.Lichess.Types.Arena
         public string CreatedBy = string.Empty;
 
         [JsonProperty("startsAt")]
-        public DateTime Started;
+        [JsonConverter(typeof(LichessDateTimeConverter))]
+        public DateTime StartDate;
+
+        [JsonProperty("finishesAt")]
+        [JsonConverter(typeof(LichessDateTimeConverter))]
+        public DateTime FinishDate;
 
         public string System = string.Empty;
 
@@ -35,9 +41,9 @@ namespace PolyChessTGBot.Lichess.Types.Arena
         [JsonProperty("perf")]
         public ArenaPerfomance Perfomance = new();
 
-        public Clock Clock = new();
+        public object? Variant;
 
-        public string Variant = string.Empty;
+        public Clock Clock = new();
 
         public bool Rated;
 

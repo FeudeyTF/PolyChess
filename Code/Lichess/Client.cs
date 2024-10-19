@@ -22,7 +22,7 @@ namespace PolyChessTGBot.Lichess
         public async Task<string> GetFileStringAsync(params object[] path)
             => await new StreamReader(await HttpClient.GetStreamAsync(LICHESS_API_URL + string.Join("/", path))).ReadToEndAsync();
 
-        public List<TValue> ParseNDJsonObject<TValue>(string str)
+        public static List<TValue> ParseNDJsonObject<TValue>(string str)
         {
             List<TValue> result = [];
             foreach (var entry in str.Split('\n'))

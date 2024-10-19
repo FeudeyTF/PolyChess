@@ -6,6 +6,8 @@
 
         public string Name = string.Empty;
 
+        public int Position;
+
         public string Icon = string.Empty;
     }
 }

@@ -20,6 +20,8 @@ namespace PolyChessTGBot
 
         public List<string> PolytechTeams = [];
 
+        public string TournamentScoresDate = string.Empty;
+
         public bool ShowApiResponseLogs = false;
 
         public SocketSettings Socket = new();

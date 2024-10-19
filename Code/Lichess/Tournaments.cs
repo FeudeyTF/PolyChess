@@ -5,7 +5,13 @@ namespace PolyChessTGBot.Lichess
 {
     public partial class LichessApiClient
     {
-        public async Task<ArenaTournament?> GetTournament(string id, int page = 1)
+        public async Task<List<ArenaTournament>> GetTeamArenaTournaments(string teamId)
+            => await GetNDJsonObject<ArenaTournament>(new StreamReader(await GetFileAsync("team", teamId, "arena")));
+
+        public async Task<List<SwissTournament>> GetTeamSwissTournaments(string teamId)
+            => await GetNDJsonObject<SwissTournament>(new StreamReader(await GetFileAsync("team", teamId, "swiss")));
+
+        public async Task<ArenaTournament?> GetTournament(string id)
             => await GetJsonObject<ArenaTournament>("tournament", id);
 
         public async Task<List<SheetEntry>> GetTournamentSheet(string id, bool full = false)

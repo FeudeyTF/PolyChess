@@ -16,15 +16,11 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private readonly ListMessage<HelpLink> HelpMessage;
 
-        private readonly ListMessage<HelpLink> HelpAdmin;
-
-        private readonly ListMessage<FAQEntry> FAQAdmin;
-
         private readonly List<FAQEntry> FAQEntries;
 
         private readonly List<HelpLink> HelpLinks;
 
-        private readonly ListMessage<TournamentInfo> Tournaments;
+        private readonly ListMessage<object> Tournaments;
 
         public BotCommands()
         {
@@ -45,7 +41,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 GetDocumentID = GetHelpLinkDocumentID
             };
 
-            Tournaments = new("tournaments", GetTournamentsIDs, TournamentToString, 5, false, "Далее ➡️", "⬅️ Назад")
+            Tournaments = new("tournaments", GetTournamentsIDs, TournamentToString, 5, true, "Далее ➡️", "⬅️ Назад")
             {
                 Header = "<b> - Информация об участии в турнирах!</b>"
             };
@@ -103,7 +99,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             await FAQMessage.Send(args.Bot, args.Message.Chat.Id, args.User);
         }
 
-        [Command("me", "Выдаёт информацию об ученике", true)]
+        [Command("me", "Выдаёт информацию об ученике")]
         public async Task MyInfo(CommandArgs args)
         {
             using var reader = Program.Data.SelectQuery($"SELECT * FROM Users WHERE TelegramID={args.User.Id}");
@@ -167,32 +163,25 @@ namespace PolyChessTGBot.Bot.BotCommands
                 await Tournaments.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From);
         }
 
-        private async Task<List<TournamentInfo>> GetTournamentsIDs()
+        private async Task<List<object>> GetTournamentsIDs()
         {
-            List<(TournamentInfo Info, DateTime Date)> result = [];
-            foreach (var filePath in Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, "Tournaments")))
-            {
-                var tournament = await Program.Lichess.GetTournament(Path.GetFileName(filePath)[..^4]);
-                if(tournament != null)
-                    result.Add(new(new(tournament.ID, TournamentType.Default), tournament.Started));
-            }
-
-            foreach (var filePath in Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, "SwissTournaments")))
-            {
-                var tournament = await Program.Lichess.GetSwissTournament(Path.GetFileName(filePath)[..^4]);
-                if (tournament != null)
-                    result.Add(new(new(tournament.ID, TournamentType.Swiss), tournament.Started));
-            }
-
-            result = [..from r in result orderby r.Date descending select r];
-            return [..result.Select(r => r.Info)];
+            List<object> result = [];
+            foreach (var tournament in TournamentsList)
+                if (tournament.StartDate < DateTime.UtcNow)
+                    result.Add(tournament);
+            foreach (var tournament in SwissTournamentsList)
+                if (tournament.Started < DateTime.UtcNow)
+                    result.Add(tournament);
+            return await Task.FromResult(new List<object>([.. from r in result orderby (r is ArenaTournament t ? t.StartDate : r is SwissTournament s ? s.Started : DateTime.Now) descending select r]));
         }
 
-        private async Task<string> TournamentToString(TournamentInfo info, int index, Telegram.Bot.Types.User tgUser)
+        private async Task<string> TournamentToString(object info, int index, Telegram.Bot.Types.User tgUser)
         {
+            Console.WriteLine(1);
             using var reader = Program.Data.SelectQuery($"SELECT * FROM Users WHERE TelegramID={tgUser.Id}");
             if (reader.Read())
             {
+                Console.WriteLine(2);
                 User user = new(reader.Get<long>("TelegramID"), reader.Get("Name"), reader.Get("LichessName"), reader.Get<int>("Year"));
                 if (!string.IsNullOrEmpty(user.LichessName))
                 {
@@ -201,21 +190,21 @@ namespace PolyChessTGBot.Bot.BotCommands
                     if (lichessUser != null)
                     {
                         List<string> result = [];
-                        if (info.Type == TournamentType.Default || info.Type == TournamentType.Team)
+                        if (info is ArenaTournament arenaTournament)
                         {
-                            var tournament = await Program.Lichess.GetTournament(info.ID);
-                            if (tournament != null)
+                            if (arenaTournament != null)
                             {
-                                if (!File.Exists(GetTournamentPath(info.ID)))
+                                if (!File.Exists(GetTournamentPath(arenaTournament.ID)))
                                     return "";
-                                var tournamentSheet = await Program.Lichess.GetTournamentSheet(File.OpenText(GetTournamentPath(info.ID)));
+                                var tournamentSheet = await Program.Lichess.GetTournamentSheet(File.OpenText(GetTournamentPath(arenaTournament.ID)));
+                                
                                 if (tournamentSheet != null)
                                 {
                                     List<string> exclude = new(Program.MainConfig.TopPlayers);
                                     tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username) || e.Team != null && !Program.MainConfig.PolytechTeams.Contains(e.Team))).ToList();
                                     var tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
 
-                                    result.Add($"\U0001f91d Турнир <b><a href=\"https://lichess.org/tournament/{tournament.ID}\">{tournament.FullName}</a></b>. Состоялся <b>{tournament.Started.AddHours(3):g}</b>");
+                                    result.Add($"\U0001f91d Турнир <b><a href=\"https://lichess.org/tournament/{arenaTournament.ID}\">{arenaTournament.FullName}</a></b>. Состоялся <b>{arenaTournament.StartDate.AddHours(3):g}</b>");
                                     TournamentUser<SheetEntry>? player = default;
                                     foreach (var p in tournamentRating.Players)
                                     {
@@ -250,21 +239,20 @@ namespace PolyChessTGBot.Bot.BotCommands
                                 }
                             }
                         }
-                        else
+                        else if(info is SwissTournament swissTournament)
                         {
-                            var tournament = await Program.Lichess.GetSwissTournament(info.ID);
-                            if (tournament != null)
+                            if (swissTournament != null)
                             {
-                                if (!File.Exists(GetSwissTournamentPath(info.ID)))
+                                if (!File.Exists(GetSwissTournamentPath(swissTournament.ID)))
                                     return string.Empty;
-                                var tournamentSheet = await Program.Lichess.GetSwissTournamentSheet(File.OpenText(GetSwissTournamentPath(info.ID)));
+                                var tournamentSheet = await Program.Lichess.GetSwissTournamentSheet(File.OpenText(GetSwissTournamentPath(swissTournament.ID)));
                                 if (tournamentSheet != null)
                                 {
                                     List<string> exclude = new(Program.MainConfig.TopPlayers);
                                     tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username))).ToList();
                                     var tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
 
-                                    result.Add($"🇨🇭 Турнир <b><a href=\"https://lichess.org/swiss/{tournament.ID}\">{tournament.Name}</a></b>. Состоялся <b>{tournament.Started.AddHours(3):g}</b>");
+                                    result.Add($"🇨🇭 Турнир <b><a href=\"https://lichess.org/swiss/{swissTournament.ID}\">{swissTournament.Name}</a></b>. Состоялся <b>{swissTournament.Started.AddHours(3):g}</b>");
                                     TournamentUser<SwissSheetEntry>? player = default;
                                     foreach (var p in tournamentRating.Players)
                                     {
@@ -305,11 +293,13 @@ namespace PolyChessTGBot.Bot.BotCommands
             return string.Empty;
         }
 
-        private struct TournamentInfo(string id, TournamentType type)
+        private struct TournamentInfo(string id, TournamentType type, DateTime date)
         {
             public string ID = id;
 
             public TournamentType Type = type;
+
+            public DateTime Date = date;
         }
 
         private enum TournamentType

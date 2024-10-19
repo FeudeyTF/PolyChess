@@ -44,6 +44,7 @@ namespace PolyChessTGBot.Bot
 
         public async Task LoadBot()
         {
+            await BotCommands.BotCommands.LoadTournaments();
             using var cancellationTokenSource = new CancellationTokenSource();
             try
             {

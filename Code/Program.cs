@@ -1,5 +1,6 @@
 ﻿using PolyChessTGBot.Bot;
 using PolyChessTGBot.Database;
+using PolyChessTGBot.Externsions;
 using PolyChessTGBot.Lichess;
 using PolyChessTGBot.Logs;
 using PolyChessTGBot.Logs.Types;
@@ -41,7 +42,7 @@ namespace PolyChessTGBot
             Bot = new(Logger);
             Lichess = new();
             if (MainConfig.Socket.StartSocketServer)
-                Socket = new(MainConfig.Socket.Port, Logger); 
+                Socket = new(MainConfig.Socket.Port, Logger);
         }
 
         public static async Task Main(string[] args)

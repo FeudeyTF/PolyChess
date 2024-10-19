@@ -50,7 +50,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                                 if (player.Sheet != null && player.Username == lichessUser.Username)
                                 {
                                     List<string> text = [
-                                        $"Турнир <b>{tournament.FullName}</b>. Состоялся <b>{tournament.Started:g}</b>",
+                                        $"Турнир <b>{tournament.FullName}</b>. Состоялся <b>{tournament.StartDate:g}</b>",
                                         $"Информация об участнике турнира <b>{player.Username}</b>:",
                                         $"<b>Ранг:</b> {player.Rank}",
                                         $"<b>Набрано очков:</b> {player.Score}",
@@ -255,7 +255,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                         tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username) || e.Team != null && !Program.MainConfig.PolytechTeams.Contains(e.Team))).ToList();
                         List<string> csv = ["Имя;Ник Lichess;Балл"];
                         List<string> text = [
-                            $"Турнир <b>{tournament.FullName}</b>. Состоялся <b>{tournament.Started:g}</b>",
+                            $"Турнир <b>{tournament.FullName}</b>. Состоялся <b>{tournament.StartDate:g}</b>",
                             $"Информация об участии в турнире"
                         ];
 
@@ -404,10 +404,10 @@ namespace PolyChessTGBot.Bot.BotCommands
             return new(playersInDivision, tournamentUsers);
         }
 
-        private string GetTournamentPath(string id)
+        private static string GetTournamentPath(string id)
             => Path.Combine(Environment.CurrentDirectory, "Tournaments", id + ".txt");
 
-        private string GetSwissTournamentPath(string id)
+        private static string GetSwissTournamentPath(string id)
             => Path.Combine(Environment.CurrentDirectory, "SwissTournaments", id + ".txt");
 
         private struct TournamentRating<TValue>(Dictionary<DivisionType, List<TValue>> divisions, List<TournamentUser<TValue>> players)
