@@ -22,6 +22,8 @@ namespace PolyChessTGBot
 
         public string TournamentScoresDate = string.Empty;
 
+        public List<string> UnnecessaryTournaments = [];
+
         public bool ShowApiResponseLogs = false;
 
         public SocketSettings Socket = new();

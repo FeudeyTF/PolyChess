@@ -37,17 +37,26 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                 foreach (var filePath in Directory.GetFiles(tournamentsPath))
                 {
-                    var tournament = await Program.Lichess.GetTournament(Path.GetFileName(filePath)[..^4]);
-                    if (tournament != null && tournament.StartDate > date)
-                        TournamentsList.Add(tournament);
+                    var tournamentName = Path.GetFileName(filePath)[..^4];
+                    if (!Program.MainConfig.UnnecessaryTournaments.Contains(tournamentName))
+                    {
+                        var tournament = await Program.Lichess.GetTournament(tournamentName);
+                        if (tournament != null && tournament.StartDate > date)
+                            TournamentsList.Add(tournament);
+                    }
                 }
 
                 foreach (var filePath in Directory.GetFiles(swissPath))
                 {
-                    var tournament = await Program.Lichess.GetSwissTournament(Path.GetFileName(filePath)[..^4]);
-                    if (tournament != null && tournament.Started > date)
-                        SwissTournamentsList.Add(tournament);
+                    var tournamentName = Path.GetFileName(filePath)[..^4];
+                    if (!Program.MainConfig.UnnecessaryTournaments.Contains(tournamentName))
+                    {
+                        var tournament = await Program.Lichess.GetSwissTournament(tournamentName);
+                        if (tournament != null && tournament.Started > date)
+                            SwissTournamentsList.Add(tournament);
+                    }
                 }
+
                 TournamentsList = [.. from r in TournamentsList orderby r.StartDate descending select r];
                 SwissTournamentsList = [.. from r in SwissTournamentsList orderby r.Started descending select r];
                 Program.Logger.Write($"Найдено {TournamentsList.Count} турниров и {SwissTournamentsList.Count} турниров по швейцарской системе!", LogType.Info);

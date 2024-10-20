@@ -156,7 +156,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             }
         }
 
-        [Command("me", "Выдаёт информацию об ученике")]
+        [Command("me", "Выдаёт информацию об ученике", true)]
         private async Task MyInfo(CommandArgs args)
         {
             using var reader = Program.Data.SelectQuery($"SELECT * FROM Users WHERE TelegramID={args.User.Id}");
