@@ -22,6 +22,8 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private readonly ListMessage<object> Tournaments;
 
+        private Dictionary<long, (string Name, string FlairID)> AccountVerifyCodes;
+
         public BotCommands()
         {
             FAQMessage = new("FAQ", GetFAQValues, ConvertFAQEntryToString)
@@ -46,6 +48,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 Header = "<b> - Информация об участии в турнирах!</b>"
             };
 
+            AccountVerifyCodes = [];
             FAQEntries = Program.Data.GetFAQEntries();
             HelpLinks = Program.Data.GetHelpLinks();
         }
@@ -99,6 +102,60 @@ namespace PolyChessTGBot.Bot.BotCommands
             await FAQMessage.Send(args.Bot, args.Message.Chat.Id, args.User);
         }
 
+        [Command("reg", "Регистрирует участника")]
+        public async Task Register(CommandArgs args)
+        {
+            if (AccountVerifyCodes.TryGetValue(args.User.Id, out (string Name, string FlairID) code))
+            {
+                var account = await Program.Lichess.GetUserAsync(code.Name);
+                if (account != null )
+                {
+                    if (account.Flair == code.FlairID)
+                    {
+                        using var reader = Program.Data.SelectQuery($"SELECT * FROM Users WHERE LichessName='{account.Username}'");
+                        if (!reader.Read())
+                        {
+                            Program.Data.Query($"UPDATE Users SET LichessName='{account.Username}' WHERE TelegramID='{args.User.Id}'");
+                            AccountVerifyCodes.Remove(args.User.Id);
+                            await args.Reply($"Ваш аккаунт теперь - <b>{account.Username}</b>");
+                        }
+                        else
+                            await args.Reply($"Аккаунт <b>{account.Username}</b> уже занят!");
+                    }
+                    else
+                        await args.Reply($"Значок аккаунта <b>{code.Name}</b> не установлен на <b>{code.FlairID}</b> или отсутствует");
+                }
+                else
+                    await args.Reply($"Аккаунт <b>{code.Name}</b> не был найден");
+            }
+            else
+            {
+                if (args.Parameters.Count == 1)
+                {
+                    var account = await Program.Lichess.GetUserAsync(args.Parameters[0]);
+                    if (account != null)
+                    {
+                        using var reader = Program.Data.SelectQuery($"SELECT * FROM Users WHERE LichessName='{account.Username}'");
+                        if (!reader.Read())
+                        {
+                            var flairCode = Program.MainConfig.Flairs[Random.Shared.Next(Program.MainConfig.Flairs.Count)];
+                            while (flairCode == account.Flair)
+                                flairCode = Program.MainConfig.Flairs[Random.Shared.Next(Program.MainConfig.Flairs.Count)];
+                            AccountVerifyCodes.Add(args.User.Id, (account.Username, flairCode));
+                            await args.Reply($"Вам нужно установить значок аккаунта {account.Username} на {flairCode} (делается в настройках на Lichess), после чего прописать /reg");
+
+                        }
+                        else
+                            await args.Reply($"Аккаунт <b>{account.Username}</b> уже занят!");
+                    }
+                    else
+                        await args.Reply($"Аккаунт <b>{args.Parameters[0]}</b> не был найден!");
+                }
+                else
+                    await args.Reply("Неправильный синтаксис! Правильно: /reg ник Lichess");
+            }
+        }
+
         [Command("me", "Выдаёт информацию об ученике")]
         public async Task MyInfo(CommandArgs args)
         {
@@ -113,7 +170,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     var lichessUser = await Program.Lichess.GetUserAsync(user.LichessName);
                     if (lichessUser != null)
                     {
-                        text.Add($"♟ <b> Имя аккаунта на Lichess:</b> {lichessUser.Username}");
+                        text.Add($"♟ <b>Имя аккаунта на Lichess:</b> {lichessUser.Username}");
                         text.Add($"🕓 <b>Дата регистрации:</b> {lichessUser.RegisterDate:g}");
                         text.Add($"🕓 <b>Последний вход:</b> {lichessUser.LastSeenDate:g}");
                         text.Add("👥 <i><b>Команды</b></i>");
@@ -147,10 +204,10 @@ namespace PolyChessTGBot.Bot.BotCommands
                         await args.Reply(message);
                     }
                     else
-                        text.Add($"Ник на Lichess: <b>Аккаунт не найден</b>");
+                        await args.Reply($"Ник на Lichess: <b>Аккаунт не найден</b>. Перепривяжите аккаунт с помощью /reg");
                 }
                 else
-                    text.Add($"Ник на Lichess: <b>Аккаунт не привязан</b>");
+                    await args.Reply($"Ник на Lichess: <b>Аккаунт не привязан</b>. Привяжите аккаунт с помощью /reg");
             }
             else
                 await args.Reply("Информация о Вашем аккаунте не найдена, обратитесь к администратору бота!");
@@ -159,7 +216,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Button("MeViewTournaments")]
         private async Task ViewTournaments(ButtonInteractArgs args)
         {
-            if(args.Query.Message != null)
+            if (args.Query.Message != null)
                 await Tournaments.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From);
         }
 
@@ -197,7 +254,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                                 if (!File.Exists(GetTournamentPath(arenaTournament.ID)))
                                     return "";
                                 var tournamentSheet = await Program.Lichess.GetTournamentSheet(File.OpenText(GetTournamentPath(arenaTournament.ID)));
-                                
+
                                 if (tournamentSheet != null)
                                 {
                                     List<string> exclude = new(Program.MainConfig.TopPlayers);
@@ -239,7 +296,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                                 }
                             }
                         }
-                        else if(info is SwissTournament swissTournament)
+                        else if (info is SwissTournament swissTournament)
                         {
                             if (swissTournament != null)
                             {
@@ -291,22 +348,6 @@ namespace PolyChessTGBot.Bot.BotCommands
                 }
             }
             return string.Empty;
-        }
-
-        private struct TournamentInfo(string id, TournamentType type, DateTime date)
-        {
-            public string ID = id;
-
-            public TournamentType Type = type;
-
-            public DateTime Date = date;
-        }
-
-        private enum TournamentType
-        {
-            Swiss,
-            Default,
-            Team
         }
     }
 }

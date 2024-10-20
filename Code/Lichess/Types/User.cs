@@ -22,6 +22,8 @@ namespace PolyChessTGBot.Lichess.Types
 
         public Dictionary<string, int> Playtime = [];
 
+        public string? Flair;
+
         public string URL = string.Empty;
 
         public Dictionary<string, int> Count = [];

@@ -30,6 +30,8 @@ namespace PolyChessTGBot
 
         public long[] Admins = [];
 
+        public List<string> Flairs = [];
+
         public static ConfigFile Load(string name)
         {
             ConfigFile emptyConfig = new();
