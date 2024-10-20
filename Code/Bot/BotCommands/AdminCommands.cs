@@ -68,7 +68,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Command("fileinfo", "Выдаёт информацию о файле", admin: true)]
-        public async Task GetFileInfo(CommandArgs args)
+        private async Task GetFileInfo(CommandArgs args)
         {
             if (args.Message.ReplyToMessage != null)
             {
@@ -117,7 +117,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Command("addfaq", "Создаёт частозадаваемый вопрос", admin: true)]
-        public async Task AddFAQ(CommandArgs args)
+        private async Task AddFAQ(CommandArgs args)
         {
             if (args.Parameters.Count == 2)
             {
@@ -133,7 +133,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Command("addhelp", "Создаёт частозадаваемый вопрос", admin: true)]
-        public async Task AddHelpLink(CommandArgs args)
+        private async Task AddHelpLink(CommandArgs args)
         {
             if (args.Parameters.Count == 2)
             {
@@ -154,13 +154,13 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Command("cstats", "Покажет характеристики канала", admin: true)]
-        public async Task Stats(CommandArgs args)
+        private async Task Stats(CommandArgs args)
         {
             await args.Reply($"Айди канала: {args.Message.Chat.Id}");
         }
 
         [Command("users", "Покажет пользователей", admin: true)]
-        public async Task GetUsers(CommandArgs args)
+        private async Task GetUsers(CommandArgs args)
         {
             List<User> users = [];
             using var reader = Program.Data.SelectQuery("SELECT * FROM Users");
@@ -170,7 +170,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Command("updatetournaments", "Покажет пользователей", admin: true)]
-        public async Task UpdateTournamnets(CommandArgs args)
+        private async Task UpdateTournamnets(CommandArgs args)
         {
             if (Program.MainConfig.PolytechTeams.Count > 0)
             {
@@ -214,7 +214,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Command("userinfo", "Покажет пользователя", admin: true)]
-        public async Task GetUserInfo(CommandArgs args)
+        private async Task GetUserInfo(CommandArgs args)
         {
             if (args.Parameters.Count > 0)
             {

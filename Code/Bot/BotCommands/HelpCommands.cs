@@ -66,7 +66,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             => await Task.FromResult($"{index + 1}) <b>{entry.Question}</b>\n - {entry.Answer}");
 
         [Command("question", "Синтаксис: /question \"вопрос\". Команда отправит вопрос напрямую Павлу", true)]
-        public async Task Question(CommandArgs args)
+        private async Task Question(CommandArgs args)
         {
             string question = string.Join(" ", args.Parameters);
             if (!string.IsNullOrEmpty(question))
@@ -97,13 +97,13 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Command("faq", "Выдаёт список с FAQ", true)]
-        public async Task FAQ(CommandArgs args)
+        private async Task FAQ(CommandArgs args)
         {
             await FAQMessage.Send(args.Bot, args.Message.Chat.Id, args.User);
         }
 
         [Command("reg", "Регистрирует участника")]
-        public async Task Register(CommandArgs args)
+        private async Task Register(CommandArgs args)
         {
             if (AccountVerifyCodes.TryGetValue(args.User.Id, out (string Name, string FlairID) code))
             {
@@ -142,7 +142,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                             while (flairCode == account.Flair)
                                 flairCode = Program.MainConfig.Flairs[Random.Shared.Next(Program.MainConfig.Flairs.Count)];
                             AccountVerifyCodes.Add(args.User.Id, (account.Username, flairCode));
-                            await args.Reply($"Вам нужно установить значок аккаунта {account.Username} на {flairCode} (делается в настройках на Lichess), после чего прописать /reg");
+                            await args.Reply($"Вам нужно установить значок аккаунта {account.Username} на <b>{flairCode}</b> (делается в настройках на Lichess. Нужно вставить в поле выбора значка <b>{flairCode.Split('.')[1]}</b>), после чего найти точное совпадение значка с <b>{flairCode}</b>. Дальше вы опять прописываете /reg");
 
                         }
                         else
@@ -157,7 +157,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Command("me", "Выдаёт информацию об ученике")]
-        public async Task MyInfo(CommandArgs args)
+        private async Task MyInfo(CommandArgs args)
         {
             using var reader = Program.Data.SelectQuery($"SELECT * FROM Users WHERE TelegramID={args.User.Id}");
             if (reader.Read())
@@ -234,11 +234,9 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private async Task<string> TournamentToString(object info, int index, Telegram.Bot.Types.User tgUser)
         {
-            Console.WriteLine(1);
             using var reader = Program.Data.SelectQuery($"SELECT * FROM Users WHERE TelegramID={tgUser.Id}");
             if (reader.Read())
             {
-                Console.WriteLine(2);
                 User user = new(reader.Get<long>("TelegramID"), reader.Get("Name"), reader.Get("LichessName"), reader.Get<int>("Year"));
                 if (!string.IsNullOrEmpty(user.LichessName))
                 {

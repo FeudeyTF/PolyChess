@@ -57,7 +57,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Command("version", "Отправляет информацию о боте", true)]
-        public async Task Version(CommandArgs args)
+        private async Task Version(CommandArgs args)
         {
             string exeFilePath = Path.Combine(
                 Environment.CurrentDirectory,
@@ -72,6 +72,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             ];
             await args.Reply(string.Join("\n", message));
         }
+
         private struct User(long telegramID, string name, string lichessName, long year)
         {
             public long TelegramID = telegramID;
