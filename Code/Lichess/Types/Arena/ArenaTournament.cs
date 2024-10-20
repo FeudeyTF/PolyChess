@@ -52,5 +52,7 @@ namespace PolyChessTGBot.Lichess.Types.Arena
         public string Description = string.Empty;
 
         public string TeamMember = string.Empty;
+
+        public TeamBattle TeamBattle = new();
     }
 }

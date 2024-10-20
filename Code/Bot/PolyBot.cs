@@ -44,7 +44,10 @@ namespace PolyChessTGBot.Bot
 
         public async Task LoadBot()
         {
+            #if !DEBUG // Сильно замедляет программу вначале
             await BotCommands.BotCommands.LoadTournaments();
+            #endif
+
             using var cancellationTokenSource = new CancellationTokenSource();
             try
             {

@@ -3,8 +3,10 @@ using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Externsions;
+using PolyChessTGBot.Lichess.Types;
 using PolyChessTGBot.Lichess.Types.Arena;
 using PolyChessTGBot.Lichess.Types.Swiss;
+using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -335,5 +337,66 @@ namespace PolyChessTGBot.Bot.BotCommands
             return message;
         }
 
+        [Command("getadmins", "Отправляет информацию о боте", admin: true)]
+        private async Task GetAdmins(CommandArgs args)
+        {
+            Dictionary<string, List<Team>> admins = [];
+            List<string> entries = [];
+            foreach (var arenaID in args.Parameters)
+            {
+                var arenaData = await Program.Lichess.GetTournament(arenaID);
+                if (arenaData != null)
+                {
+                    List<string> teams = [];
+                    foreach (var battleTeam in arenaData.TeamBattle.Teams)
+                    {
+                        var team = await Program.Lichess.GetTeamAsync(battleTeam.Key);
+                        if (team != null)
+                        {
+                            foreach (var admin in team.Leaders)
+                                if (admins.TryGetValue(admin.Name, out var teamList2))
+                                    teamList2.Add(team);
+                                else
+                                {
+                                    var user = await Program.Lichess.GetUserAsync(admin.Name);
+                                    if (user != null && user.LastSeenDate >= DateTime.Now.AddMonths(-3))
+                                        admins.Add(admin.Name, [team]);
+                                }
+                        }
+                    }
+                }
+            }
+            await args.Reply($"ВСЕГО: {admins.Count} админ(ов)!");
+            int adminsPerPage = 20;
+            if (admins.Count > 0)
+            {
+                for (int i = 0; i < admins.Count; i += adminsPerPage)
+                {
+                    List<string> text = [];
+                    for (int j = i; j < i + adminsPerPage && j < admins.Count; j++)
+                    {
+                        var admin = admins.ElementAt(j);
+                        entries.Add($"https://lichess.org/@/{admin.Key}");
+                        text.Add($"<a href=\"https://lichess.org/@/{admin.Key}\">{admin.Key}</a> ({string.Join(", ", admin.Value.Select(t => $"<b>{t.Name}</b>"))})");
+                    }
+                    TelegramMessageBuilder message = string.Join("\n", text);
+                    message.WithoutWebPagePreview();
+                    await args.Reply(message);
+                }
+                var listFilePath = Path.Combine(TempPath, "admins.txt");
+                if (File.Exists(listFilePath))
+                    File.Delete(listFilePath);
+                using (var streamWriter = new StreamWriter(File.Create(listFilePath), Encoding.UTF8))
+                {
+                    foreach (var entry in entries)
+                        streamWriter.WriteLine(entry);
+                    streamWriter.Close();
+                }
+                using var stream = File.Open(listFilePath, FileMode.Open);
+                await args.Reply(new TelegramMessageBuilder("Админы клубов").WithFile(stream, "admins.txt"));
+            }
+            else
+                await args.Reply("Не было найдено админов команд!");
+        }
     }
 }

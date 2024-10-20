@@ -1,6 +1,5 @@
 ﻿using PolyChessTGBot.Bot;
 using PolyChessTGBot.Database;
-using PolyChessTGBot.Externsions;
 using PolyChessTGBot.Lichess;
 using PolyChessTGBot.Logs;
 using PolyChessTGBot.Logs.Types;
@@ -11,7 +10,7 @@ namespace PolyChessTGBot
 {
     public static class Program
     {
-        public static readonly Version Version = new(0, 3, 3, 7);
+        public static readonly Version Version = new(0, 3, 4, 2);
 
         public static readonly DateTime Started;
 
