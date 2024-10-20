@@ -1,6 +1,6 @@
 ﻿using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Messages;
-using PolyChessTGBot.Externsions;
+using PolyChessTGBot.Extensions;
 using PolyChessTGBot.Lichess.Types.Arena;
 using PolyChessTGBot.Lichess.Types.Swiss;
 using System.Text;

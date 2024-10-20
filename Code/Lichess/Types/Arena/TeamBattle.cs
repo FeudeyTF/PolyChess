@@ -8,7 +8,6 @@ namespace PolyChessTGBot.Lichess.Types.Arena
     {
         public Dictionary<string, List<string>> Teams = [];
 
-        [JsonProperty("nbLeaders")]
-        public long LeadersNumber;
+        public int LeadersNumber;
     }
 }

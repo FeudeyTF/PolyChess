@@ -1,5 +1,5 @@
 ﻿using PolyChessTGBot.Bot.Buttons;
-using PolyChessTGBot.Externsions;
+using PolyChessTGBot.Extensions;
 using PolyChessTGBot.Hooks;
 using Telegram.Bot;
 using Telegram.Bot.Types;

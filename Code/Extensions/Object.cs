@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace PolyChessTGBot.Externsions
+namespace PolyChessTGBot.Extensions
 {
     public static partial class Extensions
     {

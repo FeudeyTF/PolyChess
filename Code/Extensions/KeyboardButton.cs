@@ -1,7 +1,7 @@
 ﻿using PolyChessTGBot.Bot.Buttons;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace PolyChessTGBot.Externsions
+namespace PolyChessTGBot.Extensions
 {
     public static partial class Extensions
     {

@@ -1,7 +1,7 @@
 ﻿using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Messages;
-using PolyChessTGBot.Externsions;
+using PolyChessTGBot.Extensions;
 using PolyChessTGBot.Hooks;
 using PolyChessTGBot.Logs;
 using Telegram.Bot;
