@@ -5,7 +5,7 @@ using PolyChessTGBot.Lichess.Types.Arena;
 
 namespace PolyChessTGBot.Lichess.Converters
 {
-    internal class ArenaTournamentsTeamBattleConverter : JsonConverter<TeamBattle>
+    internal class TeamBattleConverter : JsonConverter<TeamBattle>
     {
         public override TeamBattle? ReadJson(JsonReader reader, Type objectType, TeamBattle? existingValue, bool hasExistingValue, JsonSerializer serializer)
         {

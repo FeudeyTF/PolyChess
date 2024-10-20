@@ -3,7 +3,7 @@ using PolyChessTGBot.Lichess.Converters;
 
 namespace PolyChessTGBot.Lichess.Types.Arena
 {
-    [JsonConverter(typeof(ArenaTournamentsTeamBattleConverter))]
+    [JsonConverter(typeof(TeamBattleConverter))]
     public class TeamBattle
     {
         public Dictionary<string, List<string>> Teams = [];
