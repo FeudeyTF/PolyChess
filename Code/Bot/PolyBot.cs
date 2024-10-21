@@ -17,11 +17,11 @@ namespace PolyChessTGBot.Bot
     {
         public readonly TelegramBotClient Telegram;
 
+        public readonly CommandRegistrator CommandRegistrator;
+
         public User? TelegramUser;
 
         private readonly ReceiverOptions BotReceiverOptions;
-
-        private readonly CommandRegistrator CommandRegistrator;
 
         private readonly ButtonsRegistrator ButtonRegistrator;
 

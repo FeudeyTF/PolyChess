@@ -96,13 +96,29 @@ namespace PolyChessTGBot.Bot.BotCommands
             await HelpMessage.Send(args.Bot, args.Message.Chat.Id, args.User);
         }
 
+        [Command("cmds", "Выдаёт список всех команд", admin: true)]
+        private async Task GetCommands(CommandArgs args)
+        {
+            List<string> text = ["<b>Список команд для бота:</b>", "", " - Обычные команды:"];
+            foreach (var command in Program.Bot.CommandRegistrator.Commands)
+                if (!command.AdminCommand)
+                    text.Add($"<b>{command.Name}</b> - {command.Description}");
+            text.Add("");
+            text.Add(" - Админские команды");
+            foreach (var command in Program.Bot.CommandRegistrator.Commands)
+                if (command.AdminCommand)
+                    text.Add($"<b>{command.Name}</b> - {command.Description}");
+
+            await args.Reply(string.Join("\n", text));
+        }
+
         [Command("faq", "Выдаёт список с FAQ", true)]
         private async Task FAQ(CommandArgs args)
         {
             await FAQMessage.Send(args.Bot, args.Message.Chat.Id, args.User);
         }
 
-        [Command("reg", "Регистрирует участника")]
+        [Command("reg", "Меняет привязанный к ученику аккаунт Lichess")]
         private async Task Register(CommandArgs args)
         {
             if (AccountVerifyCodes.TryGetValue(args.User.Id, out (string Name, string FlairID) code))

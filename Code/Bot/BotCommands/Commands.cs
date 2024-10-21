@@ -1,12 +1,8 @@
 using PolyChessTGBot.Bot.Commands;
-using PolyChessTGBot.Bot.Messages;
-using PolyChessTGBot.Lichess.Types;
 using PolyChessTGBot.Lichess.Types.Arena;
 using PolyChessTGBot.Lichess.Types.Swiss;
 using PolyChessTGBot.Logs;
 using System.Reflection;
-using System.Text;
-using Telegram.Bot.Types;
 using File = System.IO.File;
 
 namespace PolyChessTGBot.Bot.BotCommands

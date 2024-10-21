@@ -16,7 +16,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private Division DivisionA = new(1801, 2100);
 
-        [Command("getplayerscore", "Помогает узнать, прошёл ли человек турнир", admin: true)]
+        [Command("getplayerscore", "Показывает результат участие ученика в турнире", admin: true)]
         private async Task GetPlayerScore(CommandArgs args)
         {
             if (args.Parameters.Count == 2)
@@ -99,7 +99,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 await args.Reply("Неправильный синтаксис! Правильно: /getplayerscore \"ID турнира\" \"Ник ученика\"");
         }
 
-        [Command("savearena", "Выдаёт список с полезными материалами", admin: true)]
+        [Command("savearena", "Сохраняет арену", admin: true)]
         private async Task SaveArena(CommandArgs args)
         {
             if (args.Parameters.Count == 1)
@@ -122,7 +122,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 await args.Reply("Неправильный синтаксис! Правильно: /savearena \"ID турнира\"");
         }
 
-        [Command("saveswiss", "Выдаёт список с полезными материалами", admin: true)]
+        [Command("saveswiss", "Сохраняет турнир по швейцарской системе", admin: true)]
         private async Task SaveSwissTournament(CommandArgs args)
         {
             if (args.Parameters.Count == 1)
@@ -145,7 +145,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 await args.Reply("Неправильный синтаксис! Правильно: /saveswiss \"ID турнира\"");
         }
 
-        [Command("swissresult", "Генерирует таблицу с результатами участников", admin: true)]
+        [Command("swissresult", "Генерирует таблицу с результатами участников турнира по швейцарской системе", admin: true)]
         private async Task GenerateSwissTournamentTable(CommandArgs args)
         {
             if (args.Parameters.Count > 0)
@@ -225,7 +225,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 await args.Reply("Неправильный синтаксис! Правильно: /swissresult \"ID турнира\"");
         }
 
-        [Command("arenaresult", "Генерирует таблицу с результатами участников", admin: true)]
+        [Command("arenaresult", "Генерирует таблицу с результатами участников арены", admin: true)]
         private async Task GenerateTournamentTable(CommandArgs args)
         {
             if (args.Parameters.Count > 0)

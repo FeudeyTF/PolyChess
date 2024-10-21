@@ -134,7 +134,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 await args.Reply("Ошибка синтаксиса! Правильно: /addFAQ \"вопрос\" \"ответ\"");
         }
 
-        [Command("addhelp", "Создаёт частозадаваемый вопрос", admin: true)]
+        [Command("addhelp", "Создаёт полезную ссылку", admin: true)]
         private async Task AddHelpLink(CommandArgs args)
         {
             if (args.Parameters.Count == 2)
@@ -155,13 +155,13 @@ namespace PolyChessTGBot.Bot.BotCommands
                 await args.Reply("Ошибка синтаксиса! Правильно: /addhelp \"название\" \"текст\". Чтобы добавить файл - прикрепите его к сообщению с командой");
         }
 
-        [Command("cstats", "Покажет характеристики канала", admin: true)]
+        [Command("cstats", "Показывает характеристики канала", admin: true)]
         private async Task Stats(CommandArgs args)
         {
             await args.Reply($"Айди канала: {args.Message.Chat.Id}");
         }
 
-        [Command("users", "Покажет пользователей", admin: true)]
+        [Command("users", "Показывает пользователей", admin: true)]
         private async Task GetUsers(CommandArgs args)
         {
             List<User> users = [];
@@ -171,7 +171,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             await args.Reply($"Пользователи: {string.Join("\n", users)}");
         }
 
-        [Command("updatetournaments", "Покажет пользователей", admin: true)]
+        [Command("updatetournaments", "Скачивает новые турниры с Lichess", admin: true)]
         private async Task UpdateTournamnets(CommandArgs args)
         {
             if (Program.MainConfig.PolytechTeams.Count > 0)
@@ -215,7 +215,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 await args.Reply("Команда Политеха не найдена!");
         }
 
-        [Command("userinfo", "Покажет пользователя", admin: true)]
+        [Command("userinfo", "Показывает информацию о пользователе", admin: true)]
         private async Task GetUserInfo(CommandArgs args)
         {
             if (args.Parameters.Count > 0)
@@ -337,7 +337,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             return message;
         }
 
-        [Command("getadmins", "Отправляет информацию о боте", admin: true)]
+        [Command("getadmins", "Выдаёт список с админами всех команд, участвовавших в турнирах", admin: true)]
         private async Task GetAdmins(CommandArgs args)
         {
             Dictionary<string, List<Team>> admins = [];
