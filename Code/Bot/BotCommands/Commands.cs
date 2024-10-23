@@ -1,6 +1,6 @@
 using PolyChessTGBot.Bot.Commands;
-using PolyChessTGBot.Lichess.Types.Arena;
-using PolyChessTGBot.Lichess.Types.Swiss;
+using LichessAPI.Types.Arena;
+using LichessAPI.Types.Swiss;
 using PolyChessTGBot.Logs;
 using System.Reflection;
 using File = System.IO.File;

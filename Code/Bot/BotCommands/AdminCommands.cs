@@ -3,9 +3,9 @@ using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
-using PolyChessTGBot.Lichess.Types;
-using PolyChessTGBot.Lichess.Types.Arena;
-using PolyChessTGBot.Lichess.Types.Swiss;
+using LichessAPI.Types;
+using LichessAPI.Types.Arena;
+using LichessAPI.Types.Swiss;
 using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -299,7 +299,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 await args.Reply("Аккаунт Lichess не найден!");
         }
 
-        private async Task<TelegramMessageBuilder> GenerateUserInfo(Lichess.Types.User user)
+        private async Task<TelegramMessageBuilder> GenerateUserInfo(LichessAPI.Types.User user)
         {
             var teams = await Program.Lichess.GetUserTeamsAsync(user.Username);
             TelegramMessageBuilder message = new();
@@ -345,7 +345,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             foreach (var arenaID in args.Parameters)
             {
                 var arenaData = await Program.Lichess.GetTournament(arenaID);
-                if (arenaData != null)
+                if (arenaData != null && arenaData.TeamBattle.Teams != null)
                 {
                     List<string> teams = [];
                     foreach (var battleTeam in arenaData.TeamBattle.Teams)

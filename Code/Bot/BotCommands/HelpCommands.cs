@@ -3,8 +3,8 @@ using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
-using PolyChessTGBot.Lichess.Types.Arena;
-using PolyChessTGBot.Lichess.Types.Swiss;
+using LichessAPI.Types.Arena;
+using LichessAPI.Types.Swiss;
 using Telegram.Bot.Types.ReplyMarkups;
 using File = System.IO.File;
 

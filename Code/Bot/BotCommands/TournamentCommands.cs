@@ -1,8 +1,8 @@
 ﻿using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Extensions;
-using PolyChessTGBot.Lichess.Types.Arena;
-using PolyChessTGBot.Lichess.Types.Swiss;
+using LichessAPI.Types.Arena;
+using LichessAPI.Types.Swiss;
 using System.Text;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -36,7 +36,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     if (tournament != null && tournamentSheet != null)
                     {
                         using var reader = Program.Data.SelectQuery($"SELECT * FROM Users WHERE Name='{name}'");
-                        Lichess.Types.User? lichessUser = null;
+                        LichessAPI.Types.User? lichessUser = null;
                         if (reader.Read())
                         {
                             lichessUser = await Program.Lichess.GetUserAsync(reader.Get("LichessName"));
