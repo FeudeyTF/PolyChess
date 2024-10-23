@@ -4,6 +4,7 @@ using LichessAPI.Types.Swiss;
 using PolyChessTGBot.Logs;
 using System.Reflection;
 using File = System.IO.File;
+using System.Diagnostics;
 
 namespace PolyChessTGBot.Bot.BotCommands
 {
@@ -75,7 +76,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             [
                 "🛠<b>Информация о боте</b>🛠",
                 $"👨🏻‍💻<b>Разработчик:</b> {Program.MainConfig.BotAuthor}",
-                $"🔀<b>Версия бота:</b> v.{Program.Version}",
+                $"🔀<b>Версия бота:</b> v.{FileVersionInfo.GetVersionInfo(exeFilePath).FileVersion}",
                 $"🕐<b>Дата последнего обновления:</b> {File.GetLastWriteTime(exeFilePath):g}",
                 $"⏱<b>Время работы:</b> {DateTime.Now - Program.Started:%d' дн. '%h' ч. '%m' мин. '%s' сек.'}"
             ];

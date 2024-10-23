@@ -12,8 +12,6 @@ namespace PolyChessTGBot
 {
     public static class Program
     {
-        public static readonly Version Version = new(0, 3, 4, 2);
-
         public static readonly DateTime Started;
 
         public static ConfigFile MainConfig { get; private set; }
@@ -36,7 +34,7 @@ namespace PolyChessTGBot
             string exeFilePath = Path.Combine(
                 Environment.CurrentDirectory,
                 Assembly.GetExecutingAssembly().GetName().Name + ".exe");
-            Logger.Write($"Программа версии {Version} от {File.GetLastWriteTime(exeFilePath):g}", LogType.Info);
+            Logger.Write($"Программа версии {FileVersionInfo.GetVersionInfo(exeFilePath).FileVersion} от {File.GetLastWriteTime(exeFilePath):g}", LogType.Info);
             Data = new(MainConfig.DatabasePath);
             Data.LoadTables();
             Logger.Write($"База данных '{Data.DatabaseName}' подключена!", LogType.Info);
