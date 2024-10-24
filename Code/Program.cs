@@ -5,8 +5,9 @@ using PolyChessTGBot.Logs;
 using PolyChessTGBot.Logs.Types;
 using PolyChessTGBot.Sockets;
 using System.Reflection;
-using LichessAPI.Client;
+using LichessAPI.Clients;
 using System.Diagnostics;
+using LichessAPI.Clients.Authorized;
 
 namespace PolyChessTGBot
 {
@@ -24,7 +25,7 @@ namespace PolyChessTGBot
 
         internal static readonly SocketServer? Socket;
 
-        internal static LichessApiClient Lichess;
+        internal static LichessClient Lichess;
 
         static Program()
         {

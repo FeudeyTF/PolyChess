@@ -1,4 +1,4 @@
-﻿using LichessAPI.Client;
+﻿using LichessAPI.Clients;
 
 namespace LichessAPI.Types
 {
@@ -10,7 +10,7 @@ namespace LichessAPI.Types
 
         public string Flair = string.Empty;
 
-        public async Task<User?> GetFullUser(LichessApiClient client)
+        public async Task<User?> GetFullUser(LichessClient client)
             => await client.GetUserAsync(Name);
     }
 }

@@ -1,9 +1,9 @@
 ﻿using LichessAPI.Types;
 using LichessAPI.Types.Streams;
 
-namespace LichessAPI.Client
+namespace LichessAPI.Clients
 {
-    public partial class LichessApiClient
+    public partial class LichessClient : LichessApiClient
     {
         public async Task<User?> GetUserAsync(string username)
         {

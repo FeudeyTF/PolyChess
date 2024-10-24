@@ -1,8 +1,8 @@
 ﻿using LichessAPI.Types;
 
-namespace LichessAPI.Client
+namespace LichessAPI.Clients
 {
-    public partial class LichessApiClient
+    public partial class LichessClient : LichessApiClient
     {
         public async Task<List<Team>> GetUserTeamsAsync(string username)
         {
