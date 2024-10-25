@@ -23,31 +23,40 @@ namespace LichessAPI
             SerializerOptions.Converters.Add(new TeamBattleConverter());
         }
 
-        protected async Task<string?> SendRequestAsync(params object[] path)
+        protected async Task<string> GetGetRequestContentAsync(params object[] path)
+            => await (await SendGetRequestAsync(path, [])).Content.ReadAsStringAsync();
+
+        protected async Task<string> GetPostRequestContentAsync(params object[] path)
+            => await (await SendPostRequestAsync(path, [])).Content.ReadAsStringAsync();
+
+        protected async Task<string> GetGetRequestContentAsync(object[] path, (string name, string value)[] headers)
+            => await (await SendGetRequestAsync(path, headers)).Content.ReadAsStringAsync();
+
+        protected async Task<string> GetPostRequestContentAsync(object[] path, (string name, string value)[] headers)
+            => await (await SendPostRequestAsync(path, headers)).Content.ReadAsStringAsync();
+
+        protected async Task<HttpResponseMessage> SendPostRequestAsync(object[] path) =>
+            await SendPostRequestAsync(path, []);
+
+        protected async Task<HttpResponseMessage> SendPostRequestAsync(object[] path, (string name, string value)[] headers)
+            => await SendRequestMessage(HttpMethod.Post, path, headers);
+
+        protected async Task<HttpResponseMessage> SendGetRequestAsync(params object[] path) =>
+            await SendGetRequestAsync(path, []);
+
+        protected async Task<HttpResponseMessage> SendGetRequestAsync(object[] path, (string name, string value)[] headers)
+            => await SendRequestMessage(HttpMethod.Get, path, headers);
+
+        protected async Task<HttpResponseMessage> SendRequestMessage(HttpMethod method, object[] path, (string name, string value)[] headers)
         {
-            try
-            {
-                return await HttpClient.GetStringAsync(LICHESS_API_URL + string.Join("/", path));
-            }
-            catch
-            {
-                return null;
-            }
+            HttpRequestMessage msg = new(method, LICHESS_API_URL + string.Join("/", path));
+            foreach (var (name, value) in headers)
+                msg.Headers.Add(name, value);
+            return await SendRequestMessage(msg);
         }
 
-        protected async Task<string?> CreatePostRequestAsync(HttpContent? content, params object[] path)
-        {
-            Console.WriteLine(LICHESS_API_URL + string.Join("/", path));
-            Console.WriteLine(content);
-            using var response = await HttpClient.PostAsync(LICHESS_API_URL + string.Join("/", path), content);
-            return await response.Content.ReadAsStringAsync();
-        }
-
-        protected async Task<string?> CreateGetRequestAsync(params object[] path)
-        {
-            using var response = await HttpClient.GetAsync(LICHESS_API_URL + string.Join("/", path));
-            return await response.Content.ReadAsStringAsync();
-        }
+        protected async Task<HttpResponseMessage> SendRequestMessage(HttpRequestMessage message)
+            => await HttpClient.SendAsync(message);
 
         internal async Task<Stream> GetFileAsync(params object[] path)
             => await HttpClient.GetStreamAsync(LICHESS_API_URL + string.Join("/", path));
@@ -61,11 +70,24 @@ namespace LichessAPI
         internal async Task<List<TValue>> GetNDJsonObject<TValue>(params object[] path)
             => Utils.ParseNDJsonObject<TValue>(await GetFileStringAsync(path));
 
-        internal async Task<TValue?> GetJsonObject<TValue>(params object[] path)
+        internal async Task<TValue?> GetJsonObject<TValue>(HttpMethod method, params object[] path)
+            => await GetJsonObject<TValue>(method, path, []);
+
+        internal async Task<TValue?> GetJsonObject<TValue>(HttpMethod method, object[] path, (string name, string value)[] headers)
         {
-            var response = await SendRequestAsync(path);
-            if (response != null)
-                return JsonSerializer.Deserialize<TValue>(response, SerializerOptions);
+            HttpRequestMessage msg = new(method, LICHESS_API_URL + string.Join("/", path));
+            foreach (var (name, value) in headers)
+                msg.Headers.Add(name, value);
+            return await GetJsonObject<TValue>(msg);
+        }
+
+        internal async Task<TValue?> GetJsonObject<TValue>(HttpRequestMessage message)
+            => await GetJsonObject<TValue>(await SendRequestMessage(message));
+
+        internal async Task<TValue?> GetJsonObject<TValue>(HttpResponseMessage response)
+        {
+            if (response.IsSuccessStatusCode)
+                return JsonSerializer.Deserialize<TValue>(await response.Content.ReadAsStringAsync(), SerializerOptions);
             else
                 return default;
         }

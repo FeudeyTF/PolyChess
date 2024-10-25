@@ -22,6 +22,8 @@ namespace LichessAPI.Types
 
         public Dictionary<string, int> Playtime  = [];
 
+        public Profile? Profile;
+
         public string? Flair;
 
         public string URL = string.Empty;

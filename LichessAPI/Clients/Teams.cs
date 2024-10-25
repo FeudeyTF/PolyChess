@@ -6,7 +6,7 @@ namespace LichessAPI.Clients
     {
         public async Task<List<Team>> GetUserTeamsAsync(string username)
         {
-            var teams = await GetJsonObject<List<Team>>("team", "of", username);
+            var teams = await GetJsonObject<List<Team>>(HttpMethod.Get, "team", "of", username);
             if (teams == null)
                 return [];
             return teams;
@@ -14,7 +14,7 @@ namespace LichessAPI.Clients
 
         public async Task<Team?> GetTeamAsync(string id)
         {
-            return await GetJsonObject<Team>("team", id);
+            return await GetJsonObject<Team>(HttpMethod.Get, "team", id);
         }
     }
 }

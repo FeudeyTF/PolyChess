@@ -12,7 +12,7 @@ namespace LichessAPI.Clients
             => await GetNDJsonObject<SwissTournament>(new StreamReader(await GetFileAsync("team", teamId, "swiss")));
 
         public async Task<ArenaTournament?> GetTournament(string id)
-            => await GetJsonObject<ArenaTournament>("tournament", id);
+            => await GetJsonObject<ArenaTournament>(HttpMethod.Get, "tournament", id);
 
         public async Task<List<SheetEntry>> GetTournamentSheet(string id, bool full = false)
             => await GetNDJsonObject<SheetEntry>("tournament", id, "results?sheet=" + full);
@@ -21,7 +21,7 @@ namespace LichessAPI.Clients
             => await GetNDJsonObject<SheetEntry>(reader);
 
         public async Task<SwissTournament?> GetSwissTournament(string id)
-            => await GetJsonObject<SwissTournament>("swiss", id);
+            => await GetJsonObject<SwissTournament>(HttpMethod.Get, "swiss", id);
 
         public async Task<List<SwissSheetEntry>> GetSwissTournamentSheet(StreamReader reader)
             => await GetNDJsonObject<SwissSheetEntry>(reader);
