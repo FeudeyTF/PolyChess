@@ -12,9 +12,9 @@ namespace PolyChessTGBot.Bot.BotCommands
     {
         public static readonly string TempPath;
 
-        private static List<ArenaTournament> TournamentsList;
+        private static List<ArenaTournamentInfo> TournamentsList;
 
-        private static List<SwissTournament> SwissTournamentsList;
+        private static List<SwissTournamentInfo> SwissTournamentsList;
 
         static BotCommands()
         {
@@ -23,7 +23,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             SwissTournamentsList = [];
         }
 
-        public static async Task LoadTournaments()
+        public async Task LoadTournaments()
         {
             if (DateTime.TryParse(Program.MainConfig.TournamentScoresDate, out var date))
             {
@@ -43,7 +43,17 @@ namespace PolyChessTGBot.Bot.BotCommands
                     {
                         var tournament = await Program.Lichess.GetTournament(tournamentName);
                         if (tournament != null && tournament.StartDate > date)
-                            TournamentsList.Add(tournament);
+                        {
+                            var tournamentSheet = await Program.Lichess.GetTournamentSheet(File.OpenText(filePath));
+
+                            if (tournamentSheet != null)
+                            {
+                                List<string> exclude = new(Program.MainConfig.TopPlayers);
+                                tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username) || e.Team != null && !Program.MainConfig.PolytechTeams.Contains(e.Team))).ToList();
+                                TournamentRating<SheetEntry> tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
+                                TournamentsList.Add(new(tournament, tournamentRating));
+                            }
+                        }
                     }
                 }
 
@@ -54,12 +64,22 @@ namespace PolyChessTGBot.Bot.BotCommands
                     {
                         var tournament = await Program.Lichess.GetSwissTournament(tournamentName);
                         if (tournament != null && tournament.Started > date)
-                            SwissTournamentsList.Add(tournament);
+                        {
+                            var tournamentSheet = await Program.Lichess.GetSwissTournamentSheet(File.OpenText(filePath));
+
+                            if (tournamentSheet != null)
+                            {
+                                List<string> exclude = new(Program.MainConfig.TopPlayers);
+                                tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username))).ToList();
+                                TournamentRating<SwissSheetEntry> tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
+                                SwissTournamentsList.Add(new(tournament, tournamentRating));
+                            }
+                        }
                     }
                 }
 
-                TournamentsList = [.. from r in TournamentsList orderby r.StartDate descending select r];
-                SwissTournamentsList = [.. from r in SwissTournamentsList orderby r.Started descending select r];
+                TournamentsList = [.. from r in TournamentsList orderby r.Tournament.StartDate descending select r];
+                SwissTournamentsList = [.. from r in SwissTournamentsList orderby r.Tournament.Started descending select r];
                 Program.Logger.Write($"Найдено {TournamentsList.Count} турниров и {SwissTournamentsList.Count} турниров по швейцарской системе!", LogType.Info);
             }
             else
@@ -96,6 +116,32 @@ namespace PolyChessTGBot.Bot.BotCommands
             public override readonly string ToString()
             {
                 return $"{Name} '{LichessName}' ({TelegramID}), Курс - {Year}";
+            }
+        }
+
+        private class ArenaTournamentInfo
+        {
+            public ArenaTournament Tournament;
+
+            public TournamentRating<SheetEntry> Rating;
+
+            public ArenaTournamentInfo(ArenaTournament tournament, TournamentRating<SheetEntry> rating)
+            {
+                Tournament = tournament;
+                Rating = rating;
+            }
+        }
+
+        private class SwissTournamentInfo
+        {
+            public SwissTournament Tournament;
+
+            public TournamentRating<SwissSheetEntry> Rating;
+
+            public SwissTournamentInfo(SwissTournament tournament, TournamentRating<SwissSheetEntry> rating)
+            {
+                Tournament = tournament;
+                Rating = rating;
             }
         }
     }

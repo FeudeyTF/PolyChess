@@ -239,7 +239,12 @@ namespace PolyChessTGBot.Bot.BotCommands
                 var filePath = Path.Combine(directory, tournamentId + ".txt");
                 if (File.Exists(filePath))
                 {
-                    var tournamentSheet = await Program.Lichess.GetTournamentSheet(File.OpenText(filePath));
+                    List<SheetEntry> tournamentSheet = [];
+                    using (var file = File.OpenText(filePath))
+                    {
+                        tournamentSheet = await Program.Lichess.GetTournamentSheet(file);
+                    }
+
                     List<string> exclude = new(Program.MainConfig.TopPlayers);
                     if (args.Parameters.Count > 1)
                     {

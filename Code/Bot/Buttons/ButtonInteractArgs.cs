@@ -30,5 +30,8 @@ namespace PolyChessTGBot.Bot.Buttons
             if (Query.Message != null)
                 await Bot.SendMessage(message.ReplyTo(Query.Message.MessageId), Query.Message.Chat.Id);
         }
+
+        public async Task Reply(IEnumerable<string> text, string separator = "\n")
+            => await Reply(string.Join(separator, text));
     }
 }

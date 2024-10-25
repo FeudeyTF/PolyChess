@@ -9,9 +9,12 @@ namespace LichessAPI
             List<TValue> result = [];
             foreach (var entry in value.Split('\n'))
             {
-                var obj = JsonSerializer.Deserialize<TValue>(entry);
-                if (obj != null)
-                    result.Add(obj);
+                if (!string.IsNullOrEmpty(entry))
+                {
+                    var obj = JsonSerializer.Deserialize<TValue>(entry, LichessApiClient.SerializerOptions);
+                    if (obj != null)
+                        result.Add(obj);
+                }
             }
             return result;
         }

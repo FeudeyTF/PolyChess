@@ -177,8 +177,8 @@ namespace PolyChessTGBot.Bot.BotCommands
             if (Program.MainConfig.PolytechTeams.Count > 0)
             {
                 await args.Reply("Началась загрузка турниров... Это может занять некоторое время");
-                List<ArenaTournament> arenaTournamentsInfos = []; 
-                List<SwissTournament> swissTournamentsInfos = [];
+                List<ArenaTournamentInfo> arenaTournamentsInfos = []; 
+                List<SwissTournamentInfo> swissTournamentsInfos = [];
                 var teamID = Program.MainConfig.PolytechTeams.First();
                 var swissTournaments = await Program.Lichess.GetTeamSwissTournaments(teamID);
                 var arenaTournaments = await Program.Lichess.GetTeamArenaTournaments(teamID);
@@ -196,19 +196,19 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                 foreach(var swissTournament in swissTournaments)
                 {
-                    swissTournaments.Add(swissTournament);
+                    //swissTournamentsInfos.Add(new(swissTournament, GenerateTournamentRating(swissTournament);
                     await Program.Lichess.SaveSwissTournamentSheet(GetSwissTournamentPath(swissTournament.ID), swissTournament.ID);
                     await args.Reply($"Турнир {swissTournament.Name} успешно сохранён!");
                 }
 
                 foreach (var arenaTournament in arenaTournaments)
                 {
-                    arenaTournamentsInfos.Add(arenaTournament);
+                    //arenaTournamentsInfos.Add(arenaTournament);
                     await Program.Lichess.SaveTournamentSheet(GetTournamentPath(arenaTournament.ID), arenaTournament.ID, true);
                     await args.Reply($"Турнир {arenaTournament.FullName} успешно сохранён!");
                 }
-                TournamentsList = [.. TournamentsList, .. arenaTournaments];
-                SwissTournamentsList = [.. SwissTournamentsList, .. swissTournaments];
+                TournamentsList = [.. TournamentsList, .. arenaTournamentsInfos];
+                SwissTournamentsList = [.. SwissTournamentsList, .. swissTournamentsInfos];
                 await args.Reply("Все турниры успешно добавлены!");
             }
             else

@@ -9,11 +9,10 @@ namespace LichessAPI
 
         private HttpClient HttpClient { get; }
 
-        private readonly JsonSerializerOptions SerializerOptions;
+        public static readonly JsonSerializerOptions SerializerOptions;
 
-        public LichessApiClient()
+        static LichessApiClient()
         {
-            HttpClient = new();
             SerializerOptions = new()
             {
                 PropertyNameCaseInsensitive = true,
@@ -21,6 +20,11 @@ namespace LichessAPI
             };
             SerializerOptions.Converters.Add(new LichessDateTimeConverter());
             SerializerOptions.Converters.Add(new TeamBattleConverter());
+        }
+
+        public LichessApiClient()
+        {
+            HttpClient = new();
         }
 
         protected async Task<string> GetGetRequestContentAsync(params object[] path)
