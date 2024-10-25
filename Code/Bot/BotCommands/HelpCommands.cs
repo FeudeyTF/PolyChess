@@ -288,7 +288,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                         text.Add($"🧩<b>Решение пазлов:</b> {puzzlePerformance.Games} из {Program.MainConfig.Test.RequiredPuzzlesSolved} ({Utils.CreateSimpleBar(puzzlePerformance.Games, Program.MainConfig.Test.RequiredPuzzlesSolved, bars: barsInBar)})");
                     }
 
-                    int creativeTask = 0;
+                    int creativeTask = user.CreativeTaskCompleted ? 1 : 0;
                     totalScore += Math.Min(creativeTask, 1) * barsInBar;
                     text.Add($"🧠<b>Творческое задание:</b> {Utils.CreateSimpleBar(creativeTask, 1, bars: 1)} Не выполнено!");
 
