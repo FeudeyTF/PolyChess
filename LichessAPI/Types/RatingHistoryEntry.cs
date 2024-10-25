@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace LichessAPI.Types
+﻿namespace LichessAPI.Types
 {
     public class RatingHistoryEntry
     {

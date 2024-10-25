@@ -6,6 +6,8 @@ namespace PolyChessTGBot.Database
     {
         public string DatabaseName => DB.Database;
 
+        public List<User> Users;
+
         private readonly SqliteConnection DB;
 
         public PolyData(string path)
@@ -15,6 +17,7 @@ namespace PolyChessTGBot.Database
             if (dirName != null)
                 Directory.CreateDirectory(dirName);
             DB = new(string.Format("Data Source={0}", sqlPath));
+            Users = GetAllUsers();
         }
 
         public void LoadTables()
@@ -41,6 +44,22 @@ namespace PolyChessTGBot.Database
                   "Footer          Text," +
                   "FileID          Text" +
                   ")");
+        }
+
+        public User? GetUser(long telegramID)
+        {
+            foreach (var user in Users)
+                if (user.TelegramID == telegramID)
+                    return user;
+            return null;
+        }
+        public List<User> GetAllUsers()
+        {
+            List<User> result = [];
+            using var reader = SelectQuery($"SELECT * FROM Users");
+            while (reader.Read())
+                result.Add(new(reader.Get<long>("TelegramID"), reader.Get("Name"), reader.Get("LichessName"), reader.Get<int>("Year"), reader.Get<int>("CreativeTaskCompleted")));
+            return result;
         }
 
         public List<HelpLink> GetHelpLinks()

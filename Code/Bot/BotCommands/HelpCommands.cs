@@ -130,9 +130,16 @@ namespace PolyChessTGBot.Bot.BotCommands
                         using var reader = Program.Data.SelectQuery($"SELECT * FROM Users WHERE LichessName='{account.Username}'");
                         if (!reader.Read())
                         {
-                            Program.Data.Query($"UPDATE Users SET LichessName='{account.Username}' WHERE TelegramID='{args.User.Id}'");
-                            AccountVerifyCodes.Remove(args.User.Id);
-                            await args.Reply($"Ваш аккаунт теперь - <b>{account.Username}</b>");
+                            var user = Program.Data.GetUser(args.User.Id);
+                            if(user != null)
+                            {
+                                user.LichessName = account.Username;
+                                Program.Data.Query($"UPDATE Users SET LichessName='{account.Username}' WHERE TelegramID='{args.User.Id}'");
+                                AccountVerifyCodes.Remove(args.User.Id);
+                                await args.Reply($"Ваш аккаунт теперь - <b>{account.Username}</b>");
+                            }
+                            else
+                                await args.Reply($"Ваши данные не были найдены!");
                         }
                         else
                             await args.Reply($"Аккаунт <b>{account.Username}</b> уже занят!");
@@ -174,10 +181,9 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Command("me", "Выдаёт информацию об ученике", true)]
         private async Task MyInfo(CommandArgs args)
         {
-            using var reader = Program.Data.SelectQuery($"SELECT * FROM Users WHERE TelegramID={args.User.Id}");
-            if (reader.Read())
-            {
-                User user = new(reader.Get<long>("TelegramID"), reader.Get("Name"), reader.Get("LichessName"), reader.Get<int>("Year"));
+            User? user = Program.Data.GetUser(args.User.Id);
+            if(user != null)
+            { 
                 List<string> text = [$"👋 Приветствую, <b>{user.Name}</b>"];
                 if (!string.IsNullOrEmpty(user.LichessName))
                 {
@@ -216,6 +222,11 @@ namespace PolyChessTGBot.Bot.BotCommands
                         InlineKeyboardButton viewTournaments = new("💪 Посмотреть баллы за турниры");
                         viewTournaments.SetData("MeViewTournaments");
                         message.AddButton(viewTournaments);
+
+                        InlineKeyboardButton viewProgress = new("📊 Посмотреть прогресс по зачёту");
+                        viewProgress.SetData("MeViewProgress");
+                        message.AddButton(viewProgress);
+
                         await args.Reply(message);
                     }
                     else
@@ -235,6 +246,65 @@ namespace PolyChessTGBot.Bot.BotCommands
                 await Tournaments.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From);
         }
 
+        [Button("MeViewProgress")]
+        private async Task ViewProgress(ButtonInteractArgs args)
+        {
+            int visitedTournamentsCount = 0;
+            int totalScore = 0;
+            int barsInBar = 15;
+            User? user = Program.Data.GetUser(args.Query.From.Id);
+            if (user != null)
+            {
+                var lichessUser = await Program.Lichess.GetUserAsync(user.LichessName);
+                if (lichessUser != null)
+                {
+                    foreach (var tournament in TournamentsList)
+                        if (tournament.Tournament.StartDate < DateTime.UtcNow)
+                            foreach (var player in tournament.Rating.Players)
+                                if (player.User != null && player.User.TelegramID == args.Query.From.Id && player.Score > -1)
+                                {
+                                    visitedTournamentsCount++;
+                                    continue;
+                                }
+
+                    foreach (var tournament in SwissTournamentsList)
+                        if (tournament.Tournament.Started < DateTime.UtcNow)
+                            foreach (var player in tournament.Rating.Players)
+                                if (player.User != null && player.User.TelegramID == args.Query.From.Id && player.Score > -1)
+                                {
+                                    visitedTournamentsCount++;
+                                    continue;
+                                }
+
+                    List<string> text = ["📌<b>Ваш прогресс по выполнению регламента зачёта:</b>"];
+                    text.Add("📚<b>Посещение занятий:</b> Недоступно");
+
+                    totalScore += Math.Min(visitedTournamentsCount / Program.MainConfig.Test.RequiredTournamentsCount, 1) * barsInBar;
+                    text.Add($"🤝<b>Участие в турнирах:</b> {visitedTournamentsCount} из  {Program.MainConfig.Test.RequiredTournamentsCount} ({Utils.CreateSimpleBar(visitedTournamentsCount, Program.MainConfig.Test.RequiredTournamentsCount, bars: barsInBar)})");
+
+                    if (lichessUser.Perfomance.TryGetValue("puzzle", out var puzzlePerformance))
+                    {
+                        totalScore += Math.Min(puzzlePerformance.Games / Program.MainConfig.Test.RequiredPuzzlesSolved, 1) * barsInBar;
+                        text.Add($"🧩<b>Решение пазлов:</b> {puzzlePerformance.Games} из {Program.MainConfig.Test.RequiredPuzzlesSolved} ({Utils.CreateSimpleBar(puzzlePerformance.Games, Program.MainConfig.Test.RequiredPuzzlesSolved, bars: barsInBar)})");
+                    }
+
+                    int creativeTask = 0;
+                    totalScore += Math.Min(creativeTask, 1) * barsInBar;
+                    text.Add($"🧠<b>Творческое задание:</b> {Utils.CreateSimpleBar(creativeTask, 1, bars: 1)} Не выполнено!");
+
+                    text.Add("");
+                    text.Add("📊<b>Полный прогресс:</b>");
+                    text.Add($"{totalScore / 3} из 15 {Utils.CreateSimpleBar(totalScore, barsInBar * 3, bars: barsInBar)}");
+
+                    await args.Reply(text);
+                }
+                else
+                    await args.Reply("Ваш аккаунт не найден на Lichess!");
+            }
+            else
+                await args.Reply("Ваш аккаунт не найден в системе!");
+        }
+
         private async Task<List<object>> GetTournamentsIDs()
         {
             List<object> result = [];
@@ -249,10 +319,9 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private async Task<string> TournamentToString(object info, int index, Telegram.Bot.Types.User tgUser)
         {
-            using var reader = Program.Data.SelectQuery($"SELECT * FROM Users WHERE TelegramID={tgUser.Id}");
-            if (reader.Read())
+            User? user = Program.Data.GetUser(tgUser.Id);
+            if (user != null)
             {
-                User user = new(reader.Get<long>("TelegramID"), reader.Get("Name"), reader.Get("LichessName"), reader.Get<int>("Year"));
                 if (!string.IsNullOrEmpty(user.LichessName))
                 {
                     TelegramMessageBuilder message = new();

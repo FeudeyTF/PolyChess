@@ -50,7 +50,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                             {
                                 List<string> exclude = new(Program.MainConfig.TopPlayers);
                                 tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username) || e.Team != null && !Program.MainConfig.PolytechTeams.Contains(e.Team))).ToList();
-                                TournamentRating<SheetEntry> tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
+                                var tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
                                 TournamentsList.Add(new(tournament, tournamentRating));
                             }
                         }
@@ -71,7 +71,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                             {
                                 List<string> exclude = new(Program.MainConfig.TopPlayers);
                                 tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username))).ToList();
-                                TournamentRating<SwissSheetEntry> tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
+                                var tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
                                 SwissTournamentsList.Add(new(tournament, tournamentRating));
                             }
                         }
@@ -101,22 +101,6 @@ namespace PolyChessTGBot.Bot.BotCommands
                 $"⏱<b>Время работы:</b> {DateTime.Now - Program.Started:%d' дн. '%h' ч. '%m' мин. '%s' сек.'}"
             ];
             await args.Reply(string.Join("\n", message));
-        }
-
-        private struct User(long telegramID, string name, string lichessName, long year)
-        {
-            public long TelegramID = telegramID;
-
-            public string Name = name;
-
-            public string LichessName = lichessName;
-
-            public long Year = year;
-
-            public override readonly string ToString()
-            {
-                return $"{Name} '{LichessName}' ({TelegramID}), Курс - {Year}";
-            }
         }
 
         private class ArenaTournamentInfo

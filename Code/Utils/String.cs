@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 
 namespace PolyChessTGBot
 {
@@ -55,6 +55,18 @@ namespace PolyChessTGBot
             if (sb.Length > 0)
                 result.Add(sb.ToString());
 
+            return result;
+        }
+
+        public static string CreateSimpleBar(double now, double max, char empty = '□', char solid = '■', int bars = 10)
+        {
+            string result = "";
+            double solidBarsCount = now / max * bars;
+            for (int i = 0; i < bars; i++)
+                if (i <= solidBarsCount - 1)
+                    result += solid;
+                else
+                    result += empty;
             return result;
         }
     }

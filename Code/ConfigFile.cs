@@ -34,6 +34,8 @@ namespace PolyChessTGBot
 
         public List<string> Flairs = [];
 
+        public TestSettings Test = new();
+
         public static ConfigFile Load(string name)
         {
             ConfigFile emptyConfig = new();
@@ -54,6 +56,15 @@ namespace PolyChessTGBot
                 File.WriteAllText(path, JsonConvert.SerializeObject(this, Formatting.Indented));
             return path;
         }
+    }
+
+    public class TestSettings
+    {
+        public int RequiredTournamentsCount;
+
+        public int RequiredVisitedLessonsPercent;
+
+        public int RequiredPuzzlesSolved;
     }
 
     public class SocketSettings

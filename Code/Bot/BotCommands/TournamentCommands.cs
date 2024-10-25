@@ -5,6 +5,7 @@ using LichessAPI.Types.Arena;
 using LichessAPI.Types.Swiss;
 using System.Text;
 using Telegram.Bot.Types.ReplyMarkups;
+using PolyChessTGBot.Database;
 
 namespace PolyChessTGBot.Bot.BotCommands
 {
@@ -366,13 +367,10 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private static TournamentRating<TValue> GenerateTournamentRating<TValue>(List<TValue> tournament, Func<TValue, DivisionType> getDivision, Func<TValue, string> getLichessName, Func<TValue, bool, int> calculateScore)
         {
-            Dictionary<string, User?> users = [];
-            using var reader = Program.Data.SelectQuery($"SELECT * FROM Users");
-            {
-                while (reader.Read())
-                    if (!string.IsNullOrEmpty(reader.Get("LichessName")))
-                        users.Add(reader.Get("LichessName"), new(reader.Get<long>("TelegramID"), reader.Get("Name"), reader.Get("LichessName"), reader.Get<int>("Year")));
-            }
+            Dictionary<string, User> users = [];
+            foreach (var user in Program.Data.Users)
+                if(!string.IsNullOrEmpty(user.LichessName))
+                    users.Add(user.LichessName, user);
 
             Dictionary<DivisionType, List<TValue>> playersInDivision = new()
                 {

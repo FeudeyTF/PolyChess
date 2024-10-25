@@ -4,8 +4,6 @@ using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
 using LichessAPI.Types;
-using LichessAPI.Types.Arena;
-using LichessAPI.Types.Swiss;
 using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -164,11 +162,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Command("users", "Показывает пользователей", admin: true)]
         private async Task GetUsers(CommandArgs args)
         {
-            List<User> users = [];
-            using var reader = Program.Data.SelectQuery("SELECT * FROM Users");
-            while (reader.Read())
-                users.Add(new(reader.Get<long>("TelegramID"), reader.Get("Name"), reader.Get("LichessName"), reader.Get<int>("Year")));
-            await args.Reply($"Пользователи: {string.Join("\n", users)}");
+            await args.Reply($"Пользователи: {string.Join("\n", Program.Data.Users)}");
         }
 
         [Command("updatetournaments", "Скачивает новые турниры с Lichess", admin: true)]
