@@ -1,11 +1,11 @@
-﻿using PolyChessTGBot.Bot.Commands;
-using PolyChessTGBot.Bot.Messages;
-using PolyChessTGBot.Extensions;
-using LichessAPI.Types.Arena;
+﻿using LichessAPI.Types.Arena;
 using LichessAPI.Types.Swiss;
+using PolyChessTGBot.Bot.Commands;
+using PolyChessTGBot.Bot.Messages;
+using PolyChessTGBot.Database;
+using PolyChessTGBot.Extensions;
 using System.Text;
 using Telegram.Bot.Types.ReplyMarkups;
-using PolyChessTGBot.Database;
 
 namespace PolyChessTGBot.Bot.BotCommands
 {

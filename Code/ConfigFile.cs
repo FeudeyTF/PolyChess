@@ -20,7 +20,7 @@ namespace PolyChessTGBot
 
         public List<string> PolytechTeams = [];
 
-        public string TournamentScoresDate = string.Empty;
+        public string SemesterStartDate = string.Empty;
 
         public List<string> UnnecessaryTournaments = [];
 

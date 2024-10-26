@@ -1,9 +1,9 @@
-﻿using PolyChessTGBot.Bot.Buttons;
+﻿using LichessAPI.Types;
+using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
-using LichessAPI.Types;
 using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;

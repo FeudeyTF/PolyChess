@@ -1,13 +1,11 @@
-﻿using PolyChessTGBot.Bot;
+﻿using LichessAPI.Clients;
+using PolyChessTGBot.Bot;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Logs;
 using PolyChessTGBot.Logs.Types;
 using PolyChessTGBot.Sockets;
-using System.Reflection;
-using LichessAPI.Clients;
 using System.Diagnostics;
-using LichessAPI.Clients.Authorized;
-using PolyChessTGBot.Extensions;
+using System.Reflection;
 
 namespace PolyChessTGBot
 {
@@ -27,10 +25,14 @@ namespace PolyChessTGBot
 
         internal static LichessClient Lichess;
 
+        internal static DateTime SemesterStartDate;
+
         static Program()
         {
             Started = DateTime.Now;
             MainConfig = ConfigFile.Load("Main");
+            if (DateTime.TryParse(MainConfig.SemesterStartDate, out var date))
+                SemesterStartDate = date;
             Logger = new(DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".log", MainConfig.LogsFolder);
             string exeFilePath = Path.Combine(
                 Environment.CurrentDirectory,

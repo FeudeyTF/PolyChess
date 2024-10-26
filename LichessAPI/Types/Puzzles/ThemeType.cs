@@ -1,7 +1,4 @@
-﻿using LichessAPI.Converters;
-using System.Text.Json.Serialization;
-
-namespace LichessAPI.Types.Puzzles
+﻿namespace LichessAPI.Types.Puzzles
 {
     public enum ThemeType
     {

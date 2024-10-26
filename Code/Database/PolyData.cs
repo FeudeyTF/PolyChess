@@ -23,10 +23,12 @@ namespace PolyChessTGBot.Database
         public void LoadTables()
         {
             Query("CREATE TABLE IF NOT EXISTS Users (" +
-                  "TelegramID      INTEGER PRIMARY KEY, " +
-                  "Name            TEXT, " +
-                  "LichessName     TEXT, " +
-                  "Year            INTEGER" +
+                  "TelegramID               INTEGER PRIMARY KEY, " +
+                  "Name                     TEXT, " +
+                  "LichessName              TEXT, " +
+                  "Year                     INTEGER," +
+                  "CreativeTaskCompleted    INT," +
+                  "TokenKey                 TEXT" +
                   ")");
             Query("CREATE TABLE IF NOT EXISTS Attendance (" +
                   "LessonDate      INTEGER PRIMARY KEY, " +
@@ -58,7 +60,7 @@ namespace PolyChessTGBot.Database
             List<User> result = [];
             using var reader = SelectQuery($"SELECT * FROM Users");
             while (reader.Read())
-                result.Add(new(reader.Get<long>("TelegramID"), reader.Get("Name"), reader.Get("LichessName"), reader.Get<int>("Year"), reader.Get<int>("CreativeTaskCompleted")));
+                result.Add(new(reader.Get<long>("TelegramID"), reader.Get("Name"), reader.Get("LichessName"), reader.Get<int>("Year"), reader.Get<int>("CreativeTaskCompleted"), reader.Get<string>("TokenKey")));
             return result;
         }
 

@@ -1,10 +1,11 @@
-﻿using PolyChessTGBot.Bot.Buttons;
+﻿using LichessAPI.Clients.Authorized;
+using LichessAPI.Types.Arena;
+using LichessAPI.Types.Swiss;
+using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
-using LichessAPI.Types.Arena;
-using LichessAPI.Types.Swiss;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PolyChessTGBot.Bot.BotCommands
@@ -282,10 +283,15 @@ namespace PolyChessTGBot.Bot.BotCommands
                     totalScore += Math.Min(visitedTournamentsCount / Program.MainConfig.Test.RequiredTournamentsCount, 1) * barsInBar;
                     text.Add($"🤝<b>Участие в турнирах:</b> {visitedTournamentsCount} из  {Program.MainConfig.Test.RequiredTournamentsCount} ({Utils.CreateSimpleBar(visitedTournamentsCount, Program.MainConfig.Test.RequiredTournamentsCount, bars: barsInBar)})");
 
-                    if (lichessUser.Perfomance.TryGetValue("puzzle", out var puzzlePerformance))
+                    if (!string.IsNullOrEmpty(user.TokenKey))
                     {
-                        totalScore += Math.Min(puzzlePerformance.Games / Program.MainConfig.Test.RequiredPuzzlesSolved, 1) * barsInBar;
-                        text.Add($"🧩<b>Решение пазлов:</b> {puzzlePerformance.Games} из {Program.MainConfig.Test.RequiredPuzzlesSolved} ({Utils.CreateSimpleBar(puzzlePerformance.Games, Program.MainConfig.Test.RequiredPuzzlesSolved, bars: barsInBar)})");
+                        var lichesAuthUser = new LichessAuthorizedClient(user.TokenKey);
+                        var puzzleDashboard = await lichesAuthUser.GetPuzzleDashboard((int)(DateTime.Now - Program.SemesterStartDate).TotalDays);
+                        if (puzzleDashboard != null)
+                        {
+                            totalScore += Math.Min(puzzleDashboard.Global.FirstWins / Program.MainConfig.Test.RequiredPuzzlesSolved, 1) * barsInBar;
+                            text.Add($"🧩<b>Решение пазлов:</b> {puzzleDashboard.Global.FirstWins} из {Program.MainConfig.Test.RequiredPuzzlesSolved} ({Utils.CreateSimpleBar(puzzleDashboard.Global.FirstWins, Program.MainConfig.Test.RequiredPuzzlesSolved, bars: barsInBar)})");
+                        }
                     }
 
                     int creativeTask = user.CreativeTaskCompleted ? 1 : 0;

@@ -1,10 +1,10 @@
-using PolyChessTGBot.Bot.Commands;
 using LichessAPI.Types.Arena;
 using LichessAPI.Types.Swiss;
+using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Logs;
+using System.Diagnostics;
 using System.Reflection;
 using File = System.IO.File;
-using System.Diagnostics;
 
 namespace PolyChessTGBot.Bot.BotCommands
 {
@@ -25,65 +25,60 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         public async Task LoadTournaments()
         {
-            if (DateTime.TryParse(Program.MainConfig.TournamentScoresDate, out var date))
+            Program.Logger.Write($"Собираем турниры от {Program.SemesterStartDate:g}...", LogType.Info);
+            var tournamentsPath = Path.Combine(Environment.CurrentDirectory, "Tournaments");
+            if (!Directory.Exists(tournamentsPath))
+                Directory.CreateDirectory(tournamentsPath);
+
+            var swissPath = Path.Combine(Environment.CurrentDirectory, "SwissTournaments");
+            if (!Directory.Exists(swissPath))
+                Directory.CreateDirectory(swissPath);
+
+            foreach (var filePath in Directory.GetFiles(tournamentsPath))
             {
-                Program.Logger.Write($"Собираем турниры от {date:g}...", LogType.Info);
-                var tournamentsPath = Path.Combine(Environment.CurrentDirectory, "Tournaments");
-                if (!Directory.Exists(tournamentsPath))
-                    Directory.CreateDirectory(tournamentsPath);
-
-                var swissPath = Path.Combine(Environment.CurrentDirectory, "SwissTournaments");
-                if (!Directory.Exists(swissPath))
-                    Directory.CreateDirectory(swissPath);
-
-                foreach (var filePath in Directory.GetFiles(tournamentsPath))
+                var tournamentName = Path.GetFileName(filePath)[..^4];
+                if (!Program.MainConfig.UnnecessaryTournaments.Contains(tournamentName))
                 {
-                    var tournamentName = Path.GetFileName(filePath)[..^4];
-                    if (!Program.MainConfig.UnnecessaryTournaments.Contains(tournamentName))
+                    var tournament = await Program.Lichess.GetTournament(tournamentName);
+                    if (tournament != null && tournament.StartDate > Program.SemesterStartDate)
                     {
-                        var tournament = await Program.Lichess.GetTournament(tournamentName);
-                        if (tournament != null && tournament.StartDate > date)
-                        {
-                            var tournamentSheet = await Program.Lichess.GetTournamentSheet(File.OpenText(filePath));
+                        var tournamentSheet = await Program.Lichess.GetTournamentSheet(File.OpenText(filePath));
 
-                            if (tournamentSheet != null)
-                            {
-                                List<string> exclude = new(Program.MainConfig.TopPlayers);
-                                tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username) || e.Team != null && !Program.MainConfig.PolytechTeams.Contains(e.Team))).ToList();
-                                var tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
-                                TournamentsList.Add(new(tournament, tournamentRating));
-                            }
+                        if (tournamentSheet != null)
+                        {
+                            List<string> exclude = new(Program.MainConfig.TopPlayers);
+                            tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username) || e.Team != null && !Program.MainConfig.PolytechTeams.Contains(e.Team))).ToList();
+                            var tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
+                            TournamentsList.Add(new(tournament, tournamentRating));
                         }
                     }
                 }
-
-                foreach (var filePath in Directory.GetFiles(swissPath))
-                {
-                    var tournamentName = Path.GetFileName(filePath)[..^4];
-                    if (!Program.MainConfig.UnnecessaryTournaments.Contains(tournamentName))
-                    {
-                        var tournament = await Program.Lichess.GetSwissTournament(tournamentName);
-                        if (tournament != null && tournament.Started > date)
-                        {
-                            var tournamentSheet = await Program.Lichess.GetSwissTournamentSheet(File.OpenText(filePath));
-
-                            if (tournamentSheet != null)
-                            {
-                                List<string> exclude = new(Program.MainConfig.TopPlayers);
-                                tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username))).ToList();
-                                var tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
-                                SwissTournamentsList.Add(new(tournament, tournamentRating));
-                            }
-                        }
-                    }
-                }
-
-                TournamentsList = [.. from r in TournamentsList orderby r.Tournament.StartDate descending select r];
-                SwissTournamentsList = [.. from r in SwissTournamentsList orderby r.Tournament.Started descending select r];
-                Program.Logger.Write($"Найдено {TournamentsList.Count} турниров и {SwissTournamentsList.Count} турниров по швейцарской системе!", LogType.Info);
             }
-            else
-                Program.Logger.Write("Дата 'TournamentScoresDate' в конфиге не была распознана!", LogType.Error);
+
+            foreach (var filePath in Directory.GetFiles(swissPath))
+            {
+                var tournamentName = Path.GetFileName(filePath)[..^4];
+                if (!Program.MainConfig.UnnecessaryTournaments.Contains(tournamentName))
+                {
+                    var tournament = await Program.Lichess.GetSwissTournament(tournamentName);
+                    if (tournament != null && tournament.Started > Program.SemesterStartDate)
+                    {
+                        var tournamentSheet = await Program.Lichess.GetSwissTournamentSheet(File.OpenText(filePath));
+
+                        if (tournamentSheet != null)
+                        {
+                            List<string> exclude = new(Program.MainConfig.TopPlayers);
+                            tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username))).ToList();
+                            var tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
+                            SwissTournamentsList.Add(new(tournament, tournamentRating));
+                        }
+                    }
+                }
+            }
+
+            TournamentsList = [.. from r in TournamentsList orderby r.Tournament.StartDate descending select r];
+            SwissTournamentsList = [.. from r in SwissTournamentsList orderby r.Tournament.Started descending select r];
+            Program.Logger.Write($"Найдено {TournamentsList.Count} турниров и {SwissTournamentsList.Count} турниров по швейцарской системе!", LogType.Info);
         }
 
         [Command("version", "Отправляет информацию о боте", true)]
