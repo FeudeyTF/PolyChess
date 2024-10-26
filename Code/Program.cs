@@ -67,7 +67,6 @@ namespace PolyChessTGBot
             }
             await Bot.LoadBot();
             Socket?.StartListening();
-            await Program.Lichess.GetTeamArenaTournaments("pHf9ZSwg");
 
             while (true)
             {
