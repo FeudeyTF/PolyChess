@@ -2,7 +2,7 @@
 
 namespace LichessAPI.Clients.Authorized
 {
-    public class LichessAuthorizedClient : LichessApiClient
+    public partial class LichessAuthorizedClient : LichessApiClient
     {
         public readonly string QAuthToken;
 

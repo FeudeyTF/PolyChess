@@ -1,6 +1,5 @@
 ﻿using PolyChessTGBot.Bot;
 using PolyChessTGBot.Database;
-using LichessAPI;
 using PolyChessTGBot.Logs;
 using PolyChessTGBot.Logs.Types;
 using PolyChessTGBot.Sockets;
@@ -8,6 +7,7 @@ using System.Reflection;
 using LichessAPI.Clients;
 using System.Diagnostics;
 using LichessAPI.Clients.Authorized;
+using PolyChessTGBot.Extensions;
 
 namespace PolyChessTGBot
 {

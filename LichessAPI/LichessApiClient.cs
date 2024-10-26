@@ -20,6 +20,7 @@ namespace LichessAPI
             };
             SerializerOptions.Converters.Add(new LichessDateTimeConverter());
             SerializerOptions.Converters.Add(new TeamBattleConverter());
+            SerializerOptions.Converters.Add(new ThemeTypeConverter());
         }
 
         public LichessApiClient()

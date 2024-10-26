@@ -18,5 +18,19 @@ namespace LichessAPI
             }
             return result;
         }
+
+        internal static string GetQueryParametersString(params (string name, object? val)[] parameters)
+        {
+            List<string> paramList = [];
+            foreach (var (name, val) in parameters)
+                if (val != default)
+                {
+                    string? paramValue = val.ToString();
+                    if (val is DateTime date)
+                        paramValue = (date.Ticks * 1000).ToString();
+                    paramList.Add(name + "=" + paramValue);
+                }
+            return paramList.Count != 0 ? "?" + string.Join("&", parameters) : "";
+        }
     }
 }
