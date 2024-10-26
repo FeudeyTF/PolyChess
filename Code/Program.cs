@@ -3,6 +3,7 @@ using PolyChessTGBot.Bot;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Logs;
 using PolyChessTGBot.Logs.Types;
+using PolyChessTGBot.Managers.Tournaments;
 using PolyChessTGBot.Sockets;
 using System.Diagnostics;
 using System.Reflection;
@@ -27,6 +28,8 @@ namespace PolyChessTGBot
 
         internal static DateTime SemesterStartDate;
 
+        internal static TournamentsManager Tournaments;
+
         static Program()
         {
             Started = DateTime.Now;
@@ -37,10 +40,14 @@ namespace PolyChessTGBot
             string exeFilePath = Path.Combine(
                 Environment.CurrentDirectory,
                 Assembly.GetExecutingAssembly().GetName().Name + ".exe");
-            Logger.Write($"Программа версии {FileVersionInfo.GetVersionInfo(exeFilePath).FileVersion} от {File.GetLastWriteTime(exeFilePath):g}", LogType.Info);
+            Logger.Write($"Программа версии {FileVersionInfo.GetVersionInfo(exeFilePath).FileVersion} от {File.GetLastWriteTime(exeFilePath):g}", LogType.Info); 
+
             Data = new(MainConfig.DatabasePath);
             Data.LoadTables();
             Logger.Write($"База данных '{Data.DatabaseName}' подключена!", LogType.Info);
+
+            Tournaments = new();
+
             Bot = new(Logger);
             Lichess = new();
             if (MainConfig.Socket.StartSocketServer)
@@ -49,6 +56,9 @@ namespace PolyChessTGBot
 
         public static async Task Main(string[] args)
         {
+            #if DEBUG
+            await Tournaments.LoadTournaments();
+            #endif
             if (string.IsNullOrEmpty(MainConfig.BotToken))
             {
                 Logger.Write("Обнаружен пустой токен в конфиге!", LogType.Error);
@@ -57,6 +67,8 @@ namespace PolyChessTGBot
             }
             await Bot.LoadBot();
             Socket?.StartListening();
+            await Program.Lichess.GetTeamArenaTournaments("pHf9ZSwg");
+
             while (true)
             {
                 var text = Console.ReadLine();

@@ -168,42 +168,11 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Command("updatetournaments", "Скачивает новые турниры с Lichess", admin: true)]
         private async Task UpdateTournamnets(CommandArgs args)
         {
-            if (Program.MainConfig.PolytechTeams.Count > 0)
+            if (!string.IsNullOrEmpty(Program.MainConfig.MainPolytechTeamID))
             {
                 await args.Reply("Началась загрузка турниров... Это может занять некоторое время");
-                List<ArenaTournamentInfo> arenaTournamentsInfos = []; 
-                List<SwissTournamentInfo> swissTournamentsInfos = [];
-                var teamID = Program.MainConfig.PolytechTeams.First();
-                var swissTournaments = await Program.Lichess.GetTeamSwissTournaments(teamID);
-                var arenaTournaments = await Program.Lichess.GetTeamArenaTournaments(teamID);
-                List<string> savedSwissTournaments = [];
-                List<string> savedArenaTournaments = [];
-
-                foreach (var filePath in Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, "Tournaments")))
-                    savedArenaTournaments.Add(Path.GetFileName(filePath)[..^4]);
-
-                foreach (var filePath in Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, "SwissTournaments")))
-                    savedSwissTournaments.Add(Path.GetFileName(filePath)[..^4]);
-
-                swissTournaments = [..swissTournaments.Except(swissTournaments.Where(t => savedSwissTournaments.Contains(t.ID)))];
-                arenaTournaments = [.. arenaTournaments.Except(arenaTournaments.Where(t => savedArenaTournaments.Contains(t.ID)))];
-
-                foreach(var swissTournament in swissTournaments)
-                {
-                    //swissTournamentsInfos.Add(new(swissTournament, GenerateTournamentRating(swissTournament);
-                    await Program.Lichess.SaveSwissTournamentSheet(GetSwissTournamentPath(swissTournament.ID), swissTournament.ID);
-                    await args.Reply($"Турнир {swissTournament.Name} успешно сохранён!");
-                }
-
-                foreach (var arenaTournament in arenaTournaments)
-                {
-                    //arenaTournamentsInfos.Add(arenaTournament);
-                    await Program.Lichess.SaveTournamentSheet(GetTournamentPath(arenaTournament.ID), arenaTournament.ID, true);
-                    await args.Reply($"Турнир {arenaTournament.FullName} успешно сохранён!");
-                }
-                TournamentsList = [.. TournamentsList, .. arenaTournamentsInfos];
-                SwissTournamentsList = [.. SwissTournamentsList, .. swissTournamentsInfos];
-                await args.Reply("Все турниры успешно добавлены!");
+                var updatedTournaments = await Program.Tournaments.UpdateTournaments(Program.MainConfig.MainPolytechTeamID);
+                await args.Reply($"Турниры {string.Join(", ", updatedTournaments.Select(t => "<b>" + t.name + "</b>"))} успешно добавлены!");
             }
             else
                 await args.Reply("Команда Политеха не найдена!");

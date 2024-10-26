@@ -18,7 +18,9 @@ namespace PolyChessTGBot
 
         public List<string> TopPlayers = [];
 
-        public List<string> PolytechTeams = [];
+        public string MainPolytechTeamID = string.Empty;
+
+        public List<string> InstitutesTeamsIDs = [];
 
         public string SemesterStartDate = string.Empty;
 

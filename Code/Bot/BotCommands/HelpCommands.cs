@@ -6,6 +6,7 @@ using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
+using PolyChessTGBot.Managers.Tournaments;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PolyChessTGBot.Bot.BotCommands
@@ -22,7 +23,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private readonly ListMessage<object> Tournaments;
 
-        private Dictionary<long, (string Name, string FlairID)> AccountVerifyCodes;
+        private readonly Dictionary<long, (string Name, string FlairID)> AccountVerifyCodes;
 
         public BotCommands()
         {
@@ -209,7 +210,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                         text.Add("📈 <i><b>Рейтинги</b></i>");
 
                         foreach (var perfomance in lichessUser.Perfomance)
-                            text.Add($" - <b>{perfomance.Key.Beautify()}</b>, Двизион: <b>{GetTournamentDivision(perfomance.Value.Rating)}</b>, Сыграно: {perfomance.Value.Games}, Рейтинг: {perfomance.Value.Rating}");
+                            text.Add($" - <b>{perfomance.Key.Beautify()}</b>, Двизион: <b>{Program.Tournaments.GetTournamentDivision(perfomance.Value.Rating)}</b>, Сыграно: {perfomance.Value.Games}, Рейтинг: {perfomance.Value.Rating}");
 
                         message.WithoutWebPagePreview();
                         message.WithText(string.Join("\n", text));
@@ -259,7 +260,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 var lichessUser = await Program.Lichess.GetUserAsync(user.LichessName);
                 if (lichessUser != null)
                 {
-                    foreach (var tournament in TournamentsList)
+                    foreach (var tournament in Program.Tournaments.TournamentsList)
                         if (tournament.Tournament.StartDate < DateTime.UtcNow)
                             foreach (var player in tournament.Rating.Players)
                                 if (player.User != null && player.User.TelegramID == args.Query.From.Id && player.Score > -1)
@@ -268,7 +269,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                                     continue;
                                 }
 
-                    foreach (var tournament in SwissTournamentsList)
+                    foreach (var tournament in Program.Tournaments.SwissTournamentsList)
                         if (tournament.Tournament.Started < DateTime.UtcNow)
                             foreach (var player in tournament.Rating.Players)
                                 if (player.User != null && player.User.TelegramID == args.Query.From.Id && player.Score > -1)
@@ -314,10 +315,10 @@ namespace PolyChessTGBot.Bot.BotCommands
         private async Task<List<object>> GetTournamentsIDs()
         {
             List<object> result = [];
-            foreach (var tournament in TournamentsList)
+            foreach (var tournament in Program.Tournaments.TournamentsList)
                 if (tournament.Tournament.StartDate < DateTime.UtcNow)
                     result.Add(tournament);
-            foreach (var tournament in SwissTournamentsList)
+            foreach (var tournament in Program.Tournaments.SwissTournamentsList)
                 if (tournament.Tournament.Started < DateTime.UtcNow)
                     result.Add(tournament);
             return await Task.FromResult(new List<object>([.. from r in result orderby (r is ArenaTournamentInfo t ? t.Tournament.StartDate : r is SwissTournamentInfo s ? s.Tournament.Started : DateTime.Now) descending select r]));

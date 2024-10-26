@@ -57,23 +57,25 @@ namespace PolyChessTGBot.Bot.Commands
                 if (command.Names.Contains(commandName))
                 {
                     Program.Logger.Write($"Получена команда: '{message.Text}'. {(args.Parameters.Count > 0 ? $"Аргументы: {string.Join(", ", args.Parameters)}" : "Аргументов нет")}", LogType.Info);
-                    try
+
+                    if (!command.AdminCommand || Program.MainConfig.Admins.Contains(user.Id))
                     {
-                        if (command.AdminCommand)
+                        #if !DEBUG
+                        try
                         {
-                            if (Program.MainConfig.Admins.Contains(user.Id))
-                                await command.Delegate(args);
-                            else
-                                await args.Reply("Эта команда доступна только админам!");
-                        }
-                        else
+                        #endif
                             await command.Delegate(args);
+                        #if !DEBUG
+                        }
+                        catch (Exception e)
+                        {
+                            Program.Logger.Write(e.ToString(), LogType.Error);
+                            await args.Reply("Произошла ошибка при выполнении команды! Обратитесь к вашему системному администратору");
+                        }
+                        #endif
                     }
-                    catch (Exception e)
-                    {
-                        Program.Logger.Write(e.ToString(), LogType.Error);
-                        await args.Reply("Произошла ошибка при выполнении команды! Обратитесь к вашему системному администратору");
-                    }
+                    else
+                        await args.Reply("Эта команда доступна только админам!");
                     return;
                 }
             await args.Reply("Команда не была найдена!");

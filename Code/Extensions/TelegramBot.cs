@@ -15,10 +15,15 @@ namespace PolyChessTGBot.Extensions
         {
             if (message.File != null)
             {
-                if(message.Text == null || message.Text.Length <= MAX_CAPTION_SIZE)
+                if (message.Text == null || message.Text.Length <= MAX_CAPTION_SIZE)
                     await bot.SendDocumentAsync(chatID, message.File, message.ThreadID, message.Thumbnail, message.Text, message.ParseMode, message.Entities, message.DisableContentTypeDetection, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
                 else
+                {
+                    #if DEBUG
+                    Console.WriteLine(message.Text);
+                    #endif
                     await bot.SendDocumentAsync(chatID, message.File, message.ThreadID, message.Thumbnail, "Превышен максимальный размер сообщения!", message.ParseMode, message.Entities, message.DisableContentTypeDetection, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+                }
             }
             else if(message.MediaFiles != null)
             {
@@ -42,7 +47,12 @@ namespace PolyChessTGBot.Extensions
                 if (message.Text == null || message.Text.Length <= MAX_TEXT_SIZE)
                     await bot.SendTextMessageAsync(chatID, message.Text ?? "", message.ThreadID, message.ParseMode, message.Entities, message.DisableWebPagePreview, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
                 else
+                {
+                    #if DEBUG
+                    Console.WriteLine(message.Text);
+                    #endif
                     await bot.SendTextMessageAsync(chatID, "Превышен максимальный размер текста!", message.ThreadID, message.ParseMode, message.Entities, message.DisableWebPagePreview, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+                }
             }    
         }
 

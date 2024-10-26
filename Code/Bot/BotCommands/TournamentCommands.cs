@@ -1,8 +1,6 @@
 ﻿using LichessAPI.Types.Arena;
-using LichessAPI.Types.Swiss;
 using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Messages;
-using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
 using System.Text;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -11,12 +9,6 @@ namespace PolyChessTGBot.Bot.BotCommands
 {
     public partial class BotCommands
     {
-        private Division DivisionC = new(0, 1300);
-
-        private Division DivisionB = new(1301, 1800);
-
-        private Division DivisionA = new(1801, 2100);
-
         [Command("getplayerscore", "Показывает результат участие ученика в турнире", admin: true)]
         private async Task GetPlayerScore(CommandArgs args)
         {
@@ -106,16 +98,9 @@ namespace PolyChessTGBot.Bot.BotCommands
             if (args.Parameters.Count == 1)
             {
                 var tournamentId = args.Parameters[0];
-                var tournament = await Program.Lichess.GetTournament(tournamentId);
+                var tournament = await Program.Tournaments.UpdateTournament(tournamentId);
                 if (tournament != null)
-                {
-                    var directory = Path.Combine(Environment.CurrentDirectory, "Tournaments");
-                    if (!Directory.Exists(directory))
-                        Directory.CreateDirectory(directory);
-
-                    await Program.Lichess.SaveTournamentSheet(Path.Combine(directory, tournamentId + ".txt"), tournamentId, true);
-                    await args.Reply($"Турнир <b>{tournament.FullName}</b> был сохранён!");
-                }
+                    await args.Reply($"Турнир <b>{tournament.Tournament.FullName}</b> был сохранён!");
                 else
                     await args.Reply("Турнир не был найден!");
             }
@@ -129,16 +114,9 @@ namespace PolyChessTGBot.Bot.BotCommands
             if (args.Parameters.Count == 1)
             {
                 var tournamentId = args.Parameters[0];
-                var tournament = await Program.Lichess.GetSwissTournament(tournamentId);
+                var tournament = await Program.Tournaments.UpdateSwissTournament(tournamentId);
                 if (tournament != null)
-                {
-                    var directory = Path.Combine(Environment.CurrentDirectory, "SwissTournaments");
-                    if (!Directory.Exists(directory))
-                        Directory.CreateDirectory(directory);
-
-                    await Program.Lichess.SaveSwissTournamentSheet(Path.Combine(directory, tournamentId + ".txt"), tournamentId);
-                    await args.Reply($"Турнир <b>{tournament.Name}</b> был сохранён!");
-                }
+                    await args.Reply($"Турнир <b>{tournament.Tournament.Name}</b> был сохранён!");
                 else
                     await args.Reply("Турнир не был найден!");
             }
@@ -179,7 +157,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                             $"Информация об участии в турнире"
                         ];
 
-                        var tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
+                        var tournamentRating = Program.Tournaments.GenerateTournamentRating(tournamentSheet);
 
                         foreach (var division in tournamentRating.Divisions)
                         {
@@ -258,14 +236,14 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                     if (tournament != null && tournamentSheet != null)
                     {
-                        tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username) || e.Team != null && !Program.MainConfig.PolytechTeams.Contains(e.Team))).ToList();
+                        tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username) || e.Team != null && !Program.MainConfig.InstitutesTeamsIDs.Contains(e.Team))).ToList();
                         List<string> csv = ["Имя;Ник Lichess;Балл"];
                         List<string> text = [
                             $"Турнир <b>{tournament.FullName}</b>. Состоялся <b>{tournament.StartDate:g}</b>",
                             $"Информация об участии в турнире"
                         ];
 
-                        var tournamentRating = GenerateTournamentRating(tournamentSheet, GetTournamentDivision, GetLichessName, CalculateScore);
+                        var tournamentRating = Program.Tournaments.GenerateTournamentRating(tournamentSheet);
 
                         foreach (var divison in tournamentRating.Divisions)
                         {
@@ -310,141 +288,6 @@ namespace PolyChessTGBot.Bot.BotCommands
             }
             else
                 await args.Reply("Неправильный синтаксис! Правильно: /arenaresult \"ID турнира\"");
-        }
-
-        private int CalculateScore(SwissSheetEntry entry, bool inDivision)
-        {
-            int totalScore = -1;
-            if (!entry.Absent)
-            {
-                totalScore = 0;
-                if (inDivision)
-                    totalScore = 1;
-            }
-            return totalScore;
-        }
-
-        private int CalculateScore(SheetEntry entry, bool inDivision)
-        {
-            int totalScore = -1;
-            if (entry.Sheet != null)
-            {
-                int zeroNumbers = entry.Sheet.Scores.Count(c => c == '0');
-                int twoNumbers = entry.Sheet.Scores.Count(c => c == '2');
-                int fourNumbers = entry.Sheet.Scores.Count(c => c == '4');
-                int total = zeroNumbers + twoNumbers + fourNumbers;
-
-                if (inDivision)
-                    totalScore = 1;
-                else if (total >= 7 && twoNumbers >= 1)
-                    totalScore = 0;
-            }
-            return totalScore;
-        }
-
-        private string GetLichessName(SwissSheetEntry entry)
-            => entry.Username;
-
-        private string GetLichessName(SheetEntry entry)
-            => entry.Username;
-
-        private DivisionType GetTournamentDivision(int rating)
-        {
-            if (DivisionC.InDivision(rating))
-                return DivisionType.C;
-            else if (DivisionB.InDivision(rating))
-                return DivisionType.B;
-            else if (DivisionA.InDivision(rating))
-                return DivisionType.A;
-            return DivisionType.None;
-        }
-
-        private DivisionType GetTournamentDivision(SwissSheetEntry entry)
-            => GetTournamentDivision(entry.Rating);
-
-        private DivisionType GetTournamentDivision(SheetEntry entry)
-            => GetTournamentDivision(entry.Rating);
-
-        private static TournamentRating<TValue> GenerateTournamentRating<TValue>(List<TValue> tournament, Func<TValue, DivisionType> getDivision, Func<TValue, string> getLichessName, Func<TValue, bool, int> calculateScore)
-        {
-            Dictionary<string, User> users = [];
-            foreach (var user in Program.Data.Users)
-                if(!string.IsNullOrEmpty(user.LichessName))
-                    users.Add(user.LichessName, user);
-
-            Dictionary<DivisionType, List<TValue>> playersInDivision = new()
-                {
-                    { DivisionType.A, [] },
-                    { DivisionType.B, [] },
-                    { DivisionType.C, [] }
-                };
-
-            foreach (var entry in tournament)
-            {
-                var division = getDivision(entry);
-                if (division != DivisionType.None && playersInDivision[division].Count < 3)
-                    playersInDivision[division].Add(entry);
-            }
-
-            List<TournamentUser<TValue>> tournamentUsers = [];
-
-            foreach (var entry in tournament)
-            {
-                bool inDivision = false;
-                for (int i = 0; i < playersInDivision.Count; i++)
-                    if (playersInDivision[(DivisionType)i].Contains(entry))
-                    {
-                        inDivision = true;
-                        break;
-                    }
-                var score = calculateScore(entry, inDivision);
-                if (users.TryGetValue(getLichessName(entry), out User? founded))
-                    tournamentUsers.Add(new(founded, score, entry));
-                else
-                    tournamentUsers.Add(new(null, score, entry));
-            }
-
-            return new(playersInDivision, tournamentUsers);
-        }
-
-        private static string GetTournamentPath(string id)
-            => Path.Combine(Environment.CurrentDirectory, "Tournaments", id + ".txt");
-
-        private static string GetSwissTournamentPath(string id)
-            => Path.Combine(Environment.CurrentDirectory, "SwissTournaments", id + ".txt");
-
-        private struct TournamentRating<TValue>(Dictionary<DivisionType, List<TValue>> divisions, List<TournamentUser<TValue>> players)
-        {
-            public Dictionary<DivisionType, List<TValue>> Divisions = divisions;
-
-            public List<TournamentUser<TValue>> Players = players;
-        }
-
-        private class TournamentUser<TValue>(User? user, int score, TValue entry)
-        {
-            public User? User = user;
-
-            public int Score = score;
-
-            public TValue TournamentEntry = entry;
-        }
-
-        private struct Division(int min, int max)
-        {
-            public int Min = min;
-
-            public int Max = max;
-
-            public bool InDivision(int rating)
-                => rating >= Min && rating <= Max;
-        }
-
-        private enum DivisionType
-        {
-            A,
-            B,
-            C,
-            None
         }
     }
 }

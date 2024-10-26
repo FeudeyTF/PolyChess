@@ -18,7 +18,23 @@ namespace LichessAPI.Converters
             var parsedObject = JsonDocument.ParseValue(ref reader).Deserialize<Dictionary<string, JsonElement>>(options);
             if (parsedObject != null)
             {
-                result.Teams = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(parsedObject["teams"], options);
+                if (parsedObject.TryGetValue("teams", out var value))
+                {
+                    result.Teams = [];
+                    try
+                    {
+                        result.Teams = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(value, options);
+                    }
+                    catch
+                    {
+                        var list = JsonSerializer.Deserialize<List<string>>(value, options);
+                        if (result.Teams != null && list != null)
+                            if(list.Count == 1)
+                                result.Teams.Add(list[0], []);
+                            else if(list.Count > 1)
+                                result.Teams.Add(list[0], list[1..]);
+                    }
+                }
                 result.LeadersNumber = JsonSerializer.Deserialize<int>(parsedObject["nbLeaders"], options);
             }
             return result;
