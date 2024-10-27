@@ -7,6 +7,7 @@ using PolyChessTGBot.Managers.Tournaments;
 using PolyChessTGBot.Sockets;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text.Json;
 
 namespace PolyChessTGBot
 {
@@ -45,7 +46,6 @@ namespace PolyChessTGBot
             Data = new(MainConfig.DatabasePath);
             Data.LoadTables();
             Logger.Write($"База данных '{Data.DatabaseName}' подключена!", LogType.Info);
-
             Tournaments = new();
 
             Bot = new(Logger);
@@ -56,7 +56,7 @@ namespace PolyChessTGBot
 
         public static async Task Main(string[] args)
         {
-            #if DEBUG
+            #if !DEBUG
             await Tournaments.LoadTournaments();
             #endif
             if (string.IsNullOrEmpty(MainConfig.BotToken))

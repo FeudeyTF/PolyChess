@@ -55,7 +55,8 @@ namespace PolyChessTGBot.Database
                     return user;
             return null;
         }
-        public List<User> GetAllUsers()
+
+        private List<User> GetAllUsers()
         {
             List<User> result = [];
             using var reader = SelectQuery($"SELECT * FROM Users");

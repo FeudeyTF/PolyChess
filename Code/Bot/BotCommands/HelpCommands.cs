@@ -252,7 +252,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         private async Task ViewProgress(ButtonInteractArgs args)
         {
             int visitedTournamentsCount = 0;
-            int totalScore = 0;
+            float totalScore = 0;
             int barsInBar = 15;
             User? user = Program.Data.GetUser(args.Query.From.Id);
             if (user != null)
@@ -290,7 +290,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                         var puzzleDashboard = await lichesAuthUser.GetPuzzleDashboard((int)(DateTime.Now - Program.SemesterStartDate).TotalDays);
                         if (puzzleDashboard != null)
                         {
-                            totalScore += Math.Min(puzzleDashboard.Global.FirstWins / Program.MainConfig.Test.RequiredPuzzlesSolved, 1) * barsInBar;
+                            totalScore += Math.Min((float)puzzleDashboard.Global.FirstWins / Program.MainConfig.Test.RequiredPuzzlesSolved, 1) * barsInBar;
                             text.Add($"🧩<b>Решение пазлов:</b> {puzzleDashboard.Global.FirstWins} из {Program.MainConfig.Test.RequiredPuzzlesSolved} ({Utils.CreateSimpleBar(puzzleDashboard.Global.FirstWins, Program.MainConfig.Test.RequiredPuzzlesSolved, bars: barsInBar)})");
                         }
                     }
@@ -301,7 +301,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                     text.Add("");
                     text.Add("📊<b>Полный прогресс:</b>");
-                    text.Add($"{totalScore / 3} из 15 {Utils.CreateSimpleBar(totalScore, barsInBar * 3, bars: barsInBar)}");
+                    text.Add($"{Math.Round(totalScore / 3)} из 15 {Utils.CreateSimpleBar(totalScore, barsInBar * 3, bars: barsInBar)}");
 
                     await args.Reply(text);
                 }
