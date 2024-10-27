@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace LichessAPI.Converters
 {
-    public class LichessDateTimeConverter : JsonConverter<DateTime>
+    internal class LichessDateTimeConverter : JsonConverter<DateTime>
     {
         private static readonly DateTime UnixStart
             = new DateTime(1970, 1, 1) + TimeZoneInfo.Local.BaseUtcOffset;

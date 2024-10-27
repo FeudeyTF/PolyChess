@@ -1,4 +1,5 @@
 ﻿using LichessAPI.Converters;
+using LichessAPI.Converters.Scopes;
 using System.Text.Json;
 
 namespace LichessAPI
@@ -21,6 +22,8 @@ namespace LichessAPI
             SerializerOptions.Converters.Add(new LichessDateTimeConverter());
             SerializerOptions.Converters.Add(new TeamBattleConverter());
             SerializerOptions.Converters.Add(new ThemeTypeConverter());
+            SerializerOptions.Converters.Add(new TokenScopesConverter());
+            SerializerOptions.Converters.Add(new TokenScopeConverter());
         }
 
         public LichessApiClient()
