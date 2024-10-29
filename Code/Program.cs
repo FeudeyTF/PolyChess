@@ -7,7 +7,6 @@ using PolyChessTGBot.Managers.Tournaments;
 using PolyChessTGBot.Sockets;
 using System.Diagnostics;
 using System.Reflection;
-using System.Text.Json;
 
 namespace PolyChessTGBot
 {

@@ -69,6 +69,7 @@ namespace PolyChessTGBot.Bot
 
         private async Task UpdateHandler(ITelegramBotClient client, Update update, CancellationToken token)
         {
+            await BotHooks.InvokeOnBotUpdate(Telegram, update);
             switch (update.Type)
             {
                 case UpdateType.Message:
