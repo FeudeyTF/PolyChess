@@ -16,12 +16,35 @@ namespace PolyChessTGBot.Bot.Buttons
             Parameters = new();
         }
 
-        public TValue? Get<TValue>(string parameter)
+        public int GetNumber(string parameter)
         {
             if (Parameters.TryGetValue(parameter, out var value))
-                if (value is TValue result)
+                if (value is long result)
+                    return (int)result;
+            return default;
+        }
+
+        public long GetLongNumber(string parameter)
+        {
+            if (Parameters.TryGetValue(parameter, out var value))
+                if (value is long result)
                     return result;
             return default;
+        }
+
+        public float GetFloat(string parameter)
+        {
+            if (Parameters.TryGetValue(parameter, out var value))
+                if (value is float result)
+                    return result;
+            return default;
+        }
+
+        public string GetString(string parameter)
+        {
+            if (Parameters.TryGetValue(parameter, out var value))
+                return value.ToString() ?? "";
+            return "";
         }
 
         public void Set<TValue>(string name, TValue value)
@@ -49,9 +72,7 @@ namespace PolyChessTGBot.Bot.Buttons
                     {
                         string name = sliced[i];
                         string value = sliced[i + 1];
-                        if (int.TryParse(value, out int intNumber))
-                            result.Set(name, intNumber);
-                        else if (long.TryParse(value, out long longNumber))
+                        if (long.TryParse(value, out long longNumber))
                             result.Set(name, longNumber);
                         else if (float.TryParse(value, out float floatNumber))
                             result.Set(name, floatNumber);

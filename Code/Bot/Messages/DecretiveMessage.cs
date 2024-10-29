@@ -1,5 +1,6 @@
 ﻿using PolyChessTGBot.Extensions;
 using PolyChessTGBot.Hooks;
+using System;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -19,11 +20,11 @@ namespace PolyChessTGBot.Bot.Messages
 
         private readonly Dictionary<long, ChannelInfo> Channels;
 
-        private readonly Action<DecretiveMessageFullyEnteredArgs> OnEntered;
+        private readonly Func<DecretiveMessageFullyEnteredArgs, Task> OnEntered;
 
         private readonly List<string> Questions;
 
-        public DecretiveMessage(List<string> questions, Action<DecretiveMessageFullyEnteredArgs> onFullEntered)
+        public DecretiveMessage(List<string> questions, Func<DecretiveMessageFullyEnteredArgs, Task> onFullEntered)
         {
             ActiveChannels = [];
             Channels = [];
@@ -38,7 +39,7 @@ namespace PolyChessTGBot.Bot.Messages
             {
                 args.Handled = true;
                 if (info.Add(args.Update.Message))
-                    CloseMessageRecieving(args.Update.Message.Chat.Id, info, args.Bot, args.Update.Message.Chat.Id);
+                    await CloseMessageRecieving(args.Update.Message.Chat.Id, info, args.Bot, args.Update.Message.Chat.Id);
                 else
                     await args.Bot.SendMessage(Questions[info.ChannelProgress], args.Update.Message.Chat.Id);
             }
@@ -57,9 +58,9 @@ namespace PolyChessTGBot.Bot.Messages
             }
         }
 
-        private void CloseMessageRecieving(long channelId, ChannelInfo info, TelegramBotClient bot, ChatId chat)
+        private async Task CloseMessageRecieving(long channelId, ChannelInfo info, TelegramBotClient bot, ChatId chat)
         {
-            OnEntered(new(info.Messages, bot, chat));
+            await OnEntered(new(info.Messages, bot, chat));
             Channels.Remove(channelId);
             ActiveChannels.Remove(channelId);
         }
@@ -103,6 +104,11 @@ namespace PolyChessTGBot.Bot.Messages
             Answears = answears;
             Bot = bot;
             ChatID = chat;
+        }
+
+        public async Task Reply(TelegramMessageBuilder message)
+        {
+            await Bot.SendMessage(message, ChatID);
         }
     }
 }

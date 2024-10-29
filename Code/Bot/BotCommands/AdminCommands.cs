@@ -19,6 +19,76 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private readonly ListMessage<User> AdminCheckUsers;
 
+        private readonly DecretiveMessage CheckPlayer = new(["Введите имя ученика или ник на Lichess"], OnCheckPlayerEntered);
+
+        private static async Task OnCheckPlayerEntered(DecretiveMessageFullyEnteredArgs args)
+        {
+            User? user = null;
+            var name = args.Answears[0].Text;
+            foreach(var dataUser in Program.Data.Users)
+                if(dataUser.LichessName == name || dataUser.Name == name)
+                {
+                    user = dataUser;
+                    break;
+                }
+
+            if (user != null)
+            {
+                List<string> text = [$"Информация об ученике, <b>{user.Name}</b>"];
+                if (!string.IsNullOrEmpty(user.LichessName))
+                {
+                    TelegramMessageBuilder message = new();
+                    var lichessUser = await Program.Lichess.GetUserAsync(user.LichessName);
+                    if (lichessUser != null)
+                    {
+                        text.Add($"♟ <b>Имя аккаунта на Lichess:</b> {lichessUser.Username}");
+                        text.Add($"🕓 <b>Дата регистрации:</b> {lichessUser.RegisterDate:g}");
+                        text.Add($"🕓 <b>Последний вход:</b> {lichessUser.LastSeenDate:g}");
+                        text.Add("👥 <i><b>Команды</b></i>");
+
+                        var teams = await Program.Lichess.GetUserTeamsAsync(lichessUser.Username);
+
+                        if (teams.Count > 0)
+                            foreach (var team in teams)
+                                text.Add($" - <b>{team.Name} ({team.MembersCount} участников)</b>");
+                        else
+                            text.Add(" - Отсутствуют");
+
+                        text.Add("");
+                        text.Add("📈 <i><b>Рейтинги</b></i>");
+
+                        foreach (var perfomance in lichessUser.Perfomance)
+                            text.Add($" - <b>{perfomance.Key.Beautify()}</b>, Двизион: <b>{Program.Tournaments.GetTournamentDivision(perfomance.Value.Rating)}</b>, Сыграно: {perfomance.Value.Games}, Рейтинг: {perfomance.Value.Rating}");
+
+                        message.WithoutWebPagePreview();
+                        message.WithText(string.Join("\n", text));
+                        InlineKeyboardButton accountLinkButton =
+                          new("♟Lichess профиль")
+                          {
+                              Url = lichessUser.URL
+                          };
+                        message.AddButton(accountLinkButton);
+
+                        InlineKeyboardButton viewTournaments = new("💪 Посмотреть баллы за турниры");
+                        viewTournaments.SetData("MeViewTournaments", ("ID", user.TelegramID));
+                        message.AddButton(viewTournaments);
+
+                        InlineKeyboardButton viewProgress = new("📊 Посмотреть прогресс по зачёту");
+                        viewProgress.SetData("MeViewProgress", ("ID", user.TelegramID));
+                        //message.AddButton(viewProgress);
+
+                        await args.Reply(message);
+                    }
+                    else
+                        await args.Reply($"Ник на Lichess: <b>Аккаунт не найден</b>. Перепривяжите аккаунт с помощью /reg");
+                }
+                else
+                    await args.Reply($"Ник на Lichess: <b>Аккаунт не привязан</b>. Привяжите аккаунт с помощью /reg");
+            }
+            else
+                await args.Reply("Информация о Вашем аккаунте не найдена, обратитесь к администратору бота!");
+        }
+
         [Command("panel", "Работает с полезными ссылками", admin: true)]
         private async Task AdminPanel(CommandArgs args)
         {
@@ -42,7 +112,19 @@ namespace PolyChessTGBot.Bot.BotCommands
             deleteFAQ.SetData("DeleteFAQEntry");
             msg.AddKeyboard([deleteHelp, deleteFAQ]);
 
+
+            InlineKeyboardButton lookPlayer = new("🔍 Посмотреть информацию об игроке");
+            lookPlayer.SetData("LookPlayer");
+            msg.AddButton(lookPlayer);
+
             await args.Reply(msg.WithText(string.Join("\n", text)));
+        }
+
+        [Button("LookPlayer")]
+        internal async Task LookPlayer(ButtonInteractArgs args)
+        {
+            if (args.Query.Message != null)
+                await CheckPlayer.Send(args.Query.Message.Chat.Id);
         }
 
         [Button("DeleteHelpLinks")]
@@ -274,7 +356,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Button("TeamInfo")]
         internal async Task SendTeamInfo(ButtonInteractArgs args)
         {
-            var teamID = args.Get<string>("ID");
+            var teamID = args.GetString("ID");
             if (!string.IsNullOrEmpty(teamID))
             {
                 var team = await Program.Lichess.GetTeamAsync(teamID);
@@ -315,7 +397,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Button("UserInfo")]
         internal async Task SendUserInfo(ButtonInteractArgs args)
         {
-            var name = args.Get<string>("Name");
+            var name = args.GetString("Name");
             if (!string.IsNullOrEmpty(name))
             {
                 var lichessUser = await Program.Lichess.GetUserAsync(name);

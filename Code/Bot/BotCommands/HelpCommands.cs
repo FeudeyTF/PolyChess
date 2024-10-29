@@ -229,12 +229,12 @@ namespace PolyChessTGBot.Bot.BotCommands
                         message.AddButton(accountLinkButton);
 
                         InlineKeyboardButton viewTournaments = new("💪 Посмотреть баллы за турниры");
-                        viewTournaments.SetData("MeViewTournaments");
+                        viewTournaments.SetData("MeViewTournaments", ("ID", args.User.Id));
                         message.AddButton(viewTournaments);
 
                         InlineKeyboardButton viewProgress = new("📊 Посмотреть прогресс по зачёту");
-                        viewProgress.SetData("MeViewProgress");
-                        message.AddButton(viewProgress);
+                        viewProgress.SetData("MeViewProgress", ("ID", args.User.Id));
+                        //message.AddButton(viewProgress);
 
                         await args.Reply(message);
                     }
@@ -251,8 +251,10 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Button("MeViewTournaments")]
         private async Task ViewTournaments(ButtonInteractArgs args)
         {
+            var id = args.GetLongNumber("ID");
+            Telegram.Bot.Types.User tgUser = new() { Id = id };
             if (args.Query.Message != null)
-                await Tournaments.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From);
+                await Tournaments.Send(args.Bot, args.Query.Message.Chat.Id, id == args.Query.From.Id ? args.Query.From : tgUser);
         }
 
         [Button("MeViewProgress")]
@@ -261,7 +263,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             int visitedTournamentsCount = 0;
             float totalScore = 0;
             int barsInBar = 15;
-            User? user = Program.Data.GetUser(args.Query.From.Id);
+            User? user = Program.Data.GetUser(args.GetNumber("ID"));
             if (user != null)
             {
                 var lichessUser = await Program.Lichess.GetUserAsync(user.LichessName);
@@ -270,7 +272,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     foreach (var tournament in Program.Tournaments.TournamentsList)
                         if (tournament.Tournament.StartDate < DateTime.UtcNow)
                             foreach (var player in tournament.Rating.Players)
-                                if (player.User != null && player.User.TelegramID == args.Query.From.Id && player.Score > -1)
+                                if (player.User != null && player.User.TelegramID == user.TelegramID && player.Score > -1)
                                 {
                                     visitedTournamentsCount++;
                                     continue;
@@ -279,7 +281,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     foreach (var tournament in Program.Tournaments.SwissTournamentsList)
                         if (tournament.Tournament.Started < DateTime.UtcNow)
                             foreach (var player in tournament.Rating.Players)
-                                if (player.User != null && player.User.TelegramID == args.Query.From.Id && player.Score > -1)
+                                if (player.User != null && player.User.TelegramID == user.TelegramID && player.Score > -1)
                                 {
                                     visitedTournamentsCount++;
                                     continue;

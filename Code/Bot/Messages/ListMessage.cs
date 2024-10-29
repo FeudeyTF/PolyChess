@@ -61,7 +61,7 @@ namespace PolyChessTGBot.Bot.Messages
                     text += (await ConvertValueToString(values[i], i, user)) + "\n";
                 text += Footer;
                 TelegramMessageBuilder message = new(text);
-                message.WithMarkup(GenerateKeyBoard(1, GetPagesCount(values.Count)));
+                message.WithMarkup(GenerateKeyBoard(1, GetPagesCount(values.Count), user));
 
                 if (GetDocumentID != null && values.Count > 0)
                 {
@@ -86,18 +86,18 @@ namespace PolyChessTGBot.Bot.Messages
                 return count / ValuesPerPage + 1;
         }
 
-        private InlineKeyboardMarkup GenerateKeyBoard(int page, int pages)
+        private InlineKeyboardMarkup GenerateKeyBoard(int page, int pages, User user)
         {
             if (pages == 1)
                 return new(GenerateAdditionalKeyboards(page));
 
             List<List<InlineKeyboardButton>> buttons = [];
             InlineKeyboardButton nextButton = new(NextButtonText);
-            nextButton.SetData("Next" + ID, ("Page", page));
+            nextButton.SetData("Next" + ID, ("Page", page), ("TID", user.Id));
             InlineKeyboardButton pageButton = new($"{page}/{pages}");
             pageButton.SetData("Page" + ID, ("Page", page));
             InlineKeyboardButton prevButton = new(PreviousButtonText);
-            prevButton.SetData("Prev" + ID, ("Page", page));
+            prevButton.SetData("Prev" + ID, ("Page", page), ("TID", user.Id));
             List<InlineKeyboardButton> movingButtons = [];
             if (page != 1)
                 movingButtons.Add(prevButton);
@@ -139,7 +139,7 @@ namespace PolyChessTGBot.Bot.Messages
                 foreach (var keyboard in AdditionalKeyboards)
                     foreach(var button in keyboard)
                         if (button.ID + ID == args.ButtonID)
-                            await button.Delegate(args, await FindValues(args.Get<int>("Page")));
+                            await button.Delegate(args, await FindValues(args.GetNumber("Page")));
             }
         }
 
@@ -148,17 +148,19 @@ namespace PolyChessTGBot.Bot.Messages
             if (args.Query != null && args.Query.Message != null)
             {
                 var values = await GetValues();
-                int page = args.Get<int>("Page");
+                int page = args.GetNumber("Page");
                 int pages = GetPagesCount(values.Count);
+                var userID = args.GetLongNumber("TID");
+                var user = userID == args.Query.From.Id ? args.Query.From : new User() { Id = userID };
                 if (page > 0 && page < pages)
                 {
                     string text = Header + "\n";
                     int startIndex = page * ValuesPerPage;
                     for (int i = startIndex; i < startIndex + (values.Count - startIndex > ValuesPerPage ? ValuesPerPage : values.Count - startIndex); i++)
-                        text += (await ConvertValueToString(values[i], i, args.Query.From)) + "\n";
+                        text += (await ConvertValueToString(values[i], i, user)) + "\n";
                     text += Footer;
                     var message = new TelegramMessageBuilder(text)
-                        .WithMarkup(GenerateKeyBoard(page + 1, GetPagesCount(values.Count)));
+                        .WithMarkup(GenerateKeyBoard(page + 1, GetPagesCount(values.Count), user));
                     if(GetDocumentID != null && values.Count > startIndex)
                     {
                         var document = GetDocumentID(values[startIndex]);
@@ -176,17 +178,19 @@ namespace PolyChessTGBot.Bot.Messages
             if (args.Query != null && args.Query.Message != null)
             {
                 var values = await GetValues();
-                int page = args.Get<int>("Page");
+                int page = args.GetNumber("Page");
                 int pages = GetPagesCount(values.Count);
+                var userID = args.GetLongNumber("TID");
+                var user = userID == args.Query.From.Id ? args.Query.From : new User() { Id = userID };
                 if (page > 1)
                 {
                     string text = Header + "\n";
                     int startIndex = (page - 2) * ValuesPerPage;
                     for (int i = startIndex; i < startIndex + (values.Count - startIndex > ValuesPerPage ? ValuesPerPage : values.Count - startIndex); i++)
-                        text += (await ConvertValueToString(values[i], i, args.Query.From)) + "\n";
+                        text += (await ConvertValueToString(values[i], i, user)) + "\n";
                     text += Footer;
                     var message = new TelegramMessageBuilder(text)
-                        .WithMarkup(GenerateKeyBoard(page - 1, GetPagesCount(values.Count)));
+                        .WithMarkup(GenerateKeyBoard(page - 1, GetPagesCount(values.Count), user));
 
                     if (GetDocumentID != null && values.Count > startIndex)
                     {

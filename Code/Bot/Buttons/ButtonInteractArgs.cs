@@ -22,8 +22,17 @@ namespace PolyChessTGBot.Bot.Buttons
             Query = query;
         }
 
-        public TValue? Get<TValue>(string parameter)
-            => Data.Get<TValue>(parameter);
+        public int GetNumber(string parameter)
+            => Data.GetNumber(parameter);
+
+        public long GetLongNumber(string parameter)
+            => Data.GetNumber(parameter);
+
+        public float GetFloat(string parameter)
+            => Data.GetFloat(parameter);
+
+        public string GetString(string parameter)
+            => Data.GetString(parameter);
 
         public async Task Reply(TelegramMessageBuilder message)
         {

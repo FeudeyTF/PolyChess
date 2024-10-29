@@ -125,12 +125,10 @@ namespace PolyChessTGBot.Bot
                                 var data = TelegramButtonData.ParseDataString(dataButton.CallbackData);
                                 if (data != null)
                                 {
-                                    var userIDlong = data.Get<long>("ID");
-                                    var userIDint = data.Get<int>("ID");
-                                    var questionChannelID = data.Get<int>("ChannelID");
-                                    if ((userIDlong != default || userIDint != default) && questionChannelID != default)
+                                    var userID = data.GetLongNumber("ID");
+                                    var questionChannelID = data.GetNumber("ChannelID");
+                                    if (userID != default && questionChannelID != default)
                                     {
-                                        var userID = userIDlong == default ? userIDint : userIDlong;
                                         var msg = new TelegramMessageBuilder($"❗️Получен **ответ** на ваш вопрос от {user.FirstName} {user.LastName}:\n{message.Text}".RemoveBadSymbols())
                                             .ReplyTo(questionChannelID)
                                             .WithParseMode(ParseMode.MarkdownV2)
