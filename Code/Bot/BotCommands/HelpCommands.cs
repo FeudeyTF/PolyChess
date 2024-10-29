@@ -49,6 +49,13 @@ namespace PolyChessTGBot.Bot.BotCommands
                 Header = "<b> - Информация об участии в турнирах!</b>"
             };
 
+            AdminCheckUsers = new("checkUsers", 
+                async () => await Task.FromResult(Program.Data.Users),
+                async (user, index, tgUser) => await Task.FromResult(user.ToString()), 
+                10,
+                true, 
+                "Далее ➡️",
+                "⬅️ Назад");
             AccountVerifyCodes = [];
             FAQEntries = Program.Data.GetFAQEntries();
             HelpLinks = Program.Data.GetHelpLinks();

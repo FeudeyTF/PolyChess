@@ -7,6 +7,7 @@ using PolyChessTGBot.Extensions;
 using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
+using User = PolyChessTGBot.Database.User;
 
 namespace PolyChessTGBot.Bot.BotCommands
 {
@@ -15,6 +16,71 @@ namespace PolyChessTGBot.Bot.BotCommands
         private readonly ListMessage<HelpLink> HelpAdmin;
 
         private readonly ListMessage<FAQEntry> FAQAdmin;
+
+        private readonly ListMessage<User> AdminCheckUsers;
+
+        [Command("panel", "Работает с полезными ссылками", admin: true)]
+        private async Task AdminPanel(CommandArgs args)
+        {
+            List<string> text = [
+                "😎 Добро пожаловать в <b>панель администратора</b>!",
+                "🌟 Вы - один из немногих, у кого есть доступ к управлению ботом",
+                "🔽 Для того, чтобы использовать панель, нажмите на кнопки управления под сообщением"
+                ];
+            TelegramMessageBuilder msg = new();
+            InlineKeyboardButton checkUsers = new("👥 Увидеть всех пользователей");
+            checkUsers.SetData("SendAllUsers");
+            msg.AddButton(checkUsers);
+            InlineKeyboardButton updateTournaments = new("🤝 Загрузить турниры");
+            updateTournaments.SetData("DownloadTournaments");
+            msg.AddButton(updateTournaments);
+
+            InlineKeyboardButton deleteHelp = new("🗑 Удалить полезные ссылки");
+            deleteHelp.SetData("DeleteHelpLinks");
+
+            InlineKeyboardButton deleteFAQ = new("🗑 Удалить запись FAQ");
+            deleteFAQ.SetData("DeleteFAQEntry");
+            msg.AddKeyboard([deleteHelp, deleteFAQ]);
+
+            await args.Reply(msg.WithText(string.Join("\n", text)));
+        }
+
+        [Button("DeleteHelpLinks")]
+        internal async Task DeleteHelpLinks(ButtonInteractArgs args)
+        {
+            if (args.Query.Message != null)
+                await HelpAdmin.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From);
+        }
+
+        [Button("DeleteFAQEntry")]
+        internal async Task DeleteFAQEntry(ButtonInteractArgs args)
+        {
+            if (args.Query.Message != null)
+                await FAQAdmin.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From);
+        }
+
+        [Button("SendAllUsers")]
+        internal async Task SendAllUsersButton(ButtonInteractArgs args)
+        {
+            if (args.Query.Message != null)
+                await AdminCheckUsers.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From);
+        }
+
+        [Button("DownloadTournaments")]
+        internal async Task DownloadTournaments(ButtonInteractArgs args)
+        {
+            if (!string.IsNullOrEmpty(Program.MainConfig.MainPolytechTeamID))
+            {
+                await args.Reply("Началась загрузка турниров... Это может занять некоторое время");
+                var updatedTournaments = await Program.Tournaments.UpdateTournaments(Program.MainConfig.MainPolytechTeamID);
+                if (updatedTournaments.Count > 0)
+                    await args.Reply($"Турниры {string.Join(", ", updatedTournaments.Select(t => "<b>" + t.name + "</b>"))} успешно добавлены!");
+                else
+                    await args.Reply("Все турниры уже загружены! Обновления не требуется");
+            }
+            else
+                await args.Reply("Команда Политеха не найдена!");
+        }
 
         [Command("admin", "Работает с полезными ссылками", admin: true)]
         private async Task AdminHelpLinks(CommandArgs args)

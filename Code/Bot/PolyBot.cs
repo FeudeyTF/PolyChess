@@ -89,6 +89,7 @@ namespace PolyChessTGBot.Bot
                         {
                             var args = new ButtonInteractArgs(data.ButtonID, update.CallbackQuery, data);
                             ButtonHooks.InvokeButtonInteract(args);
+                            await args.Bot.AnswerCallbackQueryAsync(args.Query.Id, cancellationToken: token);
                         }
                     }
                     break;

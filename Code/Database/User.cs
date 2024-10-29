@@ -16,7 +16,7 @@
 
         public override string ToString()
         {
-            return $"{Name} '{LichessName}' ({TelegramID}), Курс - {Year}";
+            return $"Имя: <b>{Name}</b>, Ник: <b>{LichessName}</b>, TID: <b>{TelegramID}</b>, Курс: <b>{Year}</b>";
         }
     }
 }
