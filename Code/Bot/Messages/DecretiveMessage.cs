@@ -32,16 +32,15 @@ namespace PolyChessTGBot.Bot.Messages
             BotHooks.OnBotUpdate += HandleBotUpdate;
         }
 
-        private async Task HandleBotUpdate(TelegramBotClient bot, Update update)
+        private async Task HandleBotUpdate(BotUpdateEventArgs args)
         {
-            if(update.Type == UpdateType.Message && update.Message != null && Channels.TryGetValue(update.Message.Chat.Id, out var info))
+            if(args.Update.Type == UpdateType.Message && args.Update.Message != null && Channels.TryGetValue(args.Update.Message.Chat.Id, out var info))
             {
-                if (info.Add(update.Message))
-                    CloseMessageRecieving(update.Message.Chat.Id, info, bot, update.Message.Chat.Id);
+                args.Handled = true;
+                if (info.Add(args.Update.Message))
+                    CloseMessageRecieving(args.Update.Message.Chat.Id, info, args.Bot, args.Update.Message.Chat.Id);
                 else
-                {
-                    await bot.SendMessage(Questions[info.ChannelProgress], update.Message.Chat.Id);
-                }
+                    await args.Bot.SendMessage(Questions[info.ChannelProgress], args.Update.Message.Chat.Id);
             }
         }
 
@@ -50,9 +49,12 @@ namespace PolyChessTGBot.Bot.Messages
 
         public async Task Send(TelegramBotClient bot, long channelId)
         {
-            await bot.SendMessage(Questions[0], channelId);
-            Channels.Add(channelId, new ChannelInfo(Questions.Count));
-            ActiveChannels.Add(channelId);
+            if (CanSendMessage(channelId))
+            {
+                await bot.SendMessage(Questions[0], channelId);
+                Channels.Add(channelId, new ChannelInfo(Questions.Count));
+                ActiveChannels.Add(channelId);
+            }
         }
 
         private void CloseMessageRecieving(long channelId, ChannelInfo info, TelegramBotClient bot, ChatId chat)
