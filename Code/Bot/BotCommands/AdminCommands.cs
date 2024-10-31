@@ -23,6 +23,14 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private readonly DiscreteMessage CheckPlayer = new(["Введите имя ученика или ник на Lichess"], OnCheckPlayerEntered);
 
+        private readonly DiscreteMessage FAQAdd;
+
+        private readonly DiscreteMessage HelpLinkAdd;
+
+        private readonly DiscreteMessage FAQChange;
+
+        private readonly DiscreteMessage HelpLinkChange;
+
         private static async Task OnCheckPlayerEntered(DecretiveMessageEnteredArgs args)
         {
             User? user = null;
@@ -36,7 +44,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
             if (user != null)
             {
-                List<string> text = [$"Информация об ученике, <b>{user.Name}</b>"];
+                List<string> text = [$"Информация об ученике <b>{user.Name}</b>"];
                 if (!string.IsNullOrEmpty(user.LichessName))
                 {
                     TelegramMessageBuilder message = new();
@@ -82,13 +90,13 @@ namespace PolyChessTGBot.Bot.BotCommands
                         await args.Reply(message);
                     }
                     else
-                        await args.Reply($"Ник на Lichess: <b>Аккаунт не найден</b>. Перепривяжите аккаунт с помощью /reg");
+                        await args.Reply($"Ник на Lichess: <b>Аккаунт не найден</b>.");
                 }
                 else
-                    await args.Reply($"Ник на Lichess: <b>Аккаунт не привязан</b>. Привяжите аккаунт с помощью /reg");
+                    await args.Reply($"Ник на Lichess: <b>Аккаунт не привязан</b>.");
             }
             else
-                await args.Reply("Информация о Вашем аккаунте не найдена, обратитесь к администратору бота!");
+                await args.Reply("Информация о аккаунте не найдена, обратитесь к администратору бота!");
         }
 
         [Command("panel", "Работает с полезными ссылками", admin: true)]
@@ -107,13 +115,19 @@ namespace PolyChessTGBot.Bot.BotCommands
             updateTournaments.SetData("DownloadTournaments");
             msg.AddButton(updateTournaments);
 
-            InlineKeyboardButton deleteHelp = new("🗑 Удалить полезные ссылки");
+            InlineKeyboardButton deleteHelp = new("✏️ Изменить полезные ссылки");
             deleteHelp.SetData("DeleteHelpLinks");
 
-            InlineKeyboardButton deleteFAQ = new("🗑 Удалить запись FAQ");
+            InlineKeyboardButton deleteFAQ = new("✏️ Изменить FAQ");
             deleteFAQ.SetData("DeleteFAQEntry");
             msg.AddKeyboard([deleteHelp, deleteFAQ]);
 
+            InlineKeyboardButton addHelp = new("➕ Добавить полезную ссылку");
+            addHelp.SetData("AddHelpLink");
+
+            InlineKeyboardButton addFAQ = new("➕ Добавить FAQ");
+            addFAQ.SetData("AddFAQEntry");
+            msg.AddKeyboard([addHelp, addFAQ]);
 
             InlineKeyboardButton lookPlayer = new("🔍 Посмотреть информацию об игроке");
             lookPlayer.SetData("LookPlayer");
@@ -166,23 +180,6 @@ namespace PolyChessTGBot.Bot.BotCommands
                 await args.Reply("Команда Политеха не найдена!");
         }
 
-        [Command("admin", "Работает с полезными ссылками", admin: true)]
-        private async Task AdminHelpLinks(CommandArgs args)
-        {
-            if (args.Parameters.Count > 0)
-            {
-                var adminType = args.Parameters[0].ToLower();
-                if (adminType.StartsWith('f'))
-                    await FAQAdmin.Send(args.Bot, args.Message.Chat.Id, args.User);
-                else if (adminType.StartsWith('h'))
-                    await HelpAdmin.Send(args.Bot, args.Message.Chat.Id, args.User);
-                else
-                    await args.Reply("Панель не найдена! Попробуйте /admin faq/helplinks");
-            }
-            else
-                await args.Reply("Неправильный синтаксис! Правильно: /admin faq/helplinks");
-        }
-
         private async Task HandleHelpLinkDelete(ButtonInteractArgs args, List<HelpLink> links)
         {
             if (links.Count != 0)
@@ -200,13 +197,25 @@ namespace PolyChessTGBot.Bot.BotCommands
                 await args.Reply("Не найдено полезных ссылок!");
         }
 
-        private async Task HandleFAQDelete(ButtonInteractArgs args, List<FAQEntry> links)
+        private async Task HandleHelpLinkChange(ButtonInteractArgs args, List<HelpLink> links)
         {
-            if (links.Count != 0)
+            if (args.Query.Message != null)
+                await HelpLinkChange.Send(args.Query.Message.Chat.Id, links[0]);
+        }
+
+        private async Task HandleFAQChange(ButtonInteractArgs args, List<FAQEntry> entries)
+        {
+            if (args.Query.Message != null)
+                await FAQChange.Send(args.Query.Message.Chat.Id, entries[0]);
+        }
+
+        private async Task HandleFAQDelete(ButtonInteractArgs args, List<FAQEntry> entries)
+        {
+            if (entries.Count != 0)
             {
-                var link = links[0];
-                FAQEntries.Remove(link);
-                Program.Data.Query("DELETE FROM FAQ WHERE ID=@0", link.ID);
+                var entry = entries[0];
+                FAQEntries.Remove(entry);
+                Program.Data.Query("DELETE FROM FAQ WHERE ID=@0", entry.ID);
                 if (args.Query.Message != null)
                 {
                     await args.Bot.DeleteMessageAsync(args.Query.Message.Chat.Id, args.Query.Message.MessageId);
@@ -215,6 +224,117 @@ namespace PolyChessTGBot.Bot.BotCommands
             }
             else
                 await args.Reply("Не найдено вопросов!");
+        }
+
+
+        private async Task OnHelpLinkChangeEntered(DecretiveMessageEnteredArgs args)
+        {
+            if(args.Answears.Length == 3 && args.Data.Count == 1)
+            {
+                if(args.Data[0] is HelpLink link)
+                {
+                    var newTitle = args.Answears[0].Text;
+                    var newText = args.Answears[1].Text;
+                    var newFile = args.Answears[2].Document;
+                    if (newTitle != null && newText != null)
+                    {
+                        if(newTitle.Trim() != "-")
+                            link.Title = newTitle;
+
+                        if (newText.Trim() != "-")
+                            link.Text = newText;
+
+                        if (newFile != default)
+                            link.FileID = newFile.FileId;
+
+                        Program.Data.Query($"UPDATE HelpLinks SET Text='{link.Text}, Title='{link.Title}', FileID='{link.FileID}' WHERE ID='{link.ID}'");
+                        await args.Reply("Полезная ссылка была успешно обновлена!");
+                    }
+                }
+            }
+        }
+
+        private async Task OnFAQChangeEntered(DecretiveMessageEnteredArgs args)
+        {
+            if (args.Answears.Length == 2 && args.Data.Count == 1)
+            {
+                if (args.Data[0] is FAQEntry entry)
+                {
+                    var newQuestions = args.Answears[0].Text;
+                    var newAnswer = args.Answears[1].Text;
+                    if (newQuestions != null && newAnswer != null)
+                    {
+                        if (newQuestions.Trim() != "-")
+                            entry.Question = newQuestions;
+
+                        if (newAnswer.Trim() != "-")
+                            entry.Answer = newAnswer;
+
+                        Program.Data.Query($"UPDATE FAQ SET Question='{entry.Question}', Answer='{entry.Answer}' WHERE ID='{entry.ID}'");
+                        await args.Reply("Запись FAQ была успешно обновлена!");
+                    }
+                }
+            }
+        }
+
+        [Button("AddHelpLink")]
+        internal async Task AddeHelpLink(ButtonInteractArgs args)
+        {
+            if(args.Query.Message != null)
+                await HelpLinkAdd.Send(args.Query.Message.Chat.Id);
+        }
+
+        [Button("AddFAQEntry")]
+        internal async Task AddFAQEntry(ButtonInteractArgs args)
+        {
+            if (args.Query.Message != null)
+                await FAQAdd.Send(args.Query.Message.Chat.Id);
+        }
+
+        private async Task OnFAQAddEntered(DecretiveMessageEnteredArgs args)
+        {
+            if (args.Answears.Length == 2)
+            {
+                var question = args.Answears[0].Text;
+                var answer = args.Answears[1].Text;
+                if (question != null && answer != null)
+                {
+                    FAQEntry entry = new(default, question, answer);
+                    string text = "INSERT INTO FAQ (Question, Answer) VALUES (@0, @1);";
+                    int id = Program.Data.QueryScalar<int>(text + "SELECT CAST(last_insert_rowid() as INT);", entry.Question, entry.Answer);
+                    entry.ID = id;
+                    FAQEntries.Add(entry);
+                    await args.Reply($"Вопрос <b>{entry.Question}</b> и ответ на него <b>{entry.Answer}</b> были успешно добавлены");
+                }
+                else
+                    await args.Reply("Необходимо ввести текст");
+            }
+        }
+
+        private async Task OnHelpLinkAddEntered(DecretiveMessageEnteredArgs args)
+        {
+            if (args.Answears.Length == 3)
+            {
+                var title = args.Answears[0].Text;
+                var footer = args.Answears[1].Text;
+                var file = args.Answears[2].Document;
+                if (title != null && footer != null)
+                {
+                    if (file != null)
+                    {
+                        HelpLink link = new(default, title, footer, "", file.FileId);
+                        string text = "INSERT INTO HelpLinks (Title, Text, Footer, FileID) VALUES (@0, @1, @2, @3);";
+                        int id = Program.Data.QueryScalar<int>(text + "SELECT CAST(last_insert_rowid() as INT);", link.Title, link.Text, link.Footer, link.FileID == null ? DBNull.Value : link.FileID);
+                        link.ID = id;
+                        HelpLinks.Add(link);
+                        await args.Reply($"Полезная ссылка была успешно добавлена!");
+                    }
+                    else
+                        await args.Reply("К полезной ссылке нужно прикрепить файл! Для этого прикрепите его к сообщеию с командой");
+                }
+                else
+                    await args.Reply("Необходимо ввести текст");
+            }
         }
 
         [Command("fileinfo", "Выдаёт информацию о файле", admin: true)]
@@ -264,95 +384,6 @@ namespace PolyChessTGBot.Bot.BotCommands
             public string FileID = fileID;
 
             public string FileUniqueId = fileUniqueID;
-        }
-
-        [Command("addfaq", "Создаёт частозадаваемый вопрос", admin: true)]
-        private async Task AddFAQ(CommandArgs args)
-        {
-            if (args.Parameters.Count == 2)
-            {
-                FAQEntry entry = new(default, args.Parameters[0], args.Parameters[1]);
-                string text = "INSERT INTO FAQ (Question, Answer) VALUES (@0, @1);";
-                int id = Program.Data.QueryScalar<int>(text + "SELECT CAST(last_insert_rowid() as INT);", entry.Question, entry.Answer);
-                entry.ID = id;
-                FAQEntries.Add(entry);
-                await args.Reply($"Вопрос <b>{entry.Question}</b> и ответ на него <b>{entry.Answer}</b> были успешно добавлены");
-            }
-            else
-                await args.Reply("Ошибка синтаксиса! Правильно: /addFAQ \"вопрос\" \"ответ\"");
-        }
-
-        [Command("addhelp", "Создаёт полезную ссылку", admin: true)]
-        private async Task AddHelpLink(CommandArgs args)
-        {
-            if (args.Parameters.Count == 2)
-            {
-                if (args.Message.Document != null)
-                {
-                    HelpLink link = new(default, args.Parameters[0], args.Parameters[1], "", args.Message.Document.FileId);
-                    string text = "INSERT INTO HelpLinks (Title, Text, Footer, FileID) VALUES (@0, @1, @2, @3);";
-                    int id = Program.Data.QueryScalar<int>(text + "SELECT CAST(last_insert_rowid() as INT);", link.Title, link.Text, link.Footer, link.FileID == null ? DBNull.Value : link.FileID);
-                    link.ID = id;
-                    HelpLinks.Add(link);
-                    await args.Reply($"Полезная ссылка была успешно добавлена!");
-                }
-                else
-                    await args.Reply("К полезной ссылке нужно прикрепить файл! Для этого прикрепите его к сообщеию с командой");
-            }
-            else
-                await args.Reply("Ошибка синтаксиса! Правильно: /addhelp \"название\" \"текст\". Чтобы добавить файл - прикрепите его к сообщению с командой");
-        }
-
-        [Command("cstats", "Показывает характеристики канала", admin: true)]
-        private async Task Stats(CommandArgs args)
-        {
-            await args.Reply($"Айди канала: {args.Message.Chat.Id}");
-        }
-
-        [Command("users", "Показывает пользователей", admin: true)]
-        private async Task GetUsers(CommandArgs args)
-        {
-            await args.Reply($"Пользователи: {string.Join("\n", Program.Data.Users)}");
-        }
-
-        [Command("updatetournaments", "Скачивает новые турниры с Lichess", admin: true)]
-        private async Task UpdateTournamnets(CommandArgs args)
-        {
-            if (!string.IsNullOrEmpty(Program.MainConfig.MainPolytechTeamID))
-            {
-                await args.Reply("Началась загрузка турниров... Это может занять некоторое время");
-                var updatedTournaments = await Program.Tournaments.UpdateTournaments(Program.MainConfig.MainPolytechTeamID);
-                await args.Reply($"Турниры {string.Join(", ", updatedTournaments.Select(t => "<b>" + t.name + "</b>"))} успешно добавлены!");
-            }
-            else
-                await args.Reply("Команда Политеха не найдена!");
-        }
-
-        [Command("userinfo", "Показывает информацию о пользователе", admin: true)]
-        private async Task GetUserInfo(CommandArgs args)
-        {
-            if (args.Parameters.Count > 0)
-            {
-                string name = string.Join(" ", args.Parameters);
-                using var reader = Program.Data.SelectQuery($"SELECT * FROM Users WHERE Name='{name}'");
-                if (reader.Read())
-                {
-                    var lichessUser = await Program.Lichess.GetUserAsync(reader.Get("LichessName"));
-
-                    if (lichessUser != null)
-                    {
-                        TelegramMessageBuilder message = await GenerateUserInfo(lichessUser);
-                        message.Text = "Информация об ученике <b>{name}</b>\n" + message.Text;
-                        await args.Reply(message);
-                    }
-                    else
-                        await args.Reply("Аккаунт Lichess не найден!");
-                }
-                else
-                    await args.Reply("Ученик не найден!");
-            }
-            else
-                await args.Reply("Неправильный синтаксис! Правильно: /userinfo \"ник\"");
         }
 
         [Button("TeamInfo")]

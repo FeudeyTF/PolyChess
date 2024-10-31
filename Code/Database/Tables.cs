@@ -1,6 +1,6 @@
 ﻿namespace PolyChessTGBot.Database
 {
-    public struct FAQEntry(int id, string question, string answer)
+    public class FAQEntry(int id, string question, string answer)
     {
         public int ID = id;
 
@@ -9,7 +9,7 @@
         public string Answer = answer;
     }
 
-    public struct HelpLink(int id, string title, string text, string footer, string? fileID)
+    public class HelpLink(int id, string title, string text, string footer, string? fileID)
     {
         public int ID = id;
 

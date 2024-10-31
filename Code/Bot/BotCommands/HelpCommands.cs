@@ -5,6 +5,7 @@ using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Commands.Basic;
 using PolyChessTGBot.Bot.Messages;
+using PolyChessTGBot.Bot.Messages.Discrete;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
 using PolyChessTGBot.Managers.Tournaments;
@@ -38,9 +39,9 @@ namespace PolyChessTGBot.Bot.BotCommands
                 GetDocumentID = GetHelpLinkDocumentID
             };
 
-            FAQAdmin = new("adminFAQ", GetFAQValues, ConvertFAQEntryToString, 1, additionalKeyboards: [[new("🗑Удалить", "Delete", HandleFAQDelete)]]);
+            FAQAdmin = new("adminFAQ", GetFAQValues, ConvertFAQEntryToString, 1, additionalKeyboards: [[new("🗑Удалить", "Delete", HandleFAQDelete), new("✏️Изменить", "Change", HandleFAQChange)]]);
 
-            HelpAdmin = new("adminHelp", GetHelpLinksValue, ConvertHelpLinkToString, 1, false, "Далее ➡️", "⬅️ Назад", [[new("🗑Удалить", "Delete", HandleHelpLinkDelete)]])
+            HelpAdmin = new("adminHelp", GetHelpLinksValue, ConvertHelpLinkToString, 1, false, "Далее ➡️", "⬅️ Назад", [[new("🗑Удалить", "Delete", HandleHelpLinkDelete), new("✏️Изменить", "Change", HandleHelpLinkChange)]])
             {
                 GetDocumentID = GetHelpLinkDocumentID
             };
@@ -50,6 +51,12 @@ namespace PolyChessTGBot.Bot.BotCommands
                 Header = "<b> - Информация об участии в турнирах!</b>"
             };
 
+            FAQAdd = new(["Введите вопрос", "Введите ответ на этот вопрос"], OnFAQAddEntered);
+            HelpLinkAdd = new(["Введите название", "Введите основной текст", "Прикрепите файл"], OnHelpLinkAddEntered);
+
+            FAQChange = new(["Введите новый вопрос (-, если оставить прежним)", "Введите новый ответ на этот вопрос (-, если оставить прежним)"], OnFAQChangeEntered);
+            HelpLinkChange = new(["Введите новое название (-, если оставить прежним)", "Введите новый текст этой ссылки (-, если оставить прежним)", "Отправьте новый файл этой ссылки (-, если оставить прежним)"], OnHelpLinkChangeEntered);
+
             AdminCheckUsers = new("checkUsers", 
                 async () => await Task.FromResult(Program.Data.Users),
                 async (user, index, tgUser) => await Task.FromResult(user.ToString()), 
@@ -57,6 +64,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 true, 
                 "Далее ➡️",
                 "⬅️ Назад");
+
             AccountVerifyCodes = [];
             FAQEntries = Program.Data.GetFAQEntries();
             HelpLinks = Program.Data.GetHelpLinks();

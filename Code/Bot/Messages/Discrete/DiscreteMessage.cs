@@ -39,7 +39,7 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
                 args.Handled = true;
                 if (info.Add(args.Update.Message))
                 {
-                    await OnEntered(new(info.Messages, args.Bot, args.Update.Message.Chat.Id, args.Update.Message.From));
+                    await OnEntered(new(info.Messages, args.Bot, args.Update.Message.Chat.Id, args.Update.Message.From, info.Data));
                     Channels.Remove(args.Update.Message.Chat.Id);
                     ActiveChannels.Remove(args.Update.Message.Chat.Id);
                 }
@@ -48,15 +48,15 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
             }
         }
 
-        public async Task Send(long channelId)
-            => await Send(Program.Bot.Telegram, channelId);
+        public async Task Send(long channelId, params List<object> data)
+            => await Send(Program.Bot.Telegram, channelId, data);
 
-        public async Task Send(TelegramBotClient bot, long channelId)
+        public async Task Send(TelegramBotClient bot, long channelId, params List<object> data)
         {
             if (CanSendMessage(channelId))
             {
                 await bot.SendMessage(Questions[0], channelId);
-                Channels.Add(channelId, new ChannelInfo(Questions.Count));
+                Channels.Add(channelId, new ChannelInfo(Questions.Count, data));
                 ActiveChannels.Add(channelId);
             }
         }
@@ -69,11 +69,14 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
 
             public int QuestionCount;
 
-            public ChannelInfo(int questionCount)
+            public List<object> Data;
+
+            public ChannelInfo(int questionCount, List<object> data)
             {
                 Messages = new Message[questionCount];
                 ChannelProgress = 0;
                 QuestionCount = questionCount;
+                Data = data;
             }
 
             public bool Add(Message message)
