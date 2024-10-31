@@ -8,7 +8,7 @@
     <ApplicationIcon>..\Icons\AppIcon.ico</ApplicationIcon>
     <DebugType>embedded</DebugType>
     <BaseOutputPath>..\bin</BaseOutputPath>
-    <FileVersion>0.3.5.1</FileVersion>
+    <FileVersion>0.3.7.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
