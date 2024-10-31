@@ -6,7 +6,7 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
 {
     public class DecretiveMessageEnteredArgs
     {
-        public Message[] Answears;
+        public Message[] Answers;
 
         public TelegramBotClient Bot;
 
@@ -18,7 +18,7 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
 
         public DecretiveMessageEnteredArgs(Message[] answears, TelegramBotClient bot, ChatId chat, User user, List<object> data)
         {
-            Answears = answears;
+            Answers = answears;
             Bot = bot;
             ChatID = chat;
             User = user;

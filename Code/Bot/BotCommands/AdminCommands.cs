@@ -34,7 +34,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         private static async Task OnCheckPlayerEntered(DecretiveMessageEnteredArgs args)
         {
             User? user = null;
-            var name = args.Answears[0].Text;
+            var name = args.Answers[0].Text;
             foreach(var dataUser in Program.Data.Users)
                 if(dataUser.LichessName == name || dataUser.Name == name)
                 {
@@ -229,13 +229,13 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private async Task OnHelpLinkChangeEntered(DecretiveMessageEnteredArgs args)
         {
-            if(args.Answears.Length == 3 && args.Data.Count == 1)
+            if(args.Answers.Length == 3 && args.Data.Count == 1)
             {
                 if(args.Data[0] is HelpLink link)
                 {
-                    var newTitle = args.Answears[0].Text;
-                    var newText = args.Answears[1].Text;
-                    var newFile = args.Answears[2].Document;
+                    var newTitle = args.Answers[0].Text;
+                    var newText = args.Answers[1].Text;
+                    var newFile = args.Answers[2].Document;
                     if (newTitle != null && newText != null)
                     {
                         if(newTitle.Trim() != "-")
@@ -256,12 +256,12 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private async Task OnFAQChangeEntered(DecretiveMessageEnteredArgs args)
         {
-            if (args.Answears.Length == 2 && args.Data.Count == 1)
+            if (args.Answers.Length == 2 && args.Data.Count == 1)
             {
                 if (args.Data[0] is FAQEntry entry)
                 {
-                    var newQuestions = args.Answears[0].Text;
-                    var newAnswer = args.Answears[1].Text;
+                    var newQuestions = args.Answers[0].Text;
+                    var newAnswer = args.Answers[1].Text;
                     if (newQuestions != null && newAnswer != null)
                     {
                         if (newQuestions.Trim() != "-")
@@ -293,10 +293,10 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private async Task OnFAQAddEntered(DecretiveMessageEnteredArgs args)
         {
-            if (args.Answears.Length == 2)
+            if (args.Answers.Length == 2)
             {
-                var question = args.Answears[0].Text;
-                var answer = args.Answears[1].Text;
+                var question = args.Answers[0].Text;
+                var answer = args.Answers[1].Text;
                 if (question != null && answer != null)
                 {
                     FAQEntry entry = new(default, question, answer);
@@ -313,11 +313,11 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private async Task OnHelpLinkAddEntered(DecretiveMessageEnteredArgs args)
         {
-            if (args.Answears.Length == 3)
+            if (args.Answers.Length == 3)
             {
-                var title = args.Answears[0].Text;
-                var footer = args.Answears[1].Text;
-                var file = args.Answears[2].Document;
+                var title = args.Answers[0].Text;
+                var footer = args.Answers[1].Text;
+                var file = args.Answers[2].Document;
                 if (title != null && footer != null)
                 {
                     if (file != null)

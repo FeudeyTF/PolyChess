@@ -35,7 +35,7 @@ namespace PolyChessTGBot.Bot.Commands.Discrete
 
         private async Task OnEntered(DecretiveMessageEnteredArgs args)
         {
-            await Delegate(new CommandArgs<Message>(args.Answears.Last(), args.Bot, args.User, [.. args.Answears], default));
+            await Delegate(new CommandArgs<Message>(args.Answers.Last(), args.Bot, args.User, [.. args.Answers], default));
         }
 
         public BotCommand ToTelegramCommand()
