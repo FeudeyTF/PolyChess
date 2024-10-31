@@ -4,7 +4,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
-namespace PolyChessTGBot.Bot.Commands
+namespace PolyChessTGBot.Bot.Commands.Basic
 {
     internal class CommandRegistrator
     {
@@ -36,7 +36,7 @@ namespace PolyChessTGBot.Bot.Commands
             }
         }
 
-        public async Task ExecuteCommand(string text, Message message, User user, CancellationToken token)
+        public async Task<bool> ExecuteCommand(string text, Message message, User user, CancellationToken token)
         {
             string commandText = text.Remove(0, 1);
 
@@ -76,14 +76,14 @@ namespace PolyChessTGBot.Bot.Commands
                     }
                     else
                         await args.Reply("Эта команда доступна только админам!");
-                    return;
+                    return true;
                 }
-            await args.Reply("Команда не была найдена!");
+            return false;
         }
 
-        public async Task RegisterCommandsInTelegram()
+        public Dictionary<BotCommandScopeType, List<BotCommand>> GetCommandsInTelegram()
         {
-            Dictionary<BotCommandScopeType, List<BotCommand>> commands = new();
+            Dictionary<BotCommandScopeType, List<BotCommand>> commands = [];
             foreach (var command in Commands)
                 if (command.Visible)
                 {
@@ -92,8 +92,7 @@ namespace PolyChessTGBot.Bot.Commands
                     else
                         commands.Add(command.ScopeType, [command.ToTelegramCommand()]);
                 }
-            foreach (var commandList in commands)
-                await Program.Bot.Telegram.SetMyCommandsAsync(commandList.Value, Utils.GetScopeByType(commandList.Key));
+            return commands;
         }
     }
 }

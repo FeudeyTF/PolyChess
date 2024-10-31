@@ -1,6 +1,6 @@
 using Telegram.Bot.Types.Enums;
 
-namespace PolyChessTGBot.Bot.Commands
+namespace PolyChessTGBot.Bot.Commands.Basic
 {
     [AttributeUsage(AttributeTargets.Method)]
     internal sealed class CommandAttribute : Attribute

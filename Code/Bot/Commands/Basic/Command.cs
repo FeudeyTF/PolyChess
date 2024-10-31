@@ -1,7 +1,7 @@
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
-namespace PolyChessTGBot.Bot.Commands
+namespace PolyChessTGBot.Bot.Commands.Basic
 {
     internal delegate Task CommandDelegate(CommandArgs args);
 

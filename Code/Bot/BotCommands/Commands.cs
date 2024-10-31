@@ -1,6 +1,9 @@
 using PolyChessTGBot.Bot.Commands;
+using PolyChessTGBot.Bot.Commands.Basic;
+using PolyChessTGBot.Bot.Commands.Discrete;
 using System.Diagnostics;
 using System.Reflection;
+using Telegram.Bot.Types;
 using File = System.IO.File;
 
 namespace PolyChessTGBot.Bot.BotCommands

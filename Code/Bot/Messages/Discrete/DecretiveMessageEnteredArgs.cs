@@ -12,11 +12,14 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
 
         public ChatId ChatID;
 
-        public DecretiveMessageEnteredArgs(Message[] answears, TelegramBotClient bot, ChatId chat)
+        public User User;
+
+        public DecretiveMessageEnteredArgs(Message[] answears, TelegramBotClient bot, ChatId chat, User user)
         {
             Answears = answears;
             Bot = bot;
             ChatID = chat;
+            User = user;
         }
 
         public async Task Reply(TelegramMessageBuilder message)

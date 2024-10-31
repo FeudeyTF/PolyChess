@@ -1,9 +1,10 @@
 ﻿using PolyChessTGBot.Bot.Buttons;
-using PolyChessTGBot.Bot.Commands;
+using PolyChessTGBot.Bot.Commands.Basic;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Extensions;
 using PolyChessTGBot.Hooks;
 using PolyChessTGBot.Logs;
+using System.Collections.Generic;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
@@ -18,6 +19,8 @@ namespace PolyChessTGBot.Bot
         public readonly TelegramBotClient Telegram;
 
         public readonly CommandRegistrator CommandRegistrator;
+
+        public readonly DiscreteCommandRegistrator DiscreteCommandRegistrator;
 
         public User? TelegramUser;
 
@@ -38,6 +41,7 @@ namespace PolyChessTGBot.Bot
             };
             Logger = logger;
             CommandRegistrator = new();
+            DiscreteCommandRegistrator = new();
             ButtonRegistrator = new();
             Commands = new();
         }
@@ -61,10 +65,25 @@ namespace PolyChessTGBot.Bot
 
             Logger.Write($"{TelegramUser.FirstName} запущен!", LogType.Info);
             CommandRegistrator.RegisterCommands(Commands);
+            DiscreteCommandRegistrator.RegisterCommands(Commands);
             ButtonRegistrator.RegisterButtons();
             ButtonRegistrator.RegisterButtons(Commands);
             await Telegram.DeleteMyCommandsAsync();
-            await CommandRegistrator.RegisterCommandsInTelegram();
+
+            Dictionary<BotCommandScopeType, List<BotCommand>> dic = [];
+            foreach (var commandList in CommandRegistrator.GetCommandsInTelegram())
+                if (dic.TryGetValue(commandList.Key, out var val))
+                    val.AddRange(commandList.Value);
+                else
+                    dic.Add(commandList.Key, commandList.Value);
+            foreach (var commandList in DiscreteCommandRegistrator.GetCommandsInTelegram())
+                if (dic.TryGetValue(commandList.Key, out var val))
+                    val.AddRange(commandList.Value);
+                else
+                    dic.Add(commandList.Key, commandList.Value);
+            foreach (var commandList in dic)
+                await Program.Bot.Telegram.SetMyCommandsAsync(commandList.Value, Utils.GetScopeByType(commandList.Key));
+           
         }
 
         private async Task UpdateHandler(ITelegramBotClient client, Update update, CancellationToken token)
@@ -105,11 +124,21 @@ namespace PolyChessTGBot.Bot
             if (user != null)
             {
                 var text = message.Text;
+
                 if (text != null && text.StartsWith('/'))
-                    await CommandRegistrator.ExecuteCommand(text, message, user, token);
+                {
+                    if(!await CommandRegistrator.ExecuteCommand(text, message, user, token))
+                        if(!await DiscreteCommandRegistrator.ExecuteCommand(text, message, user, token))
+                            await Program.Bot.Telegram.SendMessage(new TelegramMessageBuilder("Команда не была найдена!").ReplyTo(message.MessageId), message.Chat.Id);
+                }
 
                 if (text == null && message.Caption != null && message.Caption.StartsWith('/'))
-                    await CommandRegistrator.ExecuteCommand(message.Caption, message, user, token);
+                {
+                    if (!await CommandRegistrator.ExecuteCommand(message.Caption, message, user, token))
+                        if (!await DiscreteCommandRegistrator.ExecuteCommand(message.Caption, message, user, token))
+                            await Program.Bot.Telegram.SendMessage(new TelegramMessageBuilder("Команда не была найдена!").ReplyTo(message.MessageId), message.Chat.Id);
+
+                }
 
 
                 if (message.Chat.Id == Program.MainConfig.QuestionChannel && message.ReplyToMessage != null && message.ReplyToMessage.ReplyMarkup != null)

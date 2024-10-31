@@ -5,7 +5,7 @@ using Telegram.Bot.Types;
 
 namespace PolyChessTGBot.Bot.Commands
 {
-    public class CommandArgs
+    public class CommandArgs<TParameter>
     {
         public TelegramBotClient Bot;
 
@@ -13,11 +13,11 @@ namespace PolyChessTGBot.Bot.Commands
 
         public Message Message;
 
-        public List<string> Parameters;
+        public List<TParameter> Parameters;
 
         public CancellationToken Token;
 
-        public CommandArgs(Message message, TelegramBotClient bot, User user, List<string> args, CancellationToken token)
+        public CommandArgs(Message message, TelegramBotClient bot, User user, List<TParameter> args, CancellationToken token)
         {
             Message = message;
             User = user;
@@ -30,5 +30,9 @@ namespace PolyChessTGBot.Bot.Commands
         {
             await Bot.SendMessage(message.ReplyTo(Message.MessageId), Message.Chat.Id);
         }
+    }
+
+    public class CommandArgs(Message message, TelegramBotClient bot, User user, List<string> args, CancellationToken token) : CommandArgs<string>(message, bot, user, args, token)
+    {
     }
 }

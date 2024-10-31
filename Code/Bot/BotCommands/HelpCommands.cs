@@ -3,6 +3,7 @@ using LichessAPI.Types.Arena;
 using LichessAPI.Types.Swiss;
 using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Bot.Commands;
+using PolyChessTGBot.Bot.Commands.Basic;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;

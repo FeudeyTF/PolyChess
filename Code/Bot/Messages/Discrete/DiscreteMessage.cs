@@ -34,11 +34,15 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
 
         private async Task HandleBotUpdate(BotUpdateEventArgs args)
         {
-            if(args.Update.Type == UpdateType.Message && args.Update.Message != null && Channels.TryGetValue(args.Update.Message.Chat.Id, out var info))
+            if(args.Update.Type == UpdateType.Message && args.Update.Message != null && args.Update.Message.From != null && Channels.TryGetValue(args.Update.Message.Chat.Id, out var info))
             {
                 args.Handled = true;
                 if (info.Add(args.Update.Message))
-                    await CloseMessageRecieving(args.Update.Message.Chat.Id, info, args.Bot, args.Update.Message.Chat.Id);
+                {
+                    await OnEntered(new(info.Messages, args.Bot, args.Update.Message.Chat.Id, args.Update.Message.From));
+                    Channels.Remove(args.Update.Message.Chat.Id);
+                    ActiveChannels.Remove(args.Update.Message.Chat.Id);
+                }
                 else
                     await args.Bot.SendMessage(Questions[info.ChannelProgress], args.Update.Message.Chat.Id);
             }
@@ -55,13 +59,6 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
                 Channels.Add(channelId, new ChannelInfo(Questions.Count));
                 ActiveChannels.Add(channelId);
             }
-        }
-
-        private async Task CloseMessageRecieving(long channelId, ChannelInfo info, TelegramBotClient bot, ChatId chat)
-        {
-            await OnEntered(new(info.Messages, bot, chat));
-            Channels.Remove(channelId);
-            ActiveChannels.Remove(channelId);
         }
 
         private  class ChannelInfo

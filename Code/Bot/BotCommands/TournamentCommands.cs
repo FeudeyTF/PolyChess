@@ -1,5 +1,6 @@
 ﻿using LichessAPI.Types.Arena;
 using PolyChessTGBot.Bot.Commands;
+using PolyChessTGBot.Bot.Commands.Basic;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Extensions;
 using System.Text;

@@ -1,7 +1,9 @@
 ﻿using LichessAPI.Types;
 using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Bot.Commands;
+using PolyChessTGBot.Bot.Commands.Basic;
 using PolyChessTGBot.Bot.Messages;
+using PolyChessTGBot.Bot.Messages.Discrete;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
 using System.Text;
@@ -21,7 +23,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private readonly DiscreteMessage CheckPlayer = new(["Введите имя ученика или ник на Lichess"], OnCheckPlayerEntered);
 
-        private static async Task OnCheckPlayerEntered(DecretiveMessageFullyEnteredArgs args)
+        private static async Task OnCheckPlayerEntered(DecretiveMessageEnteredArgs args)
         {
             User? user = null;
             var name = args.Answears[0].Text;
