@@ -19,7 +19,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private readonly ListMessage<User> AdminCheckUsers;
 
-        private readonly DecretiveMessage CheckPlayer = new(["Введите имя ученика или ник на Lichess"], OnCheckPlayerEntered);
+        private readonly DiscreteMessage CheckPlayer = new(["Введите имя ученика или ник на Lichess"], OnCheckPlayerEntered);
 
         private static async Task OnCheckPlayerEntered(DecretiveMessageFullyEnteredArgs args)
         {

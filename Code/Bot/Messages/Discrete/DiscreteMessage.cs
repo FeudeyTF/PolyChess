@@ -1,17 +1,16 @@
 ﻿using PolyChessTGBot.Extensions;
 using PolyChessTGBot.Hooks;
-using System;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
-namespace PolyChessTGBot.Bot.Messages
+namespace PolyChessTGBot.Bot.Messages.Discrete
 {
-    public class DecretiveMessage
+    public class DiscreteMessage
     {
         private static List<long> ActiveChannels;
 
-        static DecretiveMessage()
+        static DiscreteMessage()
         {
             ActiveChannels = [];
         }
@@ -20,11 +19,11 @@ namespace PolyChessTGBot.Bot.Messages
 
         private readonly Dictionary<long, ChannelInfo> Channels;
 
-        private readonly Func<DecretiveMessageFullyEnteredArgs, Task> OnEntered;
+        private readonly Func<DecretiveMessageEnteredArgs, Task> OnEntered;
 
         private readonly List<string> Questions;
 
-        public DecretiveMessage(List<string> questions, Func<DecretiveMessageFullyEnteredArgs, Task> onFullEntered)
+        public DiscreteMessage(List<string> questions, Func<DecretiveMessageEnteredArgs, Task> onFullEntered)
         {
             ActiveChannels = [];
             Channels = [];
@@ -65,7 +64,7 @@ namespace PolyChessTGBot.Bot.Messages
             ActiveChannels.Remove(channelId);
         }
 
-        private class ChannelInfo
+        private  class ChannelInfo
         {
             public Message[] Messages;
 
@@ -88,27 +87,6 @@ namespace PolyChessTGBot.Bot.Messages
                     return true;
                 return false;
             }
-        }
-    }
-
-    public class DecretiveMessageFullyEnteredArgs
-    {
-        public Message[] Answears;
-
-        public TelegramBotClient Bot;
-
-        public ChatId ChatID;
-
-        public DecretiveMessageFullyEnteredArgs(Message[] answears, TelegramBotClient bot, ChatId chat)
-        {
-            Answears = answears;
-            Bot = bot;
-            ChatID = chat;
-        }
-
-        public async Task Reply(TelegramMessageBuilder message)
-        {
-            await Bot.SendMessage(message, ChatID);
         }
     }
 }
