@@ -59,7 +59,7 @@ namespace PolyChessTGBot.Bot.Commands.Basic
                         catch (Exception e)
                         {
                             Program.Logger.Write(e.ToString(), LogType.Error);
-                            await args.Reply("Произошла ошибка при выполнении команды! Обратитесь к вашему системному администратору");
+                            await Program.Bot.Telegram.SendMessage(new Messages.TelegramMessageBuilder("Произошла ошибка при выполнении команды! Обратитесь к вашему системному администратору!").ReplyTo(message.MessageId), message.Chat.Id);
                         }
                         #endif
                     }
