@@ -4,7 +4,6 @@ using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Extensions;
 using PolyChessTGBot.Hooks;
 using PolyChessTGBot.Logs;
-using System.Collections.Generic;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;

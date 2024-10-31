@@ -2,7 +2,6 @@ using PolyChessTGBot.Bot.Commands.Discrete;
 using PolyChessTGBot.Extensions;
 using PolyChessTGBot.Logs;
 using System.Reflection;
-using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
