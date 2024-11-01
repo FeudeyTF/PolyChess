@@ -219,7 +219,7 @@ namespace PolyChessTGBot.Managers.Tournaments
                 await Program.Lichess.SaveSwissTournamentSheet(GetSwissTournamentPath(id), id);
                 if (swissTournament.IsSemesterTournament())
                 {
-                    using var reader = File.OpenText(GetTournamentPath(swissTournament.ID));
+                    using var reader = File.OpenText(GetSwissTournamentPath(swissTournament.ID));
                     var result = new SwissTournamentInfo(swissTournament, GenerateTournamentRating(await Program.Lichess.GetSwissTournamentSheet(reader)));
                     SwissTournamentsList.Add(result);
                     return result;

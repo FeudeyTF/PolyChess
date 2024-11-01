@@ -6,16 +6,29 @@ using Telegram.Bot.Types.Enums;
 
 namespace PolyChessTGBot.Bot.Messages.Discrete
 {
-    public class DiscreteMessage
+    public class DiscreteMessage : IDisposable
     {
-        private static List<long> ActiveChannels;
+        private static Dictionary<long, DiscreteMessage> ActiveChannels;
 
         static DiscreteMessage()
         {
             ActiveChannels = [];
         }
 
-        public static bool CanSendMessage(long channelId) => !ActiveChannels.Contains(channelId);
+        public static bool CanSendMessage(long channelId) => !ActiveChannels.ContainsKey(channelId);
+
+        /// <summary>
+        /// Отправляет разделённое сообщение, создавая новый объект. 
+        /// </summary>
+        public static async Task Send(long channelId, List<string> questions, Func<DecretiveMessageEnteredArgs, Task> onEntered, params List<object> data)
+        {
+            if(CanSendMessage(channelId))
+            {
+                DiscreteMessage msg = new(questions, onEntered);
+                await msg.Send(channelId, data);
+                ActiveChannels.Add(channelId, msg);
+            }
+        }
 
         private readonly Dictionary<long, ChannelInfo> Channels;
 
@@ -57,8 +70,14 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
             {
                 await bot.SendMessage(Questions[0], channelId);
                 Channels.Add(channelId, new ChannelInfo(Questions.Count, data));
-                ActiveChannels.Add(channelId);
+                ActiveChannels.Add(channelId, this);
             }
+        }
+
+        public void Dispose()
+        {
+            BotHooks.OnBotUpdate -= HandleBotUpdate;
+            GC.SuppressFinalize(this);
         }
 
         private  class ChannelInfo

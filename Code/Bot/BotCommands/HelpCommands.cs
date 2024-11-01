@@ -50,12 +50,6 @@ namespace PolyChessTGBot.Bot.BotCommands
                 Header = "<b> - Информация об участии в турнирах!</b>"
             };
 
-            FAQAdd = new(["Введите вопрос", "Введите ответ на этот вопрос"], OnFAQAddEntered);
-            HelpLinkAdd = new(["Введите название", "Введите основной текст", "Прикрепите файл"], OnHelpLinkAddEntered);
-
-            FAQChange = new(["Введите новый вопрос (-, если оставить прежним)", "Введите новый ответ на этот вопрос (-, если оставить прежним)"], OnFAQChangeEntered);
-            HelpLinkChange = new(["Введите новое название (-, если оставить прежним)", "Введите новый текст этой ссылки (-, если оставить прежним)", "Отправьте новый файл этой ссылки (-, если оставить прежним)"], OnHelpLinkChangeEntered);
-
             AdminCheckUsers = new("checkUsers", 
                 async () => await Task.FromResult(Program.Data.Users),
                 async (user, index, tgUser) => await Task.FromResult(user.ToString()), 
