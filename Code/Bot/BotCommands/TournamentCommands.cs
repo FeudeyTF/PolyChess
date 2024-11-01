@@ -104,7 +104,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     ["Введите ссылку на турнир"],
                     OnTournamentSwissEntered);
 
-            static async Task OnTournamentSwissEntered(DecretiveMessageEnteredArgs args)
+            static async Task OnTournamentSwissEntered(DiscreteMessageEnteredArgs args)
             {
                 if (args.Answers.Length == 1)
                 {
@@ -161,7 +161,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     ],
                     OnTournamentResultEntered);
 
-            static async Task OnTournamentResultEntered(DecretiveMessageEnteredArgs args)
+            static async Task OnTournamentResultEntered(DiscreteMessageEnteredArgs args)
             {
                 if (args.Answers.Length == 2)
                 {

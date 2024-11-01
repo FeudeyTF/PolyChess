@@ -33,7 +33,7 @@ namespace PolyChessTGBot.Bot.Commands.Discrete
             Message = new(questions, OnEntered);
         }
 
-        private async Task OnEntered(DecretiveMessageEnteredArgs args)
+        private async Task OnEntered(DiscreteMessageEnteredArgs args)
         {
             await Delegate(new CommandArgs<Message>(args.Answers.Last(), args.Bot, args.User, [.. args.Answers], default));
         }

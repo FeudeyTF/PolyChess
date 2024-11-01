@@ -4,7 +4,7 @@ using Telegram.Bot.Types;
 
 namespace PolyChessTGBot.Bot.Messages.Discrete
 {
-    public class DecretiveMessageEnteredArgs
+    public class DiscreteMessageEnteredArgs
     {
         public Message[] Answers;
 
@@ -16,7 +16,7 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
 
         public List<object> Data;
 
-        public DecretiveMessageEnteredArgs(Message[] answears, TelegramBotClient bot, ChatId chat, User user, List<object> data)
+        public DiscreteMessageEnteredArgs(Message[] answears, TelegramBotClient bot, ChatId chat, User user, List<object> data)
         {
             Answers = answears;
             Bot = bot;

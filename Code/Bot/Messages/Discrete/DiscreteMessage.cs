@@ -20,7 +20,7 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
         /// <summary>
         /// Отправляет разделённое сообщение, создавая новый объект. 
         /// </summary>
-        public static async Task Send(long channelId, List<string> questions, Func<DecretiveMessageEnteredArgs, Task> onEntered, params List<object> data)
+        public static async Task Send(long channelId, List<string> questions, Func<DiscreteMessageEnteredArgs, Task> onEntered, params List<object> data)
         {
             if(CanSendMessage(channelId))
             {
@@ -32,11 +32,11 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
 
         private readonly Dictionary<long, ChannelInfo> Channels;
 
-        private readonly Func<DecretiveMessageEnteredArgs, Task> OnEntered;
+        private readonly Func<DiscreteMessageEnteredArgs, Task> OnEntered;
 
         private readonly List<string> Questions;
 
-        public DiscreteMessage(List<string> questions, Func<DecretiveMessageEnteredArgs, Task> onFullEntered)
+        public DiscreteMessage(List<string> questions, Func<DiscreteMessageEnteredArgs, Task> onFullEntered)
         {
             ActiveChannels = [];
             Channels = [];

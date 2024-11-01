@@ -75,7 +75,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     ["Введите имя ученика или ник на Lichess"],
                     OnCheckPlayerEntered);
 
-            static async Task OnCheckPlayerEntered(DecretiveMessageEnteredArgs args)
+            static async Task OnCheckPlayerEntered(DiscreteMessageEnteredArgs args)
             {
                 User? user = null;
                 var name = args.Answers[0].Text;
@@ -211,7 +211,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     OnHelpLinkChangeEntered,
                     links[0]);
 
-            static async Task OnHelpLinkChangeEntered(DecretiveMessageEnteredArgs args)
+            static async Task OnHelpLinkChangeEntered(DiscreteMessageEnteredArgs args)
             {
                 if (args.Answers.Length == 3 && args.Data.Count == 1)
                 {
@@ -251,7 +251,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     OnFAQChangeEntered,
                     entries[0]);
 
-            static async Task OnFAQChangeEntered(DecretiveMessageEnteredArgs args)
+            static async Task OnFAQChangeEntered(DiscreteMessageEnteredArgs args)
             {
                 if (args.Answers.Length == 2 && args.Data.Count == 1)
                 {
@@ -305,7 +305,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     ],
                     OnHelpLinkAddEntered);
 
-            async Task OnHelpLinkAddEntered(DecretiveMessageEnteredArgs args)
+            async Task OnHelpLinkAddEntered(DiscreteMessageEnteredArgs args)
             {
                 if (args.Answers.Length == 3)
                 {
@@ -344,7 +344,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     ],
                     OnFAQAddEntered);
 
-            async Task OnFAQAddEntered(DecretiveMessageEnteredArgs args)
+            async Task OnFAQAddEntered(DiscreteMessageEnteredArgs args)
             {
                 if (args.Answers.Length == 2)
                 {
