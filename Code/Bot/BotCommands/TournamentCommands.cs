@@ -96,7 +96,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Button("SaveTournament")]
-        internal async Task SaveTournament(ButtonInteractArgs args)
+        private async Task SaveTournament(ButtonInteractArgs args)
         {
             if (args.Query.Message != null)
                 await DiscreteMessage.Send(
@@ -150,7 +150,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Button("TournamentResult")]
-        internal async Task TournamentResult(ButtonInteractArgs args)
+        private async Task TournamentResult(ButtonInteractArgs args)
         {
             if (args.Query.Message != null)
                 await DiscreteMessage.Send(
