@@ -271,7 +271,8 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Button("MeViewProgress")]
         private async Task ViewProgress(ButtonInteractArgs args)
         {
-            int visitedTournamentsCount = 0;
+            int zeroScoreTournaments = 0;
+            int oneScoreTournaments = 0;
             float totalScore = 0;
             int barsInBar = 15;
             User? user = Program.Data.GetUser(args.GetNumber("ID"));
@@ -285,8 +286,11 @@ namespace PolyChessTGBot.Bot.BotCommands
                             foreach (var player in tournament.Rating.Players)
                                 if (player.User != null && player.User.TelegramID == user.TelegramID && player.Score > -1)
                                 {
-                                    visitedTournamentsCount++;
-                                    continue;
+                                    if (player.Score == 1)
+                                        oneScoreTournaments++;
+                                    else if (player.Score == 0)
+                                        zeroScoreTournaments++;
+                                    break;
                                 }
 
                     foreach (var tournament in Program.Tournaments.SwissTournamentsList)
@@ -294,15 +298,21 @@ namespace PolyChessTGBot.Bot.BotCommands
                             foreach (var player in tournament.Rating.Players)
                                 if (player.User != null && player.User.TelegramID == user.TelegramID && player.Score > -1)
                                 {
-                                    visitedTournamentsCount++;
-                                    continue;
+                                    if (player.Score == 1)
+                                        oneScoreTournaments++;
+                                    else if (player.Score == 0)
+                                        zeroScoreTournaments++;
+                                    break;
                                 }
-
+                    int visitedTournamentsCount = zeroScoreTournaments + oneScoreTournaments;
                     List<string> text = ["📌<b>Ваш прогресс по выполнению регламента зачёта:</b>"];
                     text.Add("📚<b>Посещение занятий:</b> Недоступно");
 
                     totalScore += Math.Min(visitedTournamentsCount / Program.MainConfig.Test.RequiredTournamentsCount, 1) * barsInBar;
-                    text.Add($"🤝<b>Участие в турнирах:</b> {visitedTournamentsCount} из  {Program.MainConfig.Test.RequiredTournamentsCount} ({Utils.CreateSimpleBar(visitedTournamentsCount, Program.MainConfig.Test.RequiredTournamentsCount, bars: barsInBar)})");
+                    text.Add($"🤝<b>Участие в турнирах:</b>");// 
+                    text.Add($"       <b>Всего</b>: {visitedTournamentsCount} из {Program.MainConfig.Test.RequiredTournamentsCount} ({Utils.CreateSimpleBar(visitedTournamentsCount, Program.MainConfig.Test.RequiredTournamentsCount, bars: barsInBar)})\");");
+                    text.Add("         - Количество нулей: " + zeroScoreTournaments);
+                    text.Add("         - Количество единиц: " + oneScoreTournaments);
 
                     if (!string.IsNullOrEmpty(user.TokenKey))
                     {
@@ -313,6 +323,10 @@ namespace PolyChessTGBot.Bot.BotCommands
                             totalScore += Math.Min((float)puzzleDashboard.Global.FirstWins / Program.MainConfig.Test.RequiredPuzzlesSolved, 1) * barsInBar;
                             text.Add($"🧩<b>Решение пазлов:</b> {puzzleDashboard.Global.FirstWins} из {Program.MainConfig.Test.RequiredPuzzlesSolved} ({Utils.CreateSimpleBar(puzzleDashboard.Global.FirstWins, Program.MainConfig.Test.RequiredPuzzlesSolved, bars: barsInBar)})");
                         }
+                    }
+                    else
+                    {
+                        text.Add($"🧩<b>Решение пазлов:</b> Токен не подключён!");
                     }
 
                     int creativeTask = user.CreativeTaskCompleted ? 1 : 0;

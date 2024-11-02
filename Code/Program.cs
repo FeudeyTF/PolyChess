@@ -55,7 +55,7 @@ namespace PolyChessTGBot
 
         public static async Task Main(string[] args)
         {
-            #if !DEBUG // Сильно замедляет программу вначале
+            #if DEBUG // Сильно замедляет программу вначале
             await Tournaments.LoadTournaments();
             #endif
             if (string.IsNullOrEmpty(MainConfig.BotToken))
