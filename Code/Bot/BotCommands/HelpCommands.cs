@@ -92,7 +92,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                         $"👤<b>Ник пользователя:</b> @{args.User.Username}",
                         $"👤<b>Имя пользователя:</b> {args.User.FirstName} {args.User.LastName}",
                         $"🕑<b>Дата отправки:</b> {question.Date:G}",
-                        $"❓<b>Вопрос:</b>\n{question}"
+                        $"❓<b>Вопрос:</b>\n{question.Text}"
                     ];
                     InlineKeyboardButton button = new("Данные");
                     button.SetData("QuestionDataID", ("ID", args.User.Id), ("ChannelID", question.MessageId));
