@@ -67,7 +67,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Button("LookPlayer")]
-        internal async Task LookPlayer(ButtonInteractArgs args)
+        private async Task LookPlayer(ButtonInteractArgs args)
         {
             if (args.Query.Message != null)
                 await DiscreteMessage.Send(
@@ -145,7 +145,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Button("DeleteHelpLinks")]
-        internal async Task DeleteHelpLinks(ButtonInteractArgs args)
+        private async Task DeleteHelpLinks(ButtonInteractArgs args)
         {
             if (args.Query.Message != null)
                 await HelpAdmin.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From);
@@ -169,21 +169,21 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Button("DeleteFAQEntry")]
-        internal async Task DeleteFAQEntry(ButtonInteractArgs args)
+        private async Task DeleteFAQEntry(ButtonInteractArgs args)
         {
             if (args.Query.Message != null)
                 await FAQAdmin.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From);
         }
 
         [Button("SendAllUsers")]
-        internal async Task SendAllUsersButton(ButtonInteractArgs args)
+        private async Task SendAllUsersButton(ButtonInteractArgs args)
         {
             if (args.Query.Message != null)
                 await AdminCheckUsers.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From);
         }
 
         [Button("DownloadTournaments")]
-        internal async Task DownloadTournaments(ButtonInteractArgs args)
+        private async Task DownloadTournaments(ButtonInteractArgs args)
         {
             if (!string.IsNullOrEmpty(Program.MainConfig.MainPolytechTeamID))
             {
@@ -293,7 +293,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Button("AddHelpLink")]
-        internal async Task AddeHelpLink(ButtonInteractArgs args)
+        private async Task AddeHelpLink(ButtonInteractArgs args)
         {
             if(args.Query.Message != null)
                 await DiscreteMessage.Send(
@@ -333,7 +333,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Button("AddFAQEntry")]
-        internal async Task AddFAQEntry(ButtonInteractArgs args)
+        private async Task AddFAQEntry(ButtonInteractArgs args)
         {
             if(args.Query.Message != null)
                 await DiscreteMessage.Send(
@@ -415,7 +415,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Button("TeamInfo")]
-        internal async Task SendTeamInfo(ButtonInteractArgs args)
+        private async Task SendTeamInfo(ButtonInteractArgs args)
         {
             var teamID = args.GetString("ID");
             if (!string.IsNullOrEmpty(teamID))
@@ -456,7 +456,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Button("UserInfo")]
-        internal async Task SendUserInfo(ButtonInteractArgs args)
+        private async Task SendUserInfo(ButtonInteractArgs args)
         {
             var name = args.GetString("Name");
             if (!string.IsNullOrEmpty(name))

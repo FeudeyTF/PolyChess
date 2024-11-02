@@ -5,6 +5,7 @@ using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Commands.Basic;
 using PolyChessTGBot.Bot.Messages;
+using PolyChessTGBot.Bot.Messages.Discrete;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
 using PolyChessTGBot.Managers.Tournaments;
@@ -78,26 +79,34 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Command("question", "Синтаксис: /question \"вопрос\". Команда отправит вопрос напрямую Павлу", true)]
         private async Task Question(CommandArgs args)
         {
-            string question = string.Join(" ", args.Parameters);
-            if (!string.IsNullOrEmpty(question))
+            await DiscreteMessage.Send(args.Message.Chat.Id, ["Введите вопрос, который хотите задать"], OnQuestionEntered);
+
+            static async Task OnQuestionEntered(DiscreteMessageEnteredArgs args)
             {
-                List<string> text =
-                [
-                    "<b><u>Вопрос от пользователя!</u></b>🙋‍",
-                    $"👤<b>Ник пользователя:</b> @{args.User.Username}",
-                    $"👤<b>Имя пользователя:</b> {args.User.FirstName} {args.User.LastName}",
-                    $"🕑<b>Дата отправки:</b> {args.Message.Date:G}",
-                    $"❓<b>Вопрос:</b>\n{question}"
-                ];
-                InlineKeyboardButton button = new("Данные");
-                button.SetData("QuestionDataID", ("ID", args.User.Id), ("ChannelID", args.Message.MessageId));
-                var message = new TelegramMessageBuilder(string.Join("\n", text))
-                    .AddButton(button);
-                await args.Bot.SendMessage(message, Program.MainConfig.QuestionChannel);
-                await args.Reply("Ваш вопрос был успешно отправлен!");
+                if (args.Answers.Length == 1)
+                {
+                    var question = args.Answers[0];
+                    if (!string.IsNullOrEmpty(question.Text))
+                    {
+                        List<string> text =
+                        [
+                            "<b><u>Вопрос от пользователя!</u></b>🙋‍",
+                            $"👤<b>Ник пользователя:</b> @{args.User.Username}",
+                            $"👤<b>Имя пользователя:</b> {args.User.FirstName} {args.User.LastName}",
+                            $"🕑<b>Дата отправки:</b> {question.Date:G}",
+                            $"❓<b>Вопрос:</b>\n{question}"
+                        ];
+                        InlineKeyboardButton button = new("Данные");
+                        button.SetData("QuestionDataID", ("ID", args.User.Id), ("ChannelID", question.MessageId));
+                        var message = new TelegramMessageBuilder(string.Join("\n", text))
+                            .AddButton(button);
+                        await args.Bot.SendMessage(message, Program.MainConfig.QuestionChannel);
+                        await args.Reply("Ваш вопрос был успешно отправлен!");
+                    }
+                    else
+                        await args.Reply("Неправильно введён вопрос!");
+                }
             }
-            else
-                await args.Reply("Неправильно введён вопрос!");
         }
 
         [Command("help", "Выдаёт список с полезными материалами", true)]
