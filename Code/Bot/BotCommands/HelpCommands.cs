@@ -307,7 +307,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                     totalScore += Math.Min(visitedTournamentsCount / Program.MainConfig.Test.RequiredTournamentsCount, 1) * barsInBar;
                     text.Add($"🤝<b>Участие в турнирах:</b>");// 
-                    text.Add($"       <b>Всего</b>: {visitedTournamentsCount} из {Program.MainConfig.Test.RequiredTournamentsCount} ({Utils.CreateSimpleBar(visitedTournamentsCount, Program.MainConfig.Test.RequiredTournamentsCount, bars: barsInBar)})\");");
+                    text.Add($"       <b>Всего</b>: {visitedTournamentsCount} из {Program.MainConfig.Test.RequiredTournamentsCount} ({Utils.CreateSimpleBar(visitedTournamentsCount, Program.MainConfig.Test.RequiredTournamentsCount, bars: barsInBar)})");
                     text.Add("         - Количество нулей: " + zeroScoreTournaments);
                     text.Add("         - Количество единиц: " + oneScoreTournaments);
 

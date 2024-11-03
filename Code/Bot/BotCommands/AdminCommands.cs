@@ -6,6 +6,7 @@ using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Bot.Messages.Discrete;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
+using PolyChessTGBot.Managers.Tournaments;
 using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -62,6 +63,10 @@ namespace PolyChessTGBot.Bot.BotCommands
             InlineKeyboardButton lookPlayer = new("🔍 Посмотреть информацию об игроке");
             lookPlayer.SetData("LookPlayer");
             msg.AddButton(lookPlayer);
+
+            InlineKeyboardButton viewTournamentsTop = new("🔝 Посмотреть лучших игроков турниров");
+            viewTournamentsTop.SetData("ViewTournamentsTop");
+            msg.AddButton(viewTournamentsTop);
 
             await args.Reply(msg.WithText(string.Join("\n", text)));
         }
@@ -363,6 +368,71 @@ namespace PolyChessTGBot.Bot.BotCommands
                         await args.Reply("Необходимо ввести текст");
                 }
             }
+        }
+
+        [Button("ViewTournamentsTop")]
+        private async Task ViewTournamentsTop(ButtonInteractArgs args)
+        {
+            List<string> text = ["<b>Лучшие ученики по результатам турниров в семестре:</b>"];
+            Dictionary<User, TournamentsScore> players = [];
+
+            foreach (var tournament in Program.Tournaments.TournamentsList)
+                if (tournament.Tournament.StartDate < DateTime.UtcNow)
+                    foreach (var player in tournament.Rating.Players)
+                    {
+                        if (player.User != null)
+                        {
+                            if (players.TryGetValue(player.User, out var scores))
+                            {
+                                if (player.Score == 0)
+                                    scores.Zeros++;
+                                else if (player.Score == 1)
+                                    scores.Ones++;
+                            }
+                            else
+                            {
+                                if (player.Score == 0)
+                                    players.Add(player.User, new(0, 1));
+                                else if (player.Score == 1)
+                                    players.Add(player.User, new(1, 0));
+                            }
+                        }
+                    }
+
+            foreach (var tournament in Program.Tournaments.SwissTournamentsList)
+                if (tournament.Tournament.Started < DateTime.UtcNow)
+                    foreach (var player in tournament.Rating.Players)
+                    {
+                        if (player.User != null)
+                        {
+                            if (players.TryGetValue(player.User, out var scores))
+                            {
+                                if (player.Score == 0)
+                                    scores.Zeros++;
+                                else if (player.Score == 1)
+                                    scores.Ones++;
+                            }
+                            else
+                            {
+                                if (player.Score == 0)
+                                    players.Add(player.User, new(0, 1));
+                                else if (player.Score == 1)
+                                    players.Add(player.User, new(1, 0));
+                            }
+                        }
+                    }
+            players = (from player in players
+                       orderby player.Value.Zeros
+                       descending
+                       orderby player.Value.Ones
+                       descending
+                       select player).ToDictionary();
+            for (int i = 0; i < players.Count; i++)
+            {
+                var player = players.ElementAt(i);
+                text.Add($"{i + 1}) <b>{player.Key.LichessName} ({player.Key.Name})</b>, Единицы: {player.Value.Ones}, Нули: {player.Value.Zeros}");
+            }
+            await args.Reply(text);
         }
 
         [Command("fileinfo", "Выдаёт информацию о файле", admin: true)]
