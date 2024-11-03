@@ -60,7 +60,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             tournamentResult.SetData("TournamentResult");
             msg.AddButton(tournamentResult);
 
-            InlineKeyboardButton lookPlayer = new("🔍 Посмотреть информацию об игроке");
+            InlineKeyboardButton lookPlayer = new("🔍 Посмотреть информацию об ученике");
             lookPlayer.SetData("LookPlayer");
             msg.AddButton(lookPlayer);
 
@@ -430,7 +430,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             for (int i = 0; i < players.Count; i++)
             {
                 var player = players.ElementAt(i);
-                text.Add($"{i + 1}) <b>{player.Key.LichessName} ({player.Key.Name})</b>, Единицы: {player.Value.Ones}, Нули: {player.Value.Zeros}");
+                text.Add($"{i + 1}) <b>{player.Key.LichessName} ({player.Key.Name})</b>, Победы: {player.Value.Ones}, Всего участий: {player.Value.Zeros + player.Value.Ones}");
             }
             await args.Reply(text);
         }
