@@ -6,7 +6,6 @@ using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Bot.Messages.Discrete;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
-using PolyChessTGBot.Managers.Tournaments;
 using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -187,22 +186,6 @@ namespace PolyChessTGBot.Bot.BotCommands
                 await AdminCheckUsers.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From);
         }
 
-        [Button("DownloadTournaments")]
-        private async Task DownloadTournaments(ButtonInteractArgs args)
-        {
-            if (!string.IsNullOrEmpty(Program.MainConfig.MainPolytechTeamID))
-            {
-                await args.Reply("Началась загрузка турниров... Это может занять некоторое время");
-                var updatedTournaments = await Program.Tournaments.UpdateTournaments(Program.MainConfig.MainPolytechTeamID);
-                if (updatedTournaments.Count > 0)
-                    await args.Reply($"Турниры {string.Join(", ", updatedTournaments.Select(t => "<b>" + t.name + "</b>"))} успешно добавлены!");
-                else
-                    await args.Reply("Все турниры уже загружены! Обновления не требуется");
-            }
-            else
-                await args.Reply("Команда Политеха не найдена!");
-        }
-
         private async Task HandleHelpLinkChange(ButtonInteractArgs args, List<HelpLink> links)
         {
             if (args.Query.Message != null)
@@ -368,71 +351,6 @@ namespace PolyChessTGBot.Bot.BotCommands
                         await args.Reply("Необходимо ввести текст");
                 }
             }
-        }
-
-        [Button("ViewTournamentsTop")]
-        private async Task ViewTournamentsTop(ButtonInteractArgs args)
-        {
-            List<string> text = ["<b>Лучшие ученики по результатам турниров в семестре:</b>"];
-            Dictionary<User, TournamentsScore> players = [];
-
-            foreach (var tournament in Program.Tournaments.TournamentsList)
-                if (tournament.Tournament.StartDate < DateTime.UtcNow)
-                    foreach (var player in tournament.Rating.Players)
-                    {
-                        if (player.User != null)
-                        {
-                            if (players.TryGetValue(player.User, out var scores))
-                            {
-                                if (player.Score == 0)
-                                    scores.Zeros++;
-                                else if (player.Score == 1)
-                                    scores.Ones++;
-                            }
-                            else
-                            {
-                                if (player.Score == 0)
-                                    players.Add(player.User, new(0, 1));
-                                else if (player.Score == 1)
-                                    players.Add(player.User, new(1, 0));
-                            }
-                        }
-                    }
-
-            foreach (var tournament in Program.Tournaments.SwissTournamentsList)
-                if (tournament.Tournament.Started < DateTime.UtcNow)
-                    foreach (var player in tournament.Rating.Players)
-                    {
-                        if (player.User != null)
-                        {
-                            if (players.TryGetValue(player.User, out var scores))
-                            {
-                                if (player.Score == 0)
-                                    scores.Zeros++;
-                                else if (player.Score == 1)
-                                    scores.Ones++;
-                            }
-                            else
-                            {
-                                if (player.Score == 0)
-                                    players.Add(player.User, new(0, 1));
-                                else if (player.Score == 1)
-                                    players.Add(player.User, new(1, 0));
-                            }
-                        }
-                    }
-            players = (from player in players
-                       orderby player.Value.Zeros
-                       descending
-                       orderby player.Value.Ones
-                       descending
-                       select player).ToDictionary();
-            for (int i = 0; i < players.Count; i++)
-            {
-                var player = players.ElementAt(i);
-                text.Add($"{i + 1}) <b>{player.Key.LichessName} ({player.Key.Name})</b>, Победы: {player.Value.Ones}, Всего участий: {player.Value.Zeros + player.Value.Ones}");
-            }
-            await args.Reply(text);
         }
 
         [Command("fileinfo", "Выдаёт информацию о файле", admin: true)]
