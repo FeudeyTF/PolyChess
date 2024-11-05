@@ -1,4 +1,5 @@
 ﻿using LichessAPI.Types;
+using LichessAPI.Types.Arena;
 using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Commands.Basic;
@@ -6,6 +7,7 @@ using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Bot.Messages.Discrete;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
+using PolyChessTGBot.Managers.Tournaments;
 using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
