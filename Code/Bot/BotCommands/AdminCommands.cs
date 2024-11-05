@@ -30,7 +30,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 "🔽 Для того, чтобы использовать панель, нажмите на кнопки управления под сообщением"
                 ];
             TelegramMessageBuilder msg = new();
-            InlineKeyboardButton checkUsers = new("👥 Увидеть всех пользователей");
+            InlineKeyboardButton checkUsers = new("👥 Увидеть всех учеников");
             checkUsers.SetData("SendAllUsers");
             msg.AddButton(checkUsers);
             InlineKeyboardButton updateTournaments = new("🤝 Загрузить турниры");
@@ -63,7 +63,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             lookPlayer.SetData("LookPlayer");
             msg.AddButton(lookPlayer);
 
-            InlineKeyboardButton viewTournamentsTop = new("🔝 Посмотреть лучших игроков турниров");
+            InlineKeyboardButton viewTournamentsTop = new("🔝 Посмотреть лучших учеников в турнирах");
             viewTournamentsTop.SetData("ViewTournamentsTop");
             msg.AddButton(viewTournamentsTop);
 
