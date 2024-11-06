@@ -1,14 +1,17 @@
 ﻿using LichessAPI.Clients.Authorized;
 using LichessAPI.Types.Arena;
 using LichessAPI.Types.Swiss;
+using LichessAPI.Types.Tokens;
 using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Commands.Basic;
 using PolyChessTGBot.Bot.Commands.Discrete;
 using PolyChessTGBot.Bot.Messages;
+using PolyChessTGBot.Bot.Messages.Discrete;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
 using PolyChessTGBot.Managers.Tournaments;
+using System.Security.Principal;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using User = PolyChessTGBot.Database.User;
@@ -242,7 +245,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                         InlineKeyboardButton viewProgress = new("📊 Посмотреть прогресс по зачёту");
                         viewProgress.SetData("MeViewProgress", ("ID", args.User.Id));
-                        //message.AddButton(viewProgress);
+                        message.AddButton(viewProgress);
 
                         await args.Reply(message);
                     }
@@ -333,14 +336,78 @@ namespace PolyChessTGBot.Bot.BotCommands
                     text.Add("");
                     text.Add("📊<b>Полный прогресс:</b>");
                     text.Add($"{Math.Round(totalScore / 3)} из 15 {Utils.CreateSimpleBar(totalScore, barsInBar * 3, bars: barsInBar)}");
+                    TelegramMessageBuilder msg = new(string.Join("\n", text));
 
-                    await args.Reply(text);
+                    if (string.IsNullOrEmpty(user.TokenKey) && user.TelegramID == args.Query.From.Id)
+                    {
+                        InlineKeyboardButton button = new("Подключить токен");
+                        button.SetData("ConnectToken");
+                        msg.AddButton(button);
+                    }
+                    
+                    await args.Reply(msg);
                 }
                 else
                     await args.Reply("Ваш аккаунт не найден на Lichess!");
             }
             else
                 await args.Reply("Ваш аккаунт не найден в системе!");
+        }
+
+        [Button("ConnectToken")]
+        private async Task ConnectToken(ButtonInteractArgs args)
+        {
+            if (args.Query.Message != null)
+                await DiscreteMessage.Send(args.Query.Message.Chat.Id, ["Введите токен"], OnTokenEntered);
+
+            static async Task OnTokenEntered(DiscreteMessageEnteredArgs args)
+            {
+                if(args.Answers.Length == 1)
+                {
+                    var token = args.Answers[0].Text;
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        var tokenInfos = await Program.Lichess.TestTokens(token);
+                        if(tokenInfos.TryGetValue(token, out var tokenInfo) && tokenInfo != null)
+                        {
+                            var user = Program.Data.GetUser(args.User.Id);
+                            if(user != null)
+                            {
+                                var lichessUser = await Program.Lichess.GetUserAsync(user.LichessName);
+                                if (lichessUser != null)
+                                {
+                                    if (tokenInfo.UserID == lichessUser.ID)
+                                    {
+                                        if (tokenInfo.Expires == default || tokenInfo.Expires > DateTime.Now)
+                                        {
+                                            if(tokenInfo.Scopes.Any(scope => scope.AccessLevel == TokenScopeAccessLevel.Read && scope.Type == TokenScopeType.Puzzle))
+                                            {
+                                                user.TokenKey = token;
+                                                Program.Data.Query($"UPDATE Users SET TokenKey='{user.TokenKey}' WHERE TelegramID='{args.User.Id}'");
+                                                await args.Reply("Токен успешно установлен!");
+                                            }
+                                            else
+                                                await args.Reply("У токена нет доступа к просмотру статистики пазлов!");
+                                        }
+                                        else
+                                            await args.Reply("Токен просрочен!");
+                                    }
+                                    else
+                                        await args.Reply("Этот токен принадлежит не Вам!");
+                                }
+                                else
+                                    await args.Reply("Информация о Вашем аккаунта не была найдена!");
+                            }
+                            else
+                                await args.Reply("Информация о Вас не была найдена!");
+                        }
+                        else
+                            await args.Reply("Информация об этом токене не была найдена!");
+                    }
+                    else
+                        await args.Reply("Нужно ввести токен");
+                }
+            }
         }
 
         private async Task<List<object>> GetTournamentsIDs()
