@@ -6,7 +6,7 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
 {
     public class DiscreteMessageEnteredArgs
     {
-        public Message[] Answers;
+        public Message[] Responses;
 
         public TelegramBotClient Bot;
 
@@ -16,9 +16,9 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
 
         public List<object> Data;
 
-        public DiscreteMessageEnteredArgs(Message[] answears, TelegramBotClient bot, ChatId chat, User user, List<object> data)
+        public DiscreteMessageEnteredArgs(Message[] responses, TelegramBotClient bot, ChatId chat, User user, List<object> data)
         {
-            Answers = answears;
+            Responses = responses;
             Bot = bot;
             ChatID = chat;
             User = user;

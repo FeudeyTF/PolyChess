@@ -362,9 +362,9 @@ namespace PolyChessTGBot.Bot.BotCommands
 
             static async Task OnTokenEntered(DiscreteMessageEnteredArgs args)
             {
-                if(args.Answers.Length == 1)
+                if(args.Responses.Length == 1)
                 {
-                    var token = args.Answers[0].Text;
+                    var token = args.Responses[0].Text;
                     if (!string.IsNullOrEmpty(token))
                     {
                         var tokenInfos = await Program.Lichess.TestTokens(token);

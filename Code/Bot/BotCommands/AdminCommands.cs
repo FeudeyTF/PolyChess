@@ -84,7 +84,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             static async Task OnCheckPlayerEntered(DiscreteMessageEnteredArgs args)
             {
                 User? user = null;
-                var name = args.Answers[0].Text;
+                var name = args.Responses[0].Text;
                 foreach (var dataUser in Program.Data.Users)
                     if (dataUser.LichessName == name || dataUser.Name == name)
                     {
@@ -203,13 +203,13 @@ namespace PolyChessTGBot.Bot.BotCommands
 
             static async Task OnHelpLinkChangeEntered(DiscreteMessageEnteredArgs args)
             {
-                if (args.Answers.Length == 3 && args.Data.Count == 1)
+                if (args.Responses.Length == 3 && args.Data.Count == 1)
                 {
                     if (args.Data[0] is HelpLink link)
                     {
-                        var newTitle = args.Answers[0].Text;
-                        var newText = args.Answers[1].Text;
-                        var newFile = args.Answers[2].Document;
+                        var newTitle = args.Responses[0].Text;
+                        var newText = args.Responses[1].Text;
+                        var newFile = args.Responses[2].Document;
                         if (newTitle != null && newText != null)
                         {
                             if (newTitle.Trim() != "-")
@@ -243,12 +243,12 @@ namespace PolyChessTGBot.Bot.BotCommands
 
             static async Task OnFAQChangeEntered(DiscreteMessageEnteredArgs args)
             {
-                if (args.Answers.Length == 2 && args.Data.Count == 1)
+                if (args.Responses.Length == 2 && args.Data.Count == 1)
                 {
                     if (args.Data[0] is FAQEntry entry)
                     {
-                        var newQuestions = args.Answers[0].Text;
-                        var newAnswer = args.Answers[1].Text;
+                        var newQuestions = args.Responses[0].Text;
+                        var newAnswer = args.Responses[1].Text;
                         if (newQuestions != null && newAnswer != null)
                         {
                             if (newQuestions.Trim() != "-")
@@ -297,11 +297,11 @@ namespace PolyChessTGBot.Bot.BotCommands
 
             async Task OnHelpLinkAddEntered(DiscreteMessageEnteredArgs args)
             {
-                if (args.Answers.Length == 3)
+                if (args.Responses.Length == 3)
                 {
-                    var title = args.Answers[0].Text;
-                    var footer = args.Answers[1].Text;
-                    var file = args.Answers[2].Document;
+                    var title = args.Responses[0].Text;
+                    var footer = args.Responses[1].Text;
+                    var file = args.Responses[2].Document;
                     if (title != null && footer != null)
                     {
                         if (file != null)
@@ -336,10 +336,10 @@ namespace PolyChessTGBot.Bot.BotCommands
 
             async Task OnFAQAddEntered(DiscreteMessageEnteredArgs args)
             {
-                if (args.Answers.Length == 2)
+                if (args.Responses.Length == 2)
                 {
-                    var question = args.Answers[0].Text;
-                    var answer = args.Answers[1].Text;
+                    var question = args.Responses[0].Text;
+                    var answer = args.Responses[1].Text;
                     if (question != null && answer != null)
                     {
                         FAQEntry entry = new(default, question, answer);
@@ -572,9 +572,9 @@ namespace PolyChessTGBot.Bot.BotCommands
 
             static async Task OnTournamentSwissEntered(DiscreteMessageEnteredArgs args)
             {
-                if (args.Answers.Length == 1)
+                if (args.Responses.Length == 1)
                 {
-                    var tournamentLink = args.Answers[0].Text;
+                    var tournamentLink = args.Responses[0].Text;
                     if (tournamentLink != null)
                     {
                         var splittedLink = tournamentLink.Split('/');
@@ -629,13 +629,13 @@ namespace PolyChessTGBot.Bot.BotCommands
 
             static async Task OnTournamentResultEntered(DiscreteMessageEnteredArgs args)
             {
-                if (args.Answers.Length == 2)
+                if (args.Responses.Length == 2)
                 {
-                    var tournamentLink = args.Answers[0].Text;
+                    var tournamentLink = args.Responses[0].Text;
                     if (tournamentLink != null)
                     {
                         List<string> exclude = new(Program.MainConfig.TopPlayers);
-                        var toExclude = args.Answers[1].Text;
+                        var toExclude = args.Responses[1].Text;
                         if (toExclude != null && toExclude.Trim() != "-")
                         {
                             var stringsToExclude = toExclude.Split(' ').Select(p => p.Split(','));

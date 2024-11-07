@@ -20,11 +20,11 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
         /// <summary>
         /// Отправляет разделённое сообщение, создавая новый объект. 
         /// </summary>
-        public static async Task Send(long channelId, List<TelegramMessageBuilder> questions, Func<DiscreteMessageEnteredArgs, Task> onEntered, params List<object> data)
+        public static async Task Send(long channelId, List<TelegramMessageBuilder> queries, Func<DiscreteMessageEnteredArgs, Task> onEntered, params List<object> data)
         {
             if(CanSendMessage(channelId))
             {
-                DiscreteMessage msg = new(questions, onEntered);
+                DiscreteMessage msg = new(queries, onEntered);
                 await msg.Send(channelId, data);
                 ActiveChannels.Add(channelId, msg);
             }
