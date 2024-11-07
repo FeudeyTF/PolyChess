@@ -20,7 +20,7 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
         /// <summary>
         /// Отправляет разделённое сообщение, создавая новый объект. 
         /// </summary>
-        public static async Task Send(long channelId, List<string> questions, Func<DiscreteMessageEnteredArgs, Task> onEntered, params List<object> data)
+        public static async Task Send(long channelId, List<TelegramMessageBuilder> questions, Func<DiscreteMessageEnteredArgs, Task> onEntered, params List<object> data)
         {
             if(CanSendMessage(channelId))
             {
@@ -34,14 +34,16 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
 
         private readonly Func<DiscreteMessageEnteredArgs, Task> OnEntered;
 
-        private readonly List<string> Questions;
+        private readonly List<TelegramMessageBuilder> Queries;
 
-        public DiscreteMessage(List<string> questions, Func<DiscreteMessageEnteredArgs, Task> onFullEntered)
+        public DiscreteMessage(List<string> queries, Func<DiscreteMessageEnteredArgs, Task> onEntered) : this([..queries.Select(q => new TelegramMessageBuilder(q))], onEntered) {}
+
+        public DiscreteMessage(List<TelegramMessageBuilder> queries, Func<DiscreteMessageEnteredArgs, Task> onEntered)
         {
             ActiveChannels = [];
             Channels = [];
-            OnEntered = onFullEntered;
-            Questions = questions;
+            OnEntered = onEntered;
+            Queries = queries;
             BotHooks.OnBotUpdate += HandleBotUpdate;
         }
 
@@ -52,12 +54,12 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
                 args.Handled = true;
                 if (info.Add(args.Update.Message))
                 {
-                    await OnEntered(new(info.Messages, args.Bot, args.Update.Message.Chat.Id, args.Update.Message.From, info.Data));
+                    await OnEntered(new(info.Responses, args.Bot, args.Update.Message.Chat.Id, args.Update.Message.From, info.Data));
                     Channels.Remove(args.Update.Message.Chat.Id);
                     ActiveChannels.Remove(args.Update.Message.Chat.Id);
                 }
                 else
-                    await args.Bot.SendMessage(Questions[info.ChannelProgress], args.Update.Message.Chat.Id);
+                    await args.Bot.SendMessage(Queries[info.Progress], args.Update.Message.Chat.Id);
             }
         }
 
@@ -68,8 +70,8 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
         {
             if (CanSendMessage(channelId))
             {
-                await bot.SendMessage(Questions[0], channelId);
-                Channels.Add(channelId, new ChannelInfo(Questions.Count, data));
+                await bot.SendMessage(Queries[0], channelId);
+                Channels.Add(channelId, new ChannelInfo(Queries.Count, data));
                 ActiveChannels.Add(channelId, this);
             }
         }
@@ -82,27 +84,27 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
 
         private  class ChannelInfo
         {
-            public Message[] Messages;
+            public Message[] Responses;
 
-            public int ChannelProgress;
+            public int Progress;
 
-            public int QuestionCount;
+            public int QueriesCount;
 
             public List<object> Data;
 
-            public ChannelInfo(int questionCount, List<object> data)
+            public ChannelInfo(int queriesCount, List<object> data)
             {
-                Messages = new Message[questionCount];
-                ChannelProgress = 0;
-                QuestionCount = questionCount;
+                Responses = new Message[queriesCount];
+                Progress = 0;
+                QueriesCount = queriesCount;
                 Data = data;
             }
 
             public bool Add(Message message)
             {
-                if (ChannelProgress < QuestionCount)
-                    Messages[ChannelProgress++] = message;
-                if(ChannelProgress == QuestionCount)
+                if (Progress < QueriesCount)
+                    Responses[Progress++] = message;
+                if(Progress == QueriesCount)
                     return true;
                 return false;
             }
