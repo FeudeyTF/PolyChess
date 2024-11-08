@@ -893,7 +893,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             for (int i = 0; i < players.Count; i++)
             {
                 var player = players.ElementAt(i);
-                text.Add($"{i + 1}) <b>{player.Key.LichessName} ({player.Key.Name})</b>, Победы: {player.Value.Ones}, Всего участий: {player.Value.Zeros + player.Value.Ones}");
+                text.Add($"{i + 1}) <b>{player.Key.LichessName} ({player.Key.Name})</b>, Победы: {player.Value.Ones}, Посещения: {player.Value.Zeros + player.Value.Ones}");
             }
             await args.Reply(text);
         }
