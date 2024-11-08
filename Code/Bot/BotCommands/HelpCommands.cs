@@ -275,11 +275,10 @@ namespace PolyChessTGBot.Bot.BotCommands
             int oneScoreTournaments = 0;
             float totalScore = 0;
             int barsInBar = 15;
-            User? user = Program.Data.GetUser(args.GetNumber("ID"));
+            User? user = Program.Data.GetUser(args.GetLongNumber("ID"));
             if (user != null)
             {
-                var lichessUser = await Program.Lichess.GetUserAsync(user.LichessName);
-                if (lichessUser != null)
+                if (!string.IsNullOrEmpty(user.LichessName))
                 {
                     foreach (var tournament in Program.Tournaments.TournamentsList)
                         if (tournament.Tournament.StartDate < DateTime.UtcNow)
@@ -309,7 +308,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     text.Add("📚<b>Посещение занятий:</b> Недоступно");
 
                     totalScore += Math.Min(visitedTournamentsCount / Program.MainConfig.Test.RequiredTournamentsCount, 1) * barsInBar;
-                    text.Add($"🤝<b>Участие в турнирах:</b>");// 
+                    text.Add($"🤝<b>Участие в турнирах:</b>"); 
                     text.Add($"       <b>Всего</b>: {visitedTournamentsCount} из {Program.MainConfig.Test.RequiredTournamentsCount} ({Utils.CreateSimpleBar(visitedTournamentsCount, Program.MainConfig.Test.RequiredTournamentsCount, bars: barsInBar)})");
                     text.Add("         - Количество посещений: " + visitedTournamentsCount);
                     text.Add("         - Количество побед: " + oneScoreTournaments);
@@ -340,8 +339,8 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                     if (string.IsNullOrEmpty(user.TokenKey) && user.TelegramID == args.Query.From.Id)
                     {
-                        InlineKeyboardButton button = new("Подключить токен");
-                        button.SetData("ConnectToken");
+                        InlineKeyboardButton button = new("🔑 Подключить токен");
+                        button.SetData("ConnectPuzzleToken");
                         msg.AddButton(button);
                     }
                     
@@ -354,7 +353,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 await args.Reply("Ваш аккаунт не найден в системе!");
         }
 
-        [Button("ConnectToken")]
+        [Button("ConnectPuzzleToken")]
         private async Task ConnectToken(ButtonInteractArgs args)
         {
             if (args.Query.Message != null)
@@ -430,89 +429,86 @@ namespace PolyChessTGBot.Bot.BotCommands
                 if (!string.IsNullOrEmpty(user.LichessName))
                 {
                     TelegramMessageBuilder message = new();
-                    var lichessUser = await Program.Lichess.GetUserAsync(user.LichessName);
-                    if (lichessUser != null)
+                    List<string> result = [];
+                    if (info is ArenaTournamentInfo arenaTournamentInfo)
                     {
-                        List<string> result = [];
-                        if (info is ArenaTournamentInfo arenaTournamentInfo)
+                        if (arenaTournamentInfo != null)
                         {
-                            if (arenaTournamentInfo != null)
+                            result.Add($"\U0001f91d Турнир <b><a href=\"https://lichess.org/tournament/{arenaTournamentInfo.Tournament.ID}\">{arenaTournamentInfo.Tournament.FullName}</a></b>. Состоялся <b>{arenaTournamentInfo.Tournament.StartDate.AddHours(3):g}</b>");
+                            TournamentUser<SheetEntry>? player = default;
+                            foreach (var p in arenaTournamentInfo.Rating.Players)
                             {
-                                result.Add($"\U0001f91d Турнир <b><a href=\"https://lichess.org/tournament/{arenaTournamentInfo.Tournament.ID}\">{arenaTournamentInfo.Tournament.FullName}</a></b>. Состоялся <b>{arenaTournamentInfo.Tournament.StartDate.AddHours(3):g}</b>");
-                                TournamentUser<SheetEntry>? player = default;
-                                foreach (var p in arenaTournamentInfo.Rating.Players)
+                                if (p.TournamentEntry.Username == user.LichessName)
                                 {
-                                    if (p.TournamentEntry.Username == lichessUser.Username)
+                                    player = p;
+                                    break;
+                                }
+                            }
+
+                            if (player != default)
+                            {
+                                result.Add($" - Ранг: <b>{player.TournamentEntry.Rank}</b>");
+                                result.Add($" - Рейтинг: <b>{player.TournamentEntry.Rating}</b>");
+                                result.Add($" - Перформанс: <b>{player.TournamentEntry.Performance}</b>");
+                                result.Add($" - Балл: <b>{(player.Score == -1 ? "Турнир не зачтён" : player.Score)}</b>");
+                                if (player.TournamentEntry.Sheet != null && !string.IsNullOrEmpty(player.TournamentEntry.Sheet.Scores))
+                                    result.Add($" - Итоговая строка: <b>{player.TournamentEntry.Sheet.Scores}</b>");
+                                DivisionType division = DivisionType.None;
+                                foreach (var div in arenaTournamentInfo.Rating.Divisions)
+                                    if (div.Value.Any(e => e.Username == user.LichessName))
                                     {
-                                        player = p;
+                                        division = div.Key;
                                         break;
                                     }
-                                }
 
-                                if (player != default)
-                                {
-                                    result.Add($" - Ранг: <b>{player.TournamentEntry.Rank}</b>");
-                                    result.Add($" - Рейтинг: <b>{player.TournamentEntry.Rating}</b>");
-                                    result.Add($" - Перформанс: <b>{player.TournamentEntry.Performance}</b>");
-                                    result.Add($" - Балл: <b>{(player.Score == -1 ? "Турнир не зачтён" : player.Score)}</b>");
-                                    if (player.TournamentEntry.Sheet != null && !string.IsNullOrEmpty(player.TournamentEntry.Sheet.Scores))
-                                        result.Add($" - Итоговая строка: <b>{player.TournamentEntry.Sheet.Scores}</b>");
-                                    DivisionType division = DivisionType.None;
-                                    foreach (var div in arenaTournamentInfo.Rating.Divisions)
-                                        if (div.Value.Any(e => e.Username == lichessUser.Username))
-                                        {
-                                            division = div.Key;
-                                            break;
-                                        }
+                                result.Add($" - Дивизион: <b>{(division == DivisionType.None ? "Нет" : division)}</b>");
 
-                                    result.Add($" - Дивизион: <b>{(division == DivisionType.None ? "Нет" : division)}</b>");
-
-                                }
-                                else
-                                    result.Add(" - <b>Отсутствовал</b>");
                             }
+                            else
+                                result.Add(" - <b>Отсутствовал</b>");
                         }
-                        else if (info is SwissTournamentInfo swissTournamentInfo)
-                        {
-                            if (swissTournamentInfo != null)
-                            {
-                                result.Add($"🇨🇭 Турнир <b><a href=\"https://lichess.org/swiss/{swissTournamentInfo.Tournament.ID}\">{swissTournamentInfo.Tournament.Name}</a></b>. Состоялся <b>{swissTournamentInfo.Tournament.Started.AddHours(3):g}</b>");
-                                TournamentUser<SwissSheetEntry>? player = default;
-                                foreach (var p in swissTournamentInfo.Rating.Players)
-                                {
-                                    if (p.TournamentEntry.Username == lichessUser.Username)
-                                    {
-                                        player = p;
-                                        break;
-                                    }
-                                }
-
-                                if (player != default)
-                                {
-                                    result.Add($" - Ранг: <b>{player.TournamentEntry.Rank}</b>");
-                                    result.Add($" - Очки: <b>{player.TournamentEntry.Points}</b>");
-                                    result.Add($" - TieBreak: <b>{player.TournamentEntry.TieBreak}</b>");
-                                    result.Add($" - Перформанс: <b>{player.TournamentEntry.Performance}</b>");
-                                    result.Add($" - Балл: <b>{(player.Score == -1 ? "Отсутствовал" : player.Score)}</b>");
-                                    DivisionType division = DivisionType.None;
-                                    foreach (var div in swissTournamentInfo.Rating.Divisions)
-                                        if (div.Value.Any(e => e.Username == lichessUser.Username))
-                                        {
-                                            division = div.Key;
-                                            break;
-                                        }
-
-                                    result.Add($" - Дивизион: <b>{(division == DivisionType.None ? "Нет" : division)}</b>");
-                                }
-                                else
-                                    result.Add(" - <b>Отсутствовал</b>");
-                            }
-                        }
-                        result.Add("");
-                        return string.Join("\n", result);
                     }
+                    else if (info is SwissTournamentInfo swissTournamentInfo)
+                    {
+                        if (swissTournamentInfo != null)
+                        {
+                            result.Add($"🇨🇭 Турнир <b><a href=\"https://lichess.org/swiss/{swissTournamentInfo.Tournament.ID}\">{swissTournamentInfo.Tournament.Name}</a></b>. Состоялся <b>{swissTournamentInfo.Tournament.Started.AddHours(3):g}</b>");
+                            TournamentUser<SwissSheetEntry>? player = default;
+                            foreach (var p in swissTournamentInfo.Rating.Players)
+                            {
+                                if (p.TournamentEntry.Username == user.LichessName)
+                                {
+                                    player = p;
+                                    break;
+                                }
+                            }
+
+                            if (player != default)
+                            {
+                                result.Add($" - Ранг: <b>{player.TournamentEntry.Rank}</b>");
+                                result.Add($" - Очки: <b>{player.TournamentEntry.Points}</b>");
+                                result.Add($" - TieBreak: <b>{player.TournamentEntry.TieBreak}</b>");
+                                result.Add($" - Перформанс: <b>{player.TournamentEntry.Performance}</b>");
+                                result.Add($" - Балл: <b>{(player.Score == -1 ? "Отсутствовал" : player.Score)}</b>");
+                                DivisionType division = DivisionType.None;
+                                foreach (var div in swissTournamentInfo.Rating.Divisions)
+                                    if (div.Value.Any(e => e.Username == user.LichessName))
+                                    {
+                                        division = div.Key;
+                                        break;
+                                    }
+
+                                result.Add($" - Дивизион: <b>{(division == DivisionType.None ? "Нет" : division)}</b>");
+                            }
+                            else
+                                result.Add(" - <b>Отсутствовал</b>");
+                        }
+                    }
+                    result.Add("");
+                    return string.Join("\n", result);
                 }
             }
+            await Task.CompletedTask;
             return string.Empty;
         }
     }

@@ -49,6 +49,7 @@ namespace PolyChessTGBot
 
             Bot = new(Logger);
             Lichess = new();
+            Lichess.OnMessageSent += HandleLichessMessageSent;
             if (MainConfig.Socket.StartSocketServer)
                 Socket = new(MainConfig.Socket.Port, Logger);
         }
@@ -152,6 +153,12 @@ namespace PolyChessTGBot
                 }
                 Logger.Write($"Была введена команда '{commandName}'. {(parameters.Count > 0 ? $"Аргументы: '{string.Join(", ", parameters)}'" : "Аргументов нет")}", LogType.Info);
             }
+        }
+
+        private static void HandleLichessMessageSent(HttpRequestMessage request, HttpResponseMessage response)
+        {
+            if (MainConfig.ShowLichessApiSending)
+                Logger.Write("LICHESS API SEND: " + request.ToString() + " RESPONSE: " + response.ToString(), LogType.Info);
         }
     }
 }

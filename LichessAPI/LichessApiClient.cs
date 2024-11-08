@@ -10,6 +10,8 @@ namespace LichessAPI
 
         private HttpClient HttpClient { get; }
 
+        public event Action<HttpRequestMessage, HttpResponseMessage> OnMessageSent;
+
         public static readonly JsonSerializerOptions SerializerOptions;
 
         static LichessApiClient()
@@ -29,6 +31,7 @@ namespace LichessAPI
         public LichessApiClient()
         {
             HttpClient = new();
+            OnMessageSent = (query, response) => { };
         }
 
         protected async Task<string> GetGetRequestContentAsync(params object[] path)
@@ -64,7 +67,11 @@ namespace LichessAPI
         }
 
         protected async Task<HttpResponseMessage> SendRequestMessage(HttpRequestMessage message)
-            => await HttpClient.SendAsync(message);
+        { 
+            var msg = await HttpClient.SendAsync(message);
+            OnMessageSent(message, msg);
+            return msg;
+        }
 
         internal async Task<Stream> GetFileAsync(params object[] path)
             => await HttpClient.GetStreamAsync(LICHESS_API_URL + string.Join("/", path));

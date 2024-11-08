@@ -2,7 +2,6 @@
 using PolyChessTGBot.Bot.Commands.Basic;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Extensions;
-using System.Text;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PolyChessTGBot.Bot.BotCommands

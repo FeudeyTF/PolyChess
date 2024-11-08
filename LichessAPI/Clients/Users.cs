@@ -7,7 +7,10 @@ namespace LichessAPI.Clients
     {
         public async Task<User?> GetUserAsync(string username)
         {
-            return await GetJsonObject<User>(HttpMethod.Get, "user", username);
+            var user = await GetJsonObject<User>(HttpMethod.Get, "user", username);
+            if (user != null && !string.IsNullOrEmpty(user.URL))
+                return user;
+            return null;
         }
 
         public async Task<List<RatingHistoryEntry>?> GetRatingHistory(string name)

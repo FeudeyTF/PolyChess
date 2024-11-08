@@ -26,7 +26,7 @@ namespace PolyChessTGBot.Bot.Buttons
             => Data.GetNumber(parameter);
 
         public long GetLongNumber(string parameter)
-            => Data.GetNumber(parameter);
+            => Data.GetLongNumber(parameter);
 
         public float GetFloat(string parameter)
             => Data.GetFloat(parameter);

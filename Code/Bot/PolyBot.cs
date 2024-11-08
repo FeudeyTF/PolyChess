@@ -47,7 +47,7 @@ namespace PolyChessTGBot.Bot
 
         public async Task LoadBot()
         {
-            using var cancellationTokenSource = new CancellationTokenSource();
+            using CancellationTokenSource cancellationTokenSource = new();
             try
             {
                 Telegram.StartReceiving(UpdateHandler, ErrorHandler, BotReceiverOptions, cancellationTokenSource.Token);
@@ -106,6 +106,11 @@ namespace PolyChessTGBot.Bot
                         if (data != null)
                         {
                             var args = new ButtonInteractArgs(data.ButtonID, update.CallbackQuery, data);
+                            if (Program.MainConfig.ShowButtonInteractLogs)
+                            {
+                                var user = args.Query.From;
+                                Logger.Write($"Получено нажатие кнопки: [{user.FirstName} {user.LastName} (@{user.Username})]: Data: {args.Query.Data}", LogType.Info);
+                            }
                             ButtonHooks.InvokeButtonInteract(args);
                             await args.Bot.AnswerCallbackQueryAsync(args.Query.Id, cancellationToken: token);
                         }

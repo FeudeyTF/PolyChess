@@ -28,6 +28,10 @@ namespace PolyChessTGBot
 
         public bool ShowApiResponseLogs = false;
 
+        public bool ShowLichessApiSending = false;
+
+        public bool ShowButtonInteractLogs = false;
+
         public SocketSettings Socket = new();
 
         public int[] SkippingApiRequestErrors = [];

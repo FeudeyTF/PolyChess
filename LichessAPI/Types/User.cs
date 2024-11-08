@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace LichessAPI.Types
 {
-    public record class User
+    public class User
     {
         public string ID = string.Empty;
 
