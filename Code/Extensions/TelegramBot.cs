@@ -53,7 +53,13 @@ namespace PolyChessTGBot.Extensions
                     #endif
                     await bot.SendTextMessageAsync(chatID, "Превышен максимальный размер текста!", message.ThreadID, message.ParseMode, message.Entities, message.DisableWebPagePreview, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
                 }
-            }    
+            }
+
+            if (message.File != null && message.File is InputFileStream streamFile)
+            {
+                streamFile.Content.Close();
+                await streamFile.Content.DisposeAsync();
+            }
         }
 
         public static async Task EditMessage(this TelegramBotClient bot, TelegramMessageBuilder message, ChatId chatID, Message oldMessage)
