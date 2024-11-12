@@ -285,10 +285,20 @@ namespace PolyChessTGBot.Bot.BotCommands
                             foreach (var player in tournament.Rating.Players)
                                 if (player.User != null && player.User.TelegramID == user.TelegramID && player.Score > -1)
                                 {
-                                    if (player.Score == 1)
-                                        oneScoreTournaments++;
-                                    else if (player.Score == 0)
-                                        zeroScoreTournaments++;
+                                    if(Program.MainConfig.TournamentRules.TryGetValue(tournament.Tournament.ID, out var rule))
+                                    {
+                                        if (player.Score == 1)
+                                            oneScoreTournaments += rule.PointsForWinning;
+                                        else if (player.Score == 0)
+                                            zeroScoreTournaments += rule.PointsForBeing;
+                                    }
+                                    else
+                                    {
+                                        if (player.Score == 1)
+                                            oneScoreTournaments += TournamentScoreRule.DEFAULT_POINTS_FOR_WINNING;
+                                        else if (player.Score == 0)
+                                            zeroScoreTournaments += TournamentScoreRule.DEFAULT_POINTS_FOR_BEING;
+                                    }
                                     break;
                                 }
 
@@ -297,12 +307,23 @@ namespace PolyChessTGBot.Bot.BotCommands
                             foreach (var player in tournament.Rating.Players)
                                 if (player.User != null && player.User.TelegramID == user.TelegramID && player.Score > -1)
                                 {
-                                    if (player.Score == 1)
-                                        oneScoreTournaments++;
-                                    else if (player.Score == 0)
-                                        zeroScoreTournaments++;
+                                    if (Program.MainConfig.TournamentRules.TryGetValue(tournament.Tournament.ID, out var rule))
+                                    {
+                                        if (player.Score == 1)
+                                            oneScoreTournaments += rule.PointsForWinning;
+                                        else if (player.Score == 0)
+                                            zeroScoreTournaments += rule.PointsForBeing;
+                                    }
+                                    else
+                                    {
+                                        if (player.Score == 1)
+                                            oneScoreTournaments += TournamentScoreRule.DEFAULT_POINTS_FOR_WINNING;
+                                        else if (player.Score == 0)
+                                            zeroScoreTournaments += TournamentScoreRule.DEFAULT_POINTS_FOR_BEING;
+                                    }
                                     break;
                                 }
+
                     int visitedTournamentsCount = zeroScoreTournaments + oneScoreTournaments;
                     List<string> text = ["📌<b>Ваш прогресс по выполнению регламента зачёта:</b>"];
                     text.Add("📚<b>Посещение занятий:</b> Недоступно");

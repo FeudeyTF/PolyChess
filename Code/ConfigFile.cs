@@ -42,6 +42,8 @@ namespace PolyChessTGBot
 
         public TestSettings Test = new();
 
+        public Dictionary<string, TournamentScoreRule> TournamentRules = [];
+
         public static ConfigFile Load(string name)
         {
             ConfigFile emptyConfig = new();
@@ -78,5 +80,16 @@ namespace PolyChessTGBot
         public bool StartSocketServer;
 
         public int Port = 8081;
+    }
+
+    public class TournamentScoreRule
+    {
+        public const int DEFAULT_POINTS_FOR_WINNING = 1;
+
+        public const int DEFAULT_POINTS_FOR_BEING = 1;
+
+        public int PointsForWinning = DEFAULT_POINTS_FOR_WINNING;
+
+        public int PointsForBeing = DEFAULT_POINTS_FOR_BEING;
     }
 }
