@@ -199,7 +199,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                         "Отправьте новый файл этой ссылки (-, если оставить прежним)"
                     ],
                     OnHelpLinkChangeEntered,
-                    links[0]);
+                    data: links[0]);
 
             static async Task OnHelpLinkChangeEntered(DiscreteMessageEnteredArgs args)
             {
@@ -239,7 +239,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                         "Введите новый ответ на этот вопрос (-, если оставить прежним)"
                     ],
                     OnFAQChangeEntered,
-                    entries[0]);
+                    data: entries[0]);
 
             static async Task OnFAQChangeEntered(DiscreteMessageEnteredArgs args)
             {

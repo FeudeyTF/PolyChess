@@ -1,8 +1,10 @@
 ﻿using PolyChessTGBot.Extensions;
 using PolyChessTGBot.Hooks;
+using System.Threading.Channels;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PolyChessTGBot.Bot.Messages.Discrete
 {
@@ -20,11 +22,11 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
         /// <summary>
         /// Отправляет разделённое сообщение, создавая новый объект. 
         /// </summary>
-        public static async Task Send(long channelId, List<TelegramMessageBuilder> queries, Func<DiscreteMessageEnteredArgs, Task> onEntered, params List<object> data)
+        public static async Task Send(long channelId, List<TelegramMessageBuilder> queries, Func<DiscreteMessageEnteredArgs, Task> onEntered, Func<DiscreteMessageNextSendedArgs, Task>? onNextSended = default, Func<DiscreteMessageNextRecievedArgs, Task>? onNextRecieved = default, params List<object> data)
         {
             if(CanSendMessage(channelId))
             {
-                DiscreteMessage msg = new(queries, onEntered);
+                DiscreteMessage msg = new(queries, onEntered, onNextSended, onNextRecieved);
                 await msg.Send(channelId, data);
                 ActiveChannels.Add(channelId, msg);
             }
@@ -34,16 +36,22 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
 
         private readonly Func<DiscreteMessageEnteredArgs, Task> OnEntered;
 
+        private readonly Func<DiscreteMessageNextSendedArgs, Task>? OnNextSended;
+
+        private readonly Func<DiscreteMessageNextRecievedArgs, Task>? OnNextRecieved;
+
         private readonly List<TelegramMessageBuilder> Queries;
 
         public DiscreteMessage(List<string> queries, Func<DiscreteMessageEnteredArgs, Task> onEntered) : this([..queries.Select(q => new TelegramMessageBuilder(q))], onEntered) {}
 
-        public DiscreteMessage(List<TelegramMessageBuilder> queries, Func<DiscreteMessageEnteredArgs, Task> onEntered)
+        public DiscreteMessage(List<TelegramMessageBuilder> queries, Func<DiscreteMessageEnteredArgs, Task> onEntered, Func<DiscreteMessageNextSendedArgs, Task>? onNextSended = default, Func<DiscreteMessageNextRecievedArgs, Task>? onNextRecieved = default)
         {
             ActiveChannels = [];
             Channels = [];
             OnEntered = onEntered;
             Queries = queries;
+            OnNextSended = onNextSended;
+            OnNextRecieved = onNextRecieved;
             BotHooks.OnBotUpdate += HandleBotUpdate;
         }
 
@@ -54,12 +62,18 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
                 args.Handled = true;
                 if (info.Add(args.Update.Message))
                 {
+                    if (OnNextRecieved != null)
+                        await OnNextRecieved(new(info.Progress - 1, Queries[info.Progress - 1], args.Update.Message, args.Bot, args.Update.Message.Chat.Id, args.Update.Message.From, info.Data));
                     await OnEntered(new(info.Responses, args.Bot, args.Update.Message.Chat.Id, args.Update.Message.From, info.Data));
                     Channels.Remove(args.Update.Message.Chat.Id);
                     ActiveChannels.Remove(args.Update.Message.Chat.Id);
                 }
                 else
+                {
+                    if(OnNextRecieved != null)
+                        await OnNextRecieved(new(info.Progress - 1, Queries[info.Progress -1], args.Update.Message, args.Bot, args.Update.Message.Chat.Id, args.Update.Message.From, info.Data));
                     await args.Bot.SendMessage(Queries[info.Progress], args.Update.Message.Chat.Id);
+                }
             }
         }
 
@@ -71,6 +85,8 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
             if (CanSendMessage(channelId))
             {
                 await bot.SendMessage(Queries[0], channelId);
+                if (OnNextSended != null)
+                    await OnNextSended(new(0, Queries[0], bot, channelId, data));
                 Channels.Add(channelId, new ChannelInfo(Queries.Count, data));
                 ActiveChannels.Add(channelId, this);
             }
