@@ -249,13 +249,13 @@ namespace PolyChessTGBot.Managers.Tournaments
 
             foreach (var tournament in TournamentsList)
             {
-                if (File.GetLastWriteTime(GetTournamentPath(tournament.Tournament.ID)) < tournament.Tournament.StartDate)
+                if (File.GetLastWriteTime(GetTournamentPath(tournament.Tournament.ID)) < tournament.Tournament.StartDate && tournament.Tournament.StartDate < DateTime.Now)
                     arenaTournaments.Add(tournament.Tournament);
             }
 
             foreach (var tournament in SwissTournamentsList)
             {
-                if (File.GetLastWriteTime(GetSwissTournamentPath(tournament.Tournament.ID)) < tournament.Tournament.Started)
+                if (File.GetLastWriteTime(GetSwissTournamentPath(tournament.Tournament.ID)) < tournament.Tournament.Started && tournament.Tournament.Started < DateTime.Now)
                     swissTournaments.Add(tournament.Tournament);
             }
 
