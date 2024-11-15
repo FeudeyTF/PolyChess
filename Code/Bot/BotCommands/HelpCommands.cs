@@ -378,7 +378,10 @@ namespace PolyChessTGBot.Bot.BotCommands
         private async Task ConnectToken(ButtonInteractArgs args)
         {
             if (args.Query.Message != null)
-                await DiscreteMessage.Send(args.Query.Message.Chat.Id, ["Введите токен"], OnTokenEntered);
+                await DiscreteMessage.Send(
+                    args.Query.Message.Chat.Id,
+                    ["Введите токен. Его можно создать <a href=\"https://lichess.org/account/oauth/token\">здесь</a>"],
+                    OnTokenEntered);
 
             static async Task OnTokenEntered(DiscreteMessageEnteredArgs args)
             {
