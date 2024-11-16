@@ -57,8 +57,8 @@ namespace PolyChessTGBot.Bot.BotCommands
             };
 
             AdminCheckUsers = new("checkUsers", 
-                async () => await Task.FromResult(Program.Data.Users),
-                async (user, index, tgUser) => await Task.FromResult(user.ToString()), 
+                () => Program.Data.Users,
+                (user, index, tgUser) => user.ToString(), 
                 10,
                 true, 
                 "Далее ➡️",
@@ -69,17 +69,17 @@ namespace PolyChessTGBot.Bot.BotCommands
             HelpLinks = Program.Data.GetHelpLinks();
         }
 
-        private async Task<List<HelpLink>> GetHelpLinksValue() => await Task.FromResult(HelpLinks);
+        private List<HelpLink> GetHelpLinksValue() => HelpLinks;
 
-        private async Task<List<FAQEntry>> GetFAQValues() => await Task.FromResult(FAQEntries);
+        private List<FAQEntry> GetFAQValues() => FAQEntries;
 
-        private async Task<string> ConvertHelpLinkToString(HelpLink link, int index, Telegram.Bot.Types.User user)
-            => await Task.FromResult($"<b>{link.Title}</b>\n{link.Text}\n<i>{link.Footer}</i>");
+        private string ConvertHelpLinkToString(HelpLink link, int index, Telegram.Bot.Types.User user)
+            => $"<b>{link.Title}</b>\n{link.Text}\n<i>{link.Footer}</i>";
 
         private string? GetHelpLinkDocumentID(HelpLink link) => link.FileID;
 
-        private async Task<string> ConvertFAQEntryToString(FAQEntry entry, int index, Telegram.Bot.Types.User user)
-            => await Task.FromResult($"{index + 1}) <b>{entry.Question}</b>\n - {entry.Answer}");
+        private string ConvertFAQEntryToString(FAQEntry entry, int index, Telegram.Bot.Types.User user)
+            => $"{index + 1}) <b>{entry.Question}</b>\n - {entry.Answer}";
 
         [DiscreteCommand("question", "Команда отправит вопрос напрямую Павлу", ["Введите вопрос, которых хотите задать"], visible: true)]
         private async Task Question(CommandArgs<Message> args)
@@ -433,7 +433,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             }
         }
 
-        private async Task<List<object>> GetTournamentsIDs()
+        private List<object> GetTournamentsIDs()
         {
             List<object> result = [];
             foreach (var tournament in Program.Tournaments.TournamentsList)
@@ -442,10 +442,10 @@ namespace PolyChessTGBot.Bot.BotCommands
             foreach (var tournament in Program.Tournaments.SwissTournamentsList)
                 if (tournament.Tournament.Started < DateTime.UtcNow)
                     result.Add(tournament);
-            return await Task.FromResult(new List<object>([.. from r in result orderby (r is ArenaTournamentInfo t ? t.Tournament.StartDate : r is SwissTournamentInfo s ? s.Tournament.Started : DateTime.Now) descending select r]));
+            return new List<object>([.. from r in result orderby (r is ArenaTournamentInfo t ? t.Tournament.StartDate : r is SwissTournamentInfo s ? s.Tournament.Started : DateTime.Now) descending select r]);
         }
 
-        private async Task<string> TournamentToString(object info, int index, Telegram.Bot.Types.User tgUser)
+        private string TournamentToString(object info, int index, Telegram.Bot.Types.User tgUser)
         {
             User? user = Program.Data.GetUser(tgUser.Id);
             if (user != null)
@@ -532,7 +532,6 @@ namespace PolyChessTGBot.Bot.BotCommands
                     return string.Join("\n", result);
                 }
             }
-            await Task.CompletedTask;
             return string.Empty;
         }
     }

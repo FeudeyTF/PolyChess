@@ -15,9 +15,9 @@ namespace PolyChessTGBot.Bot.Messages
 
         public string Footer;
 
-        public Func<Task<List<TValue>>> GetValues;
+        public Func<List<TValue>> GetValues;
 
-        public Func<TValue, int, User, Task<string>> ConvertValueToString;
+        public Func<TValue, int, User, string> ConvertValueToString;
 
         public Func<TValue, string?>? GetDocumentID;
 
@@ -31,7 +31,7 @@ namespace PolyChessTGBot.Bot.Messages
 
         public List<List<ListMessageButton<List<TValue>>>> AdditionalKeyboards;
 
-        public ListMessage(string id, Func<Task<List<TValue>>> getValues, Func<TValue, int, User, Task<string>> processString, int valuesPerPage = 10, bool showPagesCount = true, string nextButtonText = "➡️", string previousButtonText = "⬅️", List<List<ListMessageButton<List<TValue>>>>? additionalKeyboards = default)
+        public ListMessage(string id, Func<List<TValue>> getValues, Func<TValue, int, User, string> processString, int valuesPerPage = 10, bool showPagesCount = true, string nextButtonText = "➡️", string previousButtonText = "⬅️", List<List<ListMessageButton<List<TValue>>>>? additionalKeyboards = default)
         {
             ID = id;
             Header = "";
@@ -53,12 +53,12 @@ namespace PolyChessTGBot.Bot.Messages
 
         public async Task Send(TelegramBotClient bot, long channelID, User user)
         {
-            var values = await GetValues();
+            var values = GetValues();
             if (values.Count != 0)
             {
                 string text = Header + "\n";
                 for (int i = 0; i < (values.Count > ValuesPerPage ? ValuesPerPage : values.Count); i++)
-                    text += (await ConvertValueToString(values[i], i, user)) + "\n";
+                    text += ConvertValueToString(values[i], i, user) + "\n";
                 text += Footer;
                 TelegramMessageBuilder message = new(text);
                 message.WithMarkup(GenerateKeyBoard(1, GetPagesCount(values.Count), user));
@@ -147,7 +147,7 @@ namespace PolyChessTGBot.Bot.Messages
         {
             if (args.Query != null && args.Query.Message != null)
             {
-                var values = await GetValues();
+                var values = GetValues();
                 int page = args.GetNumber("Page");
                 int pages = GetPagesCount(values.Count);
                 var userID = args.GetLongNumber("TID");
@@ -157,7 +157,7 @@ namespace PolyChessTGBot.Bot.Messages
                     string text = Header + "\n";
                     int startIndex = page * ValuesPerPage;
                     for (int i = startIndex; i < startIndex + (values.Count - startIndex > ValuesPerPage ? ValuesPerPage : values.Count - startIndex); i++)
-                        text += (await ConvertValueToString(values[i], i, user)) + "\n";
+                        text += ConvertValueToString(values[i], i, user) + "\n";
                     text += Footer;
                     var message = new TelegramMessageBuilder(text)
                         .WithMarkup(GenerateKeyBoard(page + 1, GetPagesCount(values.Count), user));
@@ -177,7 +177,7 @@ namespace PolyChessTGBot.Bot.Messages
         {
             if (args.Query != null && args.Query.Message != null)
             {
-                var values = await GetValues();
+                var values = GetValues();
                 int page = args.GetNumber("Page");
                 int pages = GetPagesCount(values.Count);
                 var userID = args.GetLongNumber("TID");
@@ -187,7 +187,7 @@ namespace PolyChessTGBot.Bot.Messages
                     string text = Header + "\n";
                     int startIndex = (page - 2) * ValuesPerPage;
                     for (int i = startIndex; i < startIndex + (values.Count - startIndex > ValuesPerPage ? ValuesPerPage : values.Count - startIndex); i++)
-                        text += (await ConvertValueToString(values[i], i, user)) + "\n";
+                        text += ConvertValueToString(values[i], i, user) + "\n";
                     text += Footer;
                     var message = new TelegramMessageBuilder(text)
                         .WithMarkup(GenerateKeyBoard(page - 1, GetPagesCount(values.Count), user));
@@ -206,7 +206,7 @@ namespace PolyChessTGBot.Bot.Messages
 
         public async Task<TValue?> FindValue(int index)
         {
-            var values = await GetValues();
+            var values = GetValues();
             if (values.Count > index)
                 return values[index];
             return default;
@@ -215,7 +215,7 @@ namespace PolyChessTGBot.Bot.Messages
         public async Task<List<TValue>> FindValues(int page)
         {
             List<TValue> result = [];
-            var values = await GetValues();
+            var values = GetValues();
             int startIndex = (page - 1) * ValuesPerPage;
             for (int i = startIndex; i < startIndex + (values.Count - startIndex > ValuesPerPage ? ValuesPerPage : values.Count - startIndex); i++)
                 result.Add(values[i]);

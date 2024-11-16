@@ -40,7 +40,19 @@ namespace PolyChessTGBot.Managers.Tournaments
                 var tournament = await Program.Lichess.GetTournament(tournamentName);
                 if (tournament != null && tournament.IsSemesterTournament())
                 {
-                    var tournamentSheet = await Program.Lichess.GetTournamentSheet(File.OpenText(filePath));
+                    List<SheetEntry>? tournamentSheet = default;
+
+                    try
+                    {
+                        using (var reader = File.OpenText(filePath))
+                        {
+                            tournamentSheet = await Program.Lichess.GetTournamentSheet(reader);
+                        }
+                    }
+                    catch
+                    {
+                        File.Delete(filePath);
+                    }
 
                     if (tournamentSheet != null)
                     {
@@ -58,7 +70,19 @@ namespace PolyChessTGBot.Managers.Tournaments
                 var tournament = await Program.Lichess.GetSwissTournament(tournamentName);
                 if (tournament != null && tournament.IsSemesterTournament())
                 {
-                    var tournamentSheet = await Program.Lichess.GetSwissTournamentSheet(File.OpenText(filePath));
+                    List<SwissSheetEntry>? tournamentSheet = default;
+
+                    try
+                    {
+                        using (var reader = File.OpenText(filePath))
+                        {
+                            tournamentSheet = await Program.Lichess.GetSwissTournamentSheet(reader);
+                        }
+                    }
+                    catch
+                    {
+                        File.Delete(filePath);
+                    }
 
                     if (tournamentSheet != null)
                     {
