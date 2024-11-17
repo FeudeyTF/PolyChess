@@ -13,10 +13,8 @@ namespace PolyChessTGBot.Extensions
 
         public static async Task SendMessage(this TelegramBotClient bot, TelegramMessageBuilder message, ChatId chatID)
         {
-            #if DEBUG
             if(message.CancellationToken == default)
                 Console.WriteLine(message.Text + " NULL TOKEN!");
-            #endif
             if (message.File != null)
             {
                 if (message.Text == null || message.Text.Length <= MAX_CAPTION_SIZE)
@@ -68,10 +66,8 @@ namespace PolyChessTGBot.Extensions
 
         public static async Task EditMessage(this TelegramBotClient bot, TelegramMessageBuilder message, ChatId chatID, Message oldMessage)
         {
-            #if DEBUG
             if (message.CancellationToken == default)
                 Console.WriteLine(message.Text + " NULL TOKEN!");
-            #endif
             if (message.File != null)
                 message.WithDocument(message.File);
 

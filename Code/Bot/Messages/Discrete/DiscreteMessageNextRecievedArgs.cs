@@ -1,6 +1,6 @@
-﻿using Telegram.Bot.Types;
+﻿using PolyChessTGBot.Extensions;
 using Telegram.Bot;
-using PolyChessTGBot.Extensions;
+using Telegram.Bot.Types;
 
 namespace PolyChessTGBot.Bot.Messages.Discrete
 {

@@ -21,7 +21,7 @@ namespace PolyChessTGBot.Bot.Buttons
         }
 
         public void RegisterButtons(BindingFlags flags = BindingFlags.Public | BindingFlags.Static)
-        => RegisterButtons(null, flags);
+            => RegisterButtons(null, flags);
 
         public void RegisterButtons(object? obj, BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
         {
