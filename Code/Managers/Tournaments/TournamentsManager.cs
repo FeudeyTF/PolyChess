@@ -11,7 +11,7 @@ namespace PolyChessTGBot.Managers.Tournaments
 
         public readonly Division DivisionB = new(1301, 1800);
 
-        public readonly Division DivisionA = new(1801, 2100);
+        public readonly Division DivisionA = new(1801, 4000);
 
         public List<ArenaTournamentInfo> TournamentsList { get; private set; }
 
@@ -120,7 +120,7 @@ namespace PolyChessTGBot.Managers.Tournaments
             => entry.Username;
 
         public static string GetLichessName(SheetEntry entry)
-        => entry.Username;
+            => entry.Username;
 
         public static int CalculateScore(SwissSheetEntry entry, bool inDivision)
         {
@@ -140,14 +140,18 @@ namespace PolyChessTGBot.Managers.Tournaments
             if (entry.Sheet != null)
             {
                 int zeroNumbers = entry.Sheet.Scores.Count(c => c == '0');
+                int oneNumbers = entry.Sheet.Scores.Count(c => c == '1');
                 int twoNumbers = entry.Sheet.Scores.Count(c => c == '2');
                 int fourNumbers = entry.Sheet.Scores.Count(c => c == '4');
-                int total = zeroNumbers + twoNumbers + fourNumbers;
+                int total = zeroNumbers + oneNumbers + twoNumbers + fourNumbers;
 
-                if (inDivision)
-                    totalScore = 1;
-                else if (total >= 7 && twoNumbers >= 1)
-                    totalScore = 0;
+                if (total >= 7 && (twoNumbers + oneNumbers + fourNumbers) >= 1)
+                {
+                    if (inDivision)
+                        totalScore = 1;
+                    else
+                        totalScore = 0;
+                }
             }
             return totalScore;
         }

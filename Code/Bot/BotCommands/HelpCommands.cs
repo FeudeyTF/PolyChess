@@ -11,7 +11,6 @@ using PolyChessTGBot.Bot.Messages.Discrete;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
 using PolyChessTGBot.Managers.Tournaments;
-using System.Security.Principal;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using User = PolyChessTGBot.Database.User;
@@ -324,13 +323,13 @@ namespace PolyChessTGBot.Bot.BotCommands
                                     break;
                                 }
 
-                    float visitedTournamentsCount = zeroScoreTournaments + oneScoreTournaments;
+                    int visitedTournamentsCount = zeroScoreTournaments + oneScoreTournaments;
                     List<string> text = ["📌<b>Ваш прогресс по выполнению регламента зачёта:</b>"];
                     text.Add("📚<b>Посещение занятий:</b> Недоступно");
 
-                    totalScore += Math.Min(visitedTournamentsCount / Program.MainConfig.Test.RequiredTournamentsCount, 1) * barsInBar;
+                    totalScore += Math.Min((float)visitedTournamentsCount / Program.MainConfig.Test.RequiredTournamentsCount, 1) * barsInBar;
                     text.Add($"🤝<b>Участие в турнирах:</b>"); 
-                    text.Add($"       <b>Всего</b>: {(int)visitedTournamentsCount} из {Program.MainConfig.Test.RequiredTournamentsCount} ({Utils.CreateSimpleBar(visitedTournamentsCount, Program.MainConfig.Test.RequiredTournamentsCount, bars: barsInBar)})");
+                    text.Add($"       <b>Всего</b>: {visitedTournamentsCount} из {Program.MainConfig.Test.RequiredTournamentsCount} ({Utils.CreateSimpleBar(visitedTournamentsCount, Program.MainConfig.Test.RequiredTournamentsCount, bars: barsInBar)})");
                     text.Add("         - Количество посещений: " + zeroScoreTournaments);
                     text.Add("         - Количество побед: " + oneScoreTournaments);
 
@@ -403,14 +402,19 @@ namespace PolyChessTGBot.Bot.BotCommands
                                     {
                                         if (tokenInfo.Expires == default || tokenInfo.Expires > DateTime.Now)
                                         {
-                                            if(tokenInfo.Scopes.Any(scope => scope.AccessLevel == TokenScopeAccessLevel.Read && scope.Type == TokenScopeType.Puzzle))
+                                            if (tokenInfo.Scopes != null && tokenInfo.Scopes.Count > 0)
                                             {
-                                                user.TokenKey = token;
-                                                Program.Data.Query($"UPDATE Users SET TokenKey='{user.TokenKey}' WHERE TelegramID='{args.User.Id}'");
-                                                await args.Reply("Токен успешно установлен!");
+                                                if (tokenInfo.Scopes.Any(scope => scope.AccessLevel == TokenScopeAccessLevel.Read && scope.Type == TokenScopeType.Puzzle))
+                                                {
+                                                    user.TokenKey = token;
+                                                    Program.Data.Query($"UPDATE Users SET TokenKey='{user.TokenKey}' WHERE TelegramID='{args.User.Id}'");
+                                                    await args.Reply("Токен успешно установлен!");
+                                                }
+                                                else
+                                                    await args.Reply("У токена нет доступа к просмотру статистики пазлов!");
                                             }
                                             else
-                                                await args.Reply("У токена нет доступа к просмотру статистики пазлов!");
+                                                await args.Reply("Не найдено токенов!");
                                         }
                                         else
                                             await args.Reply("Токен просрочен!");
