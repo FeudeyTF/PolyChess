@@ -139,7 +139,7 @@ namespace PolyChessTGBot.Bot.Messages
                 foreach (var keyboard in AdditionalKeyboards)
                     foreach(var button in keyboard)
                         if (button.ID + ID == args.ButtonID)
-                            await button.Delegate(args, await FindValues(args.GetNumber("Page")));
+                            await button.Delegate(args, FindValues(args.GetNumber("Page")));
             }
         }
 
@@ -204,7 +204,7 @@ namespace PolyChessTGBot.Bot.Messages
             }
         }
 
-        public async Task<TValue?> FindValue(int index)
+        public TValue? FindValue(int index)
         {
             var values = GetValues();
             if (values.Count > index)
@@ -212,7 +212,7 @@ namespace PolyChessTGBot.Bot.Messages
             return default;
         }
 
-        public async Task<List<TValue>> FindValues(int page)
+        public List<TValue> FindValues(int page)
         {
             List<TValue> result = [];
             var values = GetValues();
