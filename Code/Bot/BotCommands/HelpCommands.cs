@@ -330,8 +330,8 @@ namespace PolyChessTGBot.Bot.BotCommands
                     totalScore += Math.Min((float)visitedTournamentsCount / Program.MainConfig.Test.RequiredTournamentsCount, 1) * barsInBar;
                     text.Add($"🤝<b>Участие в турнирах:</b>"); 
                     text.Add($"       <b>Всего</b>: {visitedTournamentsCount} из {Program.MainConfig.Test.RequiredTournamentsCount} ({Utils.CreateSimpleBar(visitedTournamentsCount, Program.MainConfig.Test.RequiredTournamentsCount, bars: barsInBar)})");
-                    text.Add("         - Количество посещений: " + zeroScoreTournaments);
-                    text.Add("         - Количество побед: " + oneScoreTournaments);
+                    text.Add("         - Не в дивизионе: " + zeroScoreTournaments);
+                    text.Add("         - В дивизионе: " + oneScoreTournaments);
 
                     if (!string.IsNullOrEmpty(user.TokenKey))
                     {
@@ -342,11 +342,11 @@ namespace PolyChessTGBot.Bot.BotCommands
                             totalScore += Math.Min((float)puzzleDashboard.Global.FirstWins / Program.MainConfig.Test.RequiredPuzzlesSolved, 1) * barsInBar;
                             text.Add($"🧩<b>Решение пазлов:</b> {puzzleDashboard.Global.FirstWins} из {Program.MainConfig.Test.RequiredPuzzlesSolved} ({Utils.CreateSimpleBar(puzzleDashboard.Global.FirstWins, Program.MainConfig.Test.RequiredPuzzlesSolved, bars: barsInBar)})");
                         }
+                        else
+                            text.Add($"🧩<b>Решение пазлов:</b> Токен не подключён!");
                     }
                     else
-                    {
                         text.Add($"🧩<b>Решение пазлов:</b> Токен не подключён!");
-                    }
 
                     int creativeTask = user.CreativeTaskCompleted ? 1 : 0;
                     totalScore += creativeTask * barsInBar;
