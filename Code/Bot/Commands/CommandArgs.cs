@@ -1,3 +1,4 @@
+using Newtonsoft.Json.Linq;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Extensions;
 using Telegram.Bot;
@@ -28,7 +29,7 @@ namespace PolyChessTGBot.Bot.Commands
 
         public async Task Reply(TelegramMessageBuilder message)
         {
-            await Bot.SendMessage(message.ReplyTo(Message.MessageId), Message.Chat.Id);
+            await Bot.SendMessage(message.ReplyTo(Message.MessageId).WithToken(Token), Message.Chat.Id);
         }
     }
 

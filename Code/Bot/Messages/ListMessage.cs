@@ -51,7 +51,7 @@ namespace PolyChessTGBot.Bot.Messages
             await TryUpdate(args.ButtonID, args);
         }
 
-        public async Task Send(TelegramBotClient bot, long channelID, User user)
+        public async Task Send(TelegramBotClient bot, long channelID, User user, CancellationToken token)
         {
             var values = GetValues();
             if (values.Count != 0)
@@ -70,10 +70,10 @@ namespace PolyChessTGBot.Bot.Messages
                         message.WithFile(document);
                 }
                 message.WithoutWebPagePreview();
-                await bot.SendMessage(message, channelID);
+                await bot.SendMessage(message.WithToken(token), channelID);
             }
             else
-                await bot.SendMessage("Данных нет", channelID);
+                await bot.SendMessage(new TelegramMessageBuilder("Данных нет").WithToken(token), channelID);
         }
 
         private int GetPagesCount(int count)
@@ -168,6 +168,7 @@ namespace PolyChessTGBot.Bot.Messages
                             message.WithFile(document);
                     }
                     message.WithoutWebPagePreview();
+                    message.WithToken(args.Token);
                     await args.Bot.EditMessage(message, args.Query.Message.Chat.Id, args.Query.Message);
                 }
             }
@@ -199,6 +200,7 @@ namespace PolyChessTGBot.Bot.Messages
                             message.WithFile(document);
                     }
                     message.WithoutWebPagePreview();
+                    message.WithToken(args.Token);
                     await args.Bot.EditMessage(message, args.Query.Message.Chat.Id, args.Query.Message);
                 }
             }

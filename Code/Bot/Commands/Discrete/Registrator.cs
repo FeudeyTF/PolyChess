@@ -53,7 +53,7 @@ namespace PolyChessTGBot.Bot.Commands.Basic
                         try
                         {
                         #endif
-                            await command.Message.Send(message.Chat.Id);
+                            await command.Message.Send(message.Chat.Id, token);
                         #if !DEBUG
                         }
                         catch (Exception e)

@@ -87,7 +87,7 @@ namespace PolyChessTGBot.Bot
 
         private async Task UpdateHandler(ITelegramBotClient client, Update update, CancellationToken token)
         {
-            BotUpdateEventArgs updateArgs = new(Telegram, update);
+            BotUpdateEventArgs updateArgs = new(Telegram, update, token);
             await BotHooks.InvokeOnBotUpdate(updateArgs);
             if (updateArgs.Handled)
                 return;
@@ -105,7 +105,7 @@ namespace PolyChessTGBot.Bot
                         var data = TelegramButtonData.ParseDataString(update.CallbackQuery.Data);
                         if (data != null)
                         {
-                            var args = new ButtonInteractArgs(data.ButtonID, update.CallbackQuery, data);
+                            ButtonInteractArgs args = new(data.ButtonID, update.CallbackQuery, data, token);
                             if (Program.MainConfig.ShowButtonInteractLogs)
                             {
                                 var user = args.Query.From;
@@ -133,14 +133,14 @@ namespace PolyChessTGBot.Bot
                 {
                     if(!await CommandRegistrator.ExecuteCommand(text, message, user, token))
                         if(!await DiscreteCommandRegistrator.ExecuteCommand(text, message, user, token))
-                            await Program.Bot.Telegram.SendMessage(new TelegramMessageBuilder("Команда не была найдена!").ReplyTo(message.MessageId), message.Chat.Id);
+                            await Program.Bot.Telegram.SendMessage(new TelegramMessageBuilder("Команда не была найдена!").WithToken(token), message.Chat.Id);
                 }
 
                 if (text == null && message.Caption != null && message.Caption.StartsWith('/'))
                 {
                     if (!await CommandRegistrator.ExecuteCommand(message.Caption, message, user, token))
                         if (!await DiscreteCommandRegistrator.ExecuteCommand(message.Caption, message, user, token))
-                            await Program.Bot.Telegram.SendMessage(new TelegramMessageBuilder("Команда не была найдена!").ReplyTo(message.MessageId), message.Chat.Id);
+                            await Program.Bot.Telegram.SendMessage(new TelegramMessageBuilder("Команда не была найдена!").ReplyTo(message.MessageId).WithToken(token), message.Chat.Id);
 
                 }
 

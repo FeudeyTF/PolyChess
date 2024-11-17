@@ -100,7 +100,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     button.SetData("QuestionDataID", ("ID", args.User.Id), ("ChannelID", question.MessageId));
                     var message = new TelegramMessageBuilder(string.Join("\n", text))
                         .AddButton(button);
-                    await args.Bot.SendMessage(message, Program.MainConfig.QuestionChannel);
+                    await args.Bot.SendMessage(message.WithToken(args.Token), Program.MainConfig.QuestionChannel);
                     await args.Reply("Ваш вопрос был успешно отправлен!");
                 }
                 else
@@ -111,7 +111,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Command("help", "Выдаёт список с полезными материалами", true)]
         private async Task SendHelpLinks(CommandArgs args)
         {
-            await HelpMessage.Send(args.Bot, args.Message.Chat.Id, args.User);
+            await HelpMessage.Send(args.Bot, args.Message.Chat.Id, args.User, args.Token);
         }
 
         [Command("cmds", "Выдаёт список всех команд", admin: true)]
@@ -133,7 +133,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Command("faq", "Выдаёт список с FAQ", true)]
         private async Task FAQ(CommandArgs args)
         {
-            await FAQMessage.Send(args.Bot, args.Message.Chat.Id, args.User);
+            await FAQMessage.Send(args.Bot, args.Message.Chat.Id, args.User, args.Token);
         }
 
         [Command("reg", "Меняет привязанный к ученику аккаунт Lichess")]
@@ -264,7 +264,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             var id = args.GetLongNumber("ID");
             Telegram.Bot.Types.User tgUser = new() { Id = id };
             if (args.Query.Message != null)
-                await Tournaments.Send(args.Bot, args.Query.Message.Chat.Id, id == args.Query.From.Id ? args.Query.From : tgUser);
+                await Tournaments.Send(args.Bot, args.Query.Message.Chat.Id, id == args.Query.From.Id ? args.Query.From : tgUser, args.Token);
         }
 
         [Button("MeViewProgress")]
@@ -377,7 +377,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         private async Task ConnectToken(ButtonInteractArgs args)
         {
             if (args.Query.Message != null)
-                await DiscreteMessage.Send(
+                await args.SendDiscreteMessage(
                     args.Query.Message.Chat.Id,
                     ["Введите токен. Его можно создать <a href=\"https://lichess.org/account/oauth/token\">здесь</a>"],
                     OnTokenEntered);

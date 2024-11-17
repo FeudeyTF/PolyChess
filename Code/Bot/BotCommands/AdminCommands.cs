@@ -76,7 +76,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         private async Task LookPlayer(ButtonInteractArgs args)
         {
             if (args.Query.Message != null)
-                await DiscreteMessage.Send(
+                await args.SendDiscreteMessage(
                     args.Query.Message.Chat.Id,
                     ["Введите имя ученика или ник на Lichess"],
                     OnCheckPlayerEntered);
@@ -154,7 +154,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         private async Task DeleteHelpLinks(ButtonInteractArgs args)
         {
             if (args.Query.Message != null)
-                await HelpAdmin.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From);
+                await HelpAdmin.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From, args.Token);
         }
 
         private async Task HandleHelpLinkDelete(ButtonInteractArgs args, List<HelpLink> links)
@@ -178,20 +178,20 @@ namespace PolyChessTGBot.Bot.BotCommands
         private async Task DeleteFAQEntry(ButtonInteractArgs args)
         {
             if (args.Query.Message != null)
-                await FAQAdmin.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From);
+                await FAQAdmin.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From, args.Token);
         }
 
         [Button("SendAllUsers")]
         private async Task SendAllUsersButton(ButtonInteractArgs args)
         {
             if (args.Query.Message != null)
-                await AdminCheckUsers.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From);
+                await AdminCheckUsers.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From, args.Token);
         }
 
         private async Task HandleHelpLinkChange(ButtonInteractArgs args, List<HelpLink> links)
         {
             if (args.Query.Message != null)
-                await DiscreteMessage.Send(
+                await args.SendDiscreteMessage(
                     args.Query.Message.Chat.Id,
                     [
                         "Введите новое название (-, если оставить прежним)",
@@ -232,7 +232,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         private async Task HandleFAQChange(ButtonInteractArgs args, List<FAQEntry> entries)
         {
             if (args.Query.Message != null)
-                await DiscreteMessage.Send(
+                await args.SendDiscreteMessage(
                     args.Query.Message.Chat.Id,
                     [
                         "Введите новый вопрос (-, если оставить прежним)",
@@ -286,7 +286,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         private async Task AddeHelpLink(ButtonInteractArgs args)
         {
             if(args.Query.Message != null)
-                await DiscreteMessage.Send(
+                await args.SendDiscreteMessage(
                     args.Query.Message.Chat.Id,
                     [
                         "Введите название",
@@ -326,7 +326,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         private async Task AddFAQEntry(ButtonInteractArgs args)
         {
             if(args.Query.Message != null)
-                await DiscreteMessage.Send(
+                await args.SendDiscreteMessage(
                     args.Query.Message.Chat.Id,
                     [
                         "Введите вопрос",
@@ -565,7 +565,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         private async Task SaveTournament(ButtonInteractArgs args)
         {
             if (args.Query.Message != null)
-                await DiscreteMessage.Send(
+                await args.SendDiscreteMessage(
                     args.Query.Message.Chat.Id,
                     ["Введите ссылку на турнир"],
                     OnTournamentSwissEntered);
@@ -619,7 +619,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         private async Task TournamentResult(ButtonInteractArgs args)
         {
             if (args.Query.Message != null)
-                await DiscreteMessage.Send(
+                await args.SendDiscreteMessage(
                     args.Query.Message.Chat.Id,
                     [
                         "Введите ссылку на турнир",

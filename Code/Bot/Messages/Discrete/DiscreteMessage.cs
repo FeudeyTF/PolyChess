@@ -1,10 +1,8 @@
 ﻿using PolyChessTGBot.Extensions;
 using PolyChessTGBot.Hooks;
-using System.Threading.Channels;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PolyChessTGBot.Bot.Messages.Discrete
 {
@@ -22,12 +20,12 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
         /// <summary>
         /// Отправляет разделённое сообщение, создавая новый объект. 
         /// </summary>
-        public static async Task Send(long channelId, List<TelegramMessageBuilder> queries, Func<DiscreteMessageEnteredArgs, Task> onEntered, Func<DiscreteMessageNextSendedArgs, Task>? onNextSended = default, Func<DiscreteMessageNextRecievedArgs, Task>? onNextRecieved = default, params List<object> data)
+        public static async Task Send(long channelId, List<TelegramMessageBuilder> queries, Func<DiscreteMessageEnteredArgs, Task> onEntered, CancellationToken token, Func<DiscreteMessageNextSendedArgs, Task>? onNextSended = default, Func<DiscreteMessageNextRecievedArgs, Task>? onNextRecieved = default, params List<object> data)
         {
             if(CanSendMessage(channelId))
             {
                 DiscreteMessage msg = new(queries, onEntered, onNextSended, onNextRecieved);
-                await msg.Send(channelId, data);
+                await msg.Send(channelId, token, data);
                 ActiveChannels.Add(channelId, msg);
             }
         }
@@ -64,7 +62,7 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
                 {
                     if (OnNextRecieved != null)
                         await OnNextRecieved(new(info.Progress - 1, Queries[info.Progress - 1], args.Update.Message, args.Bot, args.Update.Message.Chat.Id, args.Update.Message.From, info.Data));
-                    await OnEntered(new(info.Responses, args.Bot, args.Update.Message.Chat.Id, args.Update.Message.From, info.Data));
+                    await OnEntered(new(info.Responses, args.Bot, args.Update.Message.Chat.Id, args.Update.Message.From, args.Token, info.Data));
                     Channels.Remove(args.Update.Message.Chat.Id);
                     ActiveChannels.Remove(args.Update.Message.Chat.Id);
                 }
@@ -72,19 +70,19 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
                 {
                     if(OnNextRecieved != null)
                         await OnNextRecieved(new(info.Progress - 1, Queries[info.Progress -1], args.Update.Message, args.Bot, args.Update.Message.Chat.Id, args.Update.Message.From, info.Data));
-                    await args.Bot.SendMessage(Queries[info.Progress], args.Update.Message.Chat.Id);
+                    await args.Bot.SendMessage(Queries[info.Progress].WithToken(args.Token), args.Update.Message.Chat.Id);
                 }
             }
         }
 
-        public async Task Send(long channelId, params List<object> data)
-            => await Send(Program.Bot.Telegram, channelId, data);
+        public async Task Send(long channelId, CancellationToken token, params List<object> data)
+            => await Send(Program.Bot.Telegram, channelId, token, data);
 
-        public async Task Send(TelegramBotClient bot, long channelId, params List<object> data)
+        public async Task Send(TelegramBotClient bot, long channelId, CancellationToken token, params List<object> data)
         {
             if (CanSendMessage(channelId))
             {
-                await bot.SendMessage(Queries[0], channelId);
+                await bot.SendMessage(Queries[0].WithToken(token), channelId);
                 if (OnNextSended != null)
                     await OnNextSended(new(0, Queries[0], bot, channelId, data));
                 Channels.Add(channelId, new ChannelInfo(Queries.Count, data));

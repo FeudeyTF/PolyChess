@@ -24,10 +24,13 @@ namespace PolyChessTGBot.Hooks
 
         public Update Update;
 
-        public BotUpdateEventArgs(TelegramBotClient bot, Update update)
+        public CancellationToken Token;
+
+        public BotUpdateEventArgs(TelegramBotClient bot, Update update, CancellationToken token)
         {
             Bot = bot;
             Update = update;
+            Token = token;
         }
     }
 }
