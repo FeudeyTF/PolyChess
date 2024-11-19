@@ -54,17 +54,17 @@ namespace PolyChessTGBot.Bot.Commands.Basic
                         {
                         #endif
                             await command.Message.Send(message.Chat.Id, token);
-                        #if !DEBUG
+#if !DEBUG
                         }
                         catch (Exception e)
                         {
                             Program.Logger.Write(e.ToString(), LogType.Error);
-                            await Program.Bot.Telegram.SendMessage(new Messages.TelegramMessageBuilder("Произошла ошибка при выполнении команды! Обратитесь к вашему системному администратору!").ReplyTo(message.MessageId), message.Chat.Id);
+                            await Program.Bot.Telegram.SendMessage(new Messages.TelegramMessageBuilder("Произошла ошибка при выполнении команды! Обратитесь к вашему системному администратору!").ReplyTo(message.MessageId).WithToken(token), message.Chat.Id);
                         }
-                        #endif
+#endif
                     }
                     else
-                        await Program.Bot.Telegram.SendMessage(new Messages.TelegramMessageBuilder("Эта команда доступна только админам!").ReplyTo(message.MessageId), message.Chat.Id);
+                        await Program.Bot.Telegram.SendMessage(new Messages.TelegramMessageBuilder("Эта команда доступна только админам!").ReplyTo(message.MessageId).WithToken(token), message.Chat.Id);
                     return true;
                 }
             return false;
