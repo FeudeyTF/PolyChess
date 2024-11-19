@@ -270,11 +270,15 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Button("MeViewProgress")]
         private async Task ViewProgress(ButtonInteractArgs args)
         {
+            User? user = Program.Data.GetUser(args.GetLongNumber("ID"));
+
+            float totalScore = 0;
+            int totalRatingsCount = 3;
+            int barsInBar = 15;
+
             int zeroScoreTournaments = 0;
             int oneScoreTournaments = 0;
-            float totalScore = 0;
-            int barsInBar = 15;
-            User? user = Program.Data.GetUser(args.GetLongNumber("ID"));
+
             if (user != null)
             {
                 if (!string.IsNullOrEmpty(user.LichessName))
@@ -323,11 +327,12 @@ namespace PolyChessTGBot.Bot.BotCommands
                                     break;
                                 }
 
-                    int visitedTournamentsCount = zeroScoreTournaments + oneScoreTournaments;
+                    float visitedTournamentsCount = zeroScoreTournaments + oneScoreTournaments;
                     List<string> text = ["📌<b>Ваш прогресс по выполнению регламента зачёта:</b>"];
                     text.Add("📚<b>Посещение занятий:</b> Недоступно");
 
-                    totalScore += Math.Min((float)visitedTournamentsCount / Program.MainConfig.Test.RequiredTournamentsCount, 1) * barsInBar;
+                    totalScore += Math.Min(visitedTournamentsCount / Program.MainConfig.Test.RequiredTournamentsCount, 1f);
+
                     text.Add($"🤝<b>Участие в турнирах:</b>"); 
                     text.Add($"       <b>Всего</b>: {visitedTournamentsCount} из {Program.MainConfig.Test.RequiredTournamentsCount} ({Utils.CreateSimpleBar(visitedTournamentsCount, Program.MainConfig.Test.RequiredTournamentsCount, bars: barsInBar)})");
                     text.Add("         - Не в топе: " + zeroScoreTournaments);
@@ -339,22 +344,22 @@ namespace PolyChessTGBot.Bot.BotCommands
                         var puzzleDashboard = await lichesAuthUser.GetPuzzleDashboard((int)(DateTime.Now - Program.SemesterStartDate).TotalDays);
                         if (puzzleDashboard != null)
                         {
-                            totalScore += Math.Min((float)puzzleDashboard.Global.FirstWins / Program.MainConfig.Test.RequiredPuzzlesSolved, 1) * barsInBar;
+                            totalScore += Math.Min((float)puzzleDashboard.Global.FirstWins / Program.MainConfig.Test.RequiredPuzzlesSolved, 1f);
                             text.Add($"🧩<b>Решение пазлов:</b> {puzzleDashboard.Global.FirstWins} из {Program.MainConfig.Test.RequiredPuzzlesSolved} ({Utils.CreateSimpleBar(puzzleDashboard.Global.FirstWins, Program.MainConfig.Test.RequiredPuzzlesSolved, bars: barsInBar)})");
                         }
                         else
                             text.Add($"🧩<b>Решение пазлов:</b> Токен не подключён!");
                     }
                     else
-                        text.Add($"🧩<b>Решение пазлов:</b> Токен не подключён!");
+                        text.Add($"🧩<b>Решение пазлов:</b> Токен не верен!");
 
-                    int creativeTask = user.CreativeTaskCompleted ? 1 : 0;
-                    totalScore += creativeTask * barsInBar;
+                    float creativeTask = user.CreativeTaskCompleted ? 1f : 0f;
+                    totalScore += creativeTask;
                     text.Add($"🧠<b>Творческое задание:</b> {Utils.CreateSimpleBar(creativeTask, 1, bars: 1)} Не выполнено!");
 
                     text.Add("");
                     text.Add("📊<b>Полный прогресс:</b>");
-                    text.Add($"{Math.Round(totalScore / 3)} из 15 {Utils.CreateSimpleBar(totalScore, barsInBar * 3, bars: barsInBar)}");
+                    text.Add($"{Math.Round(totalScore * barsInBar / totalRatingsCount)} из 15 {Utils.CreateSimpleBar(totalScore, totalRatingsCount, bars: barsInBar)}");
                     TelegramMessageBuilder msg = new(string.Join("\n", text));
 
                     if (string.IsNullOrEmpty(user.TokenKey) && user.TelegramID == args.Query.From.Id)
