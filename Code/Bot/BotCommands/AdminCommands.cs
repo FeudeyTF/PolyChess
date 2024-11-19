@@ -32,7 +32,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 "🔽 Для того, чтобы использовать панель, нажмите на кнопки управления под сообщением"
                 ];
             TelegramMessageBuilder msg = new();
-            InlineKeyboardButton checkUsers = new("👥 Увидеть всех учеников");
+            InlineKeyboardButton checkUsers = new("👥 Увидеть всех студентов");
             checkUsers.SetData("SendAllUsers");
             msg.AddButton(checkUsers);
             InlineKeyboardButton updateTournaments = new("🤝 Загрузить турниры");
@@ -61,11 +61,11 @@ namespace PolyChessTGBot.Bot.BotCommands
             tournamentResult.SetData("TournamentResult");
             msg.AddButton(tournamentResult);
 
-            InlineKeyboardButton lookPlayer = new("🔍 Посмотреть информацию об ученике");
+            InlineKeyboardButton lookPlayer = new("🔍 Посмотреть информацию о студенте");
             lookPlayer.SetData("LookPlayer");
             msg.AddButton(lookPlayer);
 
-            InlineKeyboardButton viewTournamentsTop = new("🔝 Посмотреть лучших учеников в турнирах");
+            InlineKeyboardButton viewTournamentsTop = new("🔝 Посмотреть лучших по турнирам студентов");
             viewTournamentsTop.SetData("ViewTournamentsTop");
             msg.AddButton(viewTournamentsTop);
 
@@ -78,7 +78,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             if (args.Query.Message != null)
                 await args.SendDiscreteMessage(
                     args.Query.Message.Chat.Id,
-                    ["Введите имя ученика или ник на Lichess"],
+                    ["Введите имя студента или ник на Lichess"],
                     OnCheckPlayerEntered);
 
             static async Task OnCheckPlayerEntered(DiscreteMessageEnteredArgs args)
@@ -94,7 +94,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                 if (user != null)
                 {
-                    List<string> text = [$"Информация об ученике <b>{user.Name}</b>"];
+                    List<string> text = [$"Информация о студенте <b>{user.Name}</b>"];
                     if (!string.IsNullOrEmpty(user.LichessName))
                     {
                         TelegramMessageBuilder message = new();
@@ -836,7 +836,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Button("ViewTournamentsTop")]
         private async Task ViewTournamentsTop(ButtonInteractArgs args)
         {
-            List<string> text = ["<b>Лучшие ученики по результатам турниров в семестре:</b>"];
+            List<string> text = ["<b>Лучшие студенты по результатам турниров в семестре:</b>"];
             Dictionary<User, TournamentsScore> players = [];
 
             foreach (var tournament in Program.Tournaments.TournamentsList)

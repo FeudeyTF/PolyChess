@@ -136,7 +136,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             await FAQMessage.Send(args.Bot, args.Message.Chat.Id, args.User, args.Token);
         }
 
-        [Command("reg", "Меняет привязанный к ученику аккаунт Lichess")]
+        [Command("reg", "Меняет привязанный к студенту аккаунт Lichess")]
         private async Task Register(CommandArgs args)
         {
             if (AccountVerifyCodes.TryGetValue(args.User.Id, out (string Name, string FlairID) code))
@@ -197,7 +197,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             }
         }
 
-        [Command("me", "Выдаёт информацию об ученике", true)]
+        [Command("me", "Выдаёт информацию о студенте", true)]
         private async Task MyInfo(CommandArgs args)
         {
             User? user = Program.Data.GetUser(args.User.Id);

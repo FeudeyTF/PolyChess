@@ -8,7 +8,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 {
     public partial class BotCommands
     {
-        [Command("getplayerscore", "Показывает результат участие ученика в турнире", admin: true)]
+        [Command("getplayerscore", "Показывает результат участия студента в турнире", admin: true)]
         private async Task GetPlayerScore(CommandArgs args)
         {
             if (args.Parameters.Count == 2)
@@ -76,7 +76,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                                     return;
                                 }
                             }
-                            await args.Reply($"Ученик {name} не участовал в турнире");
+                            await args.Reply($"Студент {name} не участовал в турнире");
                         }
                         else
                             await args.Reply("Аккаунт Lichess не найден!");
@@ -88,7 +88,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     await args.Reply("Турнир не сохранён с помощью команды /savearena!");
             }
             else
-                await args.Reply("Неправильный синтаксис! Правильно: /getplayerscore \"ID турнира\" \"Ник ученика\"");
+                await args.Reply("Неправильный синтаксис! Правильно: /getplayerscore \"ID турнира\" \"Ник студента\"");
         }
     }
 }
