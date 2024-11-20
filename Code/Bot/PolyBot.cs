@@ -162,9 +162,8 @@ namespace PolyChessTGBot.Bot
                                     var questionChannelID = data.GetNumber("ChannelID");
                                     if (userID != default && questionChannelID != default)
                                     {
-                                        var msg = new TelegramMessageBuilder($"❗️Получен **ответ** на ваш вопрос от {user.FirstName} {user.LastName}:\n{message.Text}".RemoveBadSymbols())
+                                        var msg = new TelegramMessageBuilder($"❗️Получен **ответ** на ваш вопрос от {user.FirstName} {user.LastName}:\n{message.Text}")
                                             .ReplyTo(questionChannelID)
-                                            .WithParseMode(ParseMode.MarkdownV2)
                                             .WithToken(token);
                                         await Telegram.SendMessage(msg, userID);
                                     }
