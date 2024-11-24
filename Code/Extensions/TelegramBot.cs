@@ -21,10 +21,13 @@ namespace PolyChessTGBot.Extensions
                     await bot.SendDocumentAsync(chatID, message.File, message.ThreadID, message.Thumbnail, message.Text, message.ParseMode, message.Entities, message.DisableContentTypeDetection, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
                 else
                 {
-                    #if DEBUG
-                    Console.WriteLine(message.Text);
-                    #endif
-                    await bot.SendDocumentAsync(chatID, message.File, message.ThreadID, message.Thumbnail, "Превышен максимальный размер сообщения!", message.ParseMode, message.Entities, message.DisableContentTypeDetection, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+#if DEBUG
+                    var textLength = message.Text.Length;
+                    int messageCount = textLength / MAX_TEXT_SIZE + 1;
+                    for(int i = 0; i < messageCount - 1; i++)
+                        await bot.SendTextMessageAsync(chatID, message.Text[(i * MAX_TEXT_SIZE)..(i + 2 * MAX_TEXT_SIZE)], message.ThreadID, message.ParseMode, message.Entities, message.DisableWebPagePreview, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+                    await bot.SendDocumentAsync(chatID, message.File, message.ThreadID, message.Thumbnail, message.Text[((messageCount - 1) * MAX_TEXT_SIZE)..], message.ParseMode, message.Entities, message.DisableContentTypeDetection, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+#endif
                 }
             }
             else if(message.MediaFiles != null)
@@ -50,10 +53,13 @@ namespace PolyChessTGBot.Extensions
                     await bot.SendTextMessageAsync(chatID, message.Text ?? "", message.ThreadID, message.ParseMode, message.Entities, message.DisableWebPagePreview, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
                 else
                 {
-                    #if DEBUG
-                    Console.WriteLine(message.Text);
-                    #endif
-                    await bot.SendTextMessageAsync(chatID, "Превышен максимальный размер текста!", message.ThreadID, message.ParseMode, message.Entities, message.DisableWebPagePreview, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+#if DEBUG
+                    var textLength = message.Text.Length;
+                    int messageCount = textLength / MAX_TEXT_SIZE + 1;
+                    for (int i = 0; i < messageCount - 1; i++)
+                            await bot.SendTextMessageAsync(chatID, message.Text[(i * MAX_TEXT_SIZE)..((i + 1) * MAX_TEXT_SIZE)], message.ThreadID, message.ParseMode, message.Entities, message.DisableWebPagePreview, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+                    await bot.SendTextMessageAsync(chatID, message.Text[((messageCount - 1) * MAX_TEXT_SIZE)..], message.ThreadID, message.ParseMode, message.Entities, message.DisableWebPagePreview, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+#endif                
                 }
             }
 

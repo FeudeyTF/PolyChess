@@ -8,6 +8,7 @@ using PolyChessTGBot.Bot.Messages.Discrete;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
 using PolyChessTGBot.Managers.Tournaments;
+using System.Security.Cryptography;
 using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -68,6 +69,10 @@ namespace PolyChessTGBot.Bot.BotCommands
             InlineKeyboardButton viewTournamentsTop = new("🔝 Посмотреть лучших по турнирам студентов");
             viewTournamentsTop.SetData("ViewTournamentsTop");
             msg.AddButton(viewTournamentsTop);
+
+            InlineKeyboardButton viewTeamsMembers= new("Посмотреть количество участников от команды");
+            viewTeamsMembers.SetData("ViewTeamsMembers");
+            msg.AddButton(viewTeamsMembers);
 
             await args.Reply(msg.WithText(string.Join("\n", text)));
         }
@@ -896,6 +901,86 @@ namespace PolyChessTGBot.Bot.BotCommands
                 text.Add($"{i + 1}) <b>{player.Key.LichessName} ({player.Key.Name})</b>, Победы: {player.Value.Ones}, Посещения: {player.Value.Zeros + player.Value.Ones}");
             }
             await args.Reply(text);
+        }
+
+        [Button("ViewTeamsMembers")]
+        private async Task ViewTeamsMembers(ButtonInteractArgs args)
+        {
+            if (args.Query.Message != null)
+                await args.SendDiscreteMessage(
+                    args.Query.Message.Chat.Id,
+                    ["Введите ссылку на турнир"],
+                    OnTournamentEntered);
+
+            static async Task OnTournamentEntered(DiscreteMessageEnteredArgs args)
+            {
+                if (args.Responses.Length == 1)
+                {
+                    var tournamentLink = args.Responses[0].Text;
+                    if (tournamentLink != null)
+                    {
+                        var splittedLink = tournamentLink.Split('/');
+                        if (splittedLink.Length > 1)
+                        {
+                            var type = splittedLink[^2];
+                            var id = splittedLink[^1];
+                            if (!string.IsNullOrEmpty(type.Trim()) && !string.IsNullOrEmpty(id.Trim()))
+                            {
+                                if (type == "tournament")
+                                {
+                                    var stream = File.OpenText(TournamentsManager.GetTournamentPath(id));
+                                    var tournament = await Program.Lichess.GetTournamentSheet(stream);
+                                    if (tournament != null)
+                                    {
+                                        Dictionary<string, int> teams = [];
+                                        foreach(var entry in tournament)
+                                            if(entry.Team != null)
+                                            {
+                                                if (teams.TryGetValue(entry.Team, out var count))
+                                                    teams[entry.Team] = ++count;
+                                                else
+                                                    teams.Add(entry.Team, 1);
+                                            }
+                                        teams = (from team in teams
+                                                orderby team.Value
+                                                descending
+                                                select team).ToDictionary();
+
+                                        List<string> text = [
+                                            "Команды по количеству участников в турнире",
+                                            ];
+
+                                        for (int i = 0; i < teams.Count; i++)
+                                        {
+                                            var team = teams.ElementAt(i);
+                                            Team? realTeam = null;
+                                            if (i < 10)
+                                                realTeam = await Program.Lichess.GetTeamAsync(team.Key);
+                                            text.Add($"{i + 1}) {(realTeam != null ? realTeam.Name : team.Key)} - {team.Value} человек");
+                                        }
+
+                                        if (teams.Count == 0)
+                                            await args.Reply("Это не командный турнир!");
+                                        else
+                                            await args.Reply(string.Join("\n", text));
+                                    }
+                                    else
+                                        await args.Reply("Турнир не был найден!");
+                                    stream.Close();
+                                }
+                                else
+                                    await args.Reply("Неправильная ссылка!");
+                            }
+                            else
+                                await args.Reply("Неправильная ссылка!");
+                        }
+                        else
+                            await args.Reply("Неправильная ссылка!");
+                    }
+                    else
+                        await args.Reply("Необходимо ввести ссылку на турнир!");
+                }
+            }
         }
     }
 }
