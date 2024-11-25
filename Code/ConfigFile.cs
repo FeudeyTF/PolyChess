@@ -24,6 +24,8 @@ namespace PolyChessTGBot
 
         public string SemesterStartDate = string.Empty;
 
+        public string SemesterEndDate = string.Empty;
+
         public List<string> UnnecessaryTournaments = [];
 
         public bool ShowApiResponseLogs = false;

@@ -28,14 +28,18 @@ namespace PolyChessTGBot
 
         internal static DateTime SemesterStartDate;
 
+        internal static DateTime SemesterEndDate;
+
         internal static TournamentsManager Tournaments;
 
         static Program()
         {
             Started = DateTime.Now;
             MainConfig = ConfigFile.Load("Main");
-            if (DateTime.TryParse(MainConfig.SemesterStartDate, out var date))
-                SemesterStartDate = date;
+            if (DateTime.TryParse(MainConfig.SemesterStartDate, out var startDate))
+                SemesterStartDate = startDate;
+            if (DateTime.TryParse(MainConfig.SemesterEndDate, out var endDate))
+                SemesterEndDate = endDate;
             Logger = new(DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".log", MainConfig.LogsFolder);
             string exeFilePath = Path.Combine(
                 Environment.CurrentDirectory,

@@ -1,4 +1,5 @@
 ﻿using LichessAPI.Clients.Authorized;
+using LichessAPI.Types;
 using LichessAPI.Types.Arena;
 using LichessAPI.Types.Swiss;
 using LichessAPI.Types.Tokens;
@@ -29,6 +30,8 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private readonly ListMessage<object> Tournaments;
 
+        private readonly ListMessage<object> NextTournaments;
+
         private readonly Dictionary<long, (string Name, string FlairID)> AccountVerifyCodes;
 
         public BotCommands()
@@ -55,11 +58,16 @@ namespace PolyChessTGBot.Bot.BotCommands
                 Header = "<b> - Информация об участии в турнирах!</b>"
             };
 
-            AdminCheckUsers = new("checkUsers", 
+            NextTournaments = new("gdfgsdf", GetNextTournamentsIDs, NextTournamentToString, 5, true, "Далее ➡️", "⬅️ Назад")
+            {
+                Header = "<b> - Информация о будущих турнирах!</b>"
+            };
+
+            AdminCheckUsers = new("checkUsers",
                 () => Program.Data.Users,
-                (user, index, tgUser) => user.ToString(), 
+                (user, index, tgUser) => user.ToString(),
                 10,
-                true, 
+                true,
                 "Далее ➡️",
                 "⬅️ Назад");
 
@@ -142,7 +150,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             if (AccountVerifyCodes.TryGetValue(args.User.Id, out (string Name, string FlairID) code))
             {
                 var account = await Program.Lichess.GetUserAsync(code.Name);
-                if (account != null )
+                if (account != null)
                 {
                     if (account.Flair == code.FlairID)
                     {
@@ -150,7 +158,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                         if (!reader.Read())
                         {
                             var user = Program.Data.GetUser(args.User.Id);
-                            if(user != null)
+                            if (user != null)
                             {
                                 user.LichessName = account.Username;
                                 Program.Data.Query($"UPDATE Users SET LichessName='{account.Username}' WHERE TelegramID='{args.User.Id}'");
@@ -201,8 +209,8 @@ namespace PolyChessTGBot.Bot.BotCommands
         private async Task MyInfo(CommandArgs args)
         {
             User? user = Program.Data.GetUser(args.User.Id);
-            if(user != null)
-            { 
+            if (user != null)
+            {
                 List<string> text = [$"👋 Приветствую, <b>{user.Name}</b>"];
                 if (!string.IsNullOrEmpty(user.LichessName))
                 {
@@ -246,6 +254,10 @@ namespace PolyChessTGBot.Bot.BotCommands
                         viewProgress.SetData("MeViewProgress", ("ID", args.User.Id));
                         message.AddButton(viewProgress);
 
+                        InlineKeyboardButton viewNextTournaments = new("🏟 Посмотреть будущие турниры");
+                        viewNextTournaments.SetData("ViewNextTournaments", ("ID", args.User.Id));
+                        message.AddButton(viewNextTournaments);
+
                         await args.Reply(message);
                     }
                     else
@@ -265,6 +277,13 @@ namespace PolyChessTGBot.Bot.BotCommands
             Telegram.Bot.Types.User tgUser = new() { Id = id };
             if (args.Query.Message != null)
                 await Tournaments.Send(args.Bot, args.Query.Message.Chat.Id, id == args.Query.From.Id ? args.Query.From : tgUser, args.Token);
+        }
+
+        [Button("ViewNextTournaments")]
+        private async Task ViewNextTournaments(ButtonInteractArgs args)
+        {
+            if (args.Query.Message != null)
+                await NextTournaments.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From, args.Token);
         }
 
         [Button("MeViewProgress")]
@@ -288,7 +307,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                             foreach (var player in tournament.Rating.Players)
                                 if (player.User != null && player.User.TelegramID == user.TelegramID && player.Score > -1)
                                 {
-                                    if(Program.MainConfig.TournamentRules.TryGetValue(tournament.Tournament.ID, out var rule))
+                                    if (Program.MainConfig.TournamentRules.TryGetValue(tournament.Tournament.ID, out var rule))
                                     {
                                         if (player.Score == 1)
                                             oneScoreTournaments += rule.PointsForWinning;
@@ -333,7 +352,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                     totalScore += Math.Min(visitedTournamentsCount / Program.MainConfig.Test.RequiredTournamentsCount, 1f);
 
-                    text.Add($"🤝<b>Участие в турнирах:</b>"); 
+                    text.Add($"🤝<b>Участие в турнирах:</b>");
                     text.Add($"       <b>Всего</b>: {visitedTournamentsCount} из {Program.MainConfig.Test.RequiredTournamentsCount} ({Utils.CreateSimpleBar(visitedTournamentsCount, Program.MainConfig.Test.RequiredTournamentsCount, bars: barsInBar)})");
                     text.Add("         - Не в топе: " + zeroScoreTournaments);
                     text.Add("         - В топе: " + oneScoreTournaments);
@@ -368,7 +387,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                         button.SetData("ConnectPuzzleToken");
                         msg.AddButton(button);
                     }
-                    
+
                     await args.Reply(msg);
                 }
                 else
@@ -389,16 +408,16 @@ namespace PolyChessTGBot.Bot.BotCommands
 
             static async Task OnTokenEntered(DiscreteMessageEnteredArgs args)
             {
-                if(args.Responses.Length == 1)
+                if (args.Responses.Length == 1)
                 {
                     var token = args.Responses[0].Text;
                     if (!string.IsNullOrEmpty(token))
                     {
                         var tokenInfos = await Program.Lichess.TestTokens(token);
-                        if(tokenInfos.TryGetValue(token, out var tokenInfo) && tokenInfo != null)
+                        if (tokenInfos.TryGetValue(token, out var tokenInfo) && tokenInfo != null)
                         {
                             var user = Program.Data.GetUser(args.User.Id);
-                            if(user != null)
+                            if (user != null)
                             {
                                 var lichessUser = await Program.Lichess.GetUserAsync(user.LichessName);
                                 if (lichessUser != null)
@@ -542,6 +561,51 @@ namespace PolyChessTGBot.Bot.BotCommands
                 }
             }
             return string.Empty;
+        }
+
+        private List<object> GetNextTournamentsIDs()
+        {
+            List<object> result = [];
+            foreach (var tournament in Program.Tournaments.TournamentsList)
+                if (tournament.Tournament.StartDate > DateTime.UtcNow && tournament.Tournament.StartDate < Program.SemesterEndDate)
+                    result.Add(tournament);
+            foreach (var tournament in Program.Tournaments.SwissTournamentsList)
+                if (tournament.Tournament.Started > DateTime.UtcNow && tournament.Tournament.Started < Program.SemesterEndDate)
+                    result.Add(tournament);
+            return new List<object>([.. from r in result orderby (r is ArenaTournamentInfo t ? t.Tournament.StartDate : r is SwissTournamentInfo s ? s.Tournament.Started : DateTime.Now) select r]);
+        }
+
+        private string NextTournamentToString(object info, int index, Telegram.Bot.Types.User user)
+        {
+            List<string> result = [];
+            if (info is ArenaTournamentInfo arenaTournamentInfo)
+            {
+                if (arenaTournamentInfo != null)
+                {
+                    var tournament = arenaTournamentInfo.Tournament;
+                    result.Add($"\U0001f91d Турнир <b><a href=\"https://lichess.org/tournament/{tournament.ID}\">{tournament.FullName}</a></b>.");
+                    result.Add($" - Состоится: <b>{tournament.StartDate.AddHours(3):g}</b>");
+                    result.Add($" - Закончится: <b>{tournament.FinishDate.AddHours(3):g}</b>");
+                    result.Add($" - Время: <b>{TimeSpan.FromSeconds(tournament.Clock.Limit).Minutes}+{tournament.Clock.Increment}</b>");
+                    result.Add($" - Длительность: <b>{TimeSpan.FromMinutes(tournament.Minutes):hh\\:mm}</b>");
+                    result.Add($" - Доступен ли Берсерк: <b>{(tournament.Berserkable ? "Да" : "Нет")}</b>");
+                    result.Add($" - Рейтинговый: <b>{(tournament.Rated ? "Да" : "Нет")}</b>"); 
+                }
+            }
+            else if (info is SwissTournamentInfo swissTournamentInfo)
+            {
+                if (swissTournamentInfo != null)
+                {
+                    var tournament = swissTournamentInfo.Tournament;
+                    result.Add($"🇨🇭 Турнир <b><a href=\"https://lichess.org/swiss/{tournament.ID}\">{tournament.Name}</a></b>.");
+                    result.Add($" - Состоится: <b>{tournament.Started.AddHours(3):g}</b>");
+                    result.Add($" - Время: <b>{TimeSpan.FromSeconds(tournament.Clock.Limit).Minutes}+{tournament.Clock.Increment}</b>");
+                    result.Add($" - Количество партий: <b>{tournament.RoundsNumber}</b>");
+                    result.Add($" - Рейтинговый: <b>{(tournament.Rated ? "Да" : "Нет")}</b>");
+                }
+            }
+            result.Add("");
+            return string.Join("\n", result);
         }
     }
 }

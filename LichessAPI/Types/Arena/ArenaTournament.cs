@@ -28,9 +28,7 @@ namespace LichessAPI.Types.Arena
         [JsonConverter(typeof(LichessDateTimeConverter))]
         public DateTime StartDate;
 
-        [JsonPropertyName("finishesAt")]
-        [JsonConverter(typeof(LichessDateTimeConverter))]
-        public DateTime FinishDate;
+        public DateTime FinishDate => StartDate.AddMinutes(Minutes);
 
         public string System = string.Empty;
 
