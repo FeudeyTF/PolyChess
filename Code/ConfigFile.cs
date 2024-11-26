@@ -8,6 +8,8 @@ namespace PolyChessTGBot
 
         public long QuestionChannel;
 
+        public long CreativeTaskChannel;
+
         public string LogsFolder = "Logs";
 
         public string DatabasePath = "data.sqlite";
