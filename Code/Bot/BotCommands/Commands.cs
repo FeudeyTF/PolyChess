@@ -42,7 +42,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             await args.Reply(string.Join("\n", message));
         }
 
-        [DiscreteCommand("task", "Отправляет выполненное творческое задание Павлу", ["Отправьте сообщение с файлом с выполненным заданием"], true)]
+        [DiscreteCommand("task", "Отправляет выполненное творческое задание Павлу", ["Отправьте сообщение с файлом с выполненным заданием"])]
         private async Task SendCreativeTask(CommandArgs<Message> args)
         {
             if (args.Parameters.Count == 1)
@@ -58,8 +58,8 @@ namespace PolyChessTGBot.Bot.BotCommands
                             List<string> text = ["Пришло выполненное творческое задание!"];
                             text.Add($"Студент: <b>{user.Name}</b>");
                             text.Add($"Курс: <b>{user.Year}</b>");
-                            text.Add($"Сообщение:");
-                            text.Add(msg.Text ?? msg.Caption ?? "Студент не отправлял текстового сообщения");
+                            text.Add($"Сообщение от студента:");
+                            text.Add($"<b>{msg.Text ?? msg.Caption ?? "Студент не отправлял текстового сообщения"}</b>");
                             TelegramMessageBuilder message = new(string.Join("\n", text));
                             message.WithFile(msg.Document.FileId);
 
@@ -96,10 +96,14 @@ namespace PolyChessTGBot.Bot.BotCommands
                 {
                     user.CreativeTaskCompleted = true;
                     Program.Data.Query($"UPDATE Users SET CreativeTaskCompleted='1' WHERE TelegramID='{telegramID}'");
-                    await args.Bot.SendMessage($"Ваше творческое задание было принято! Поздравляю, вы - молодец", telegramID);
-                    args.Query.Message.Text = "[ПРОВЕРЕНО]\n" + args.Query.Message.Chat.Id;
-                    await args.Bot.EditMessage(args.Query.Message, args.Query.Message.Chat.Id, args.Query.Message);
-                    await args.Reply($"Вы успешно оценили задание студента <b>{user.Name}</b>");
+                    await args.Bot.SendMessage($"Ваше творческое задание было <b>принято</b>! Поздравляю, вы - <b>молодец</b>", telegramID);
+                  
+                    TelegramMessageBuilder builder = new("[ПРИНЯТО]\n" + (args.Query.Message.Text ?? args.Query.Message.Caption));
+                    if(args.Query.Message.Document != null)
+                        builder.WithFile(args.Query.Message.Document.FileId);
+
+                    await args.Bot.EditMessage(builder, args.Query.Message.Chat.Id, args.Query.Message);
+                    await args.Reply($"Вы успешно <b>приняли</b> задание студента <b>{user.Name}</b>");
                 }
                 else
                     await args.Reply("Студент не был найден!");
@@ -107,26 +111,31 @@ namespace PolyChessTGBot.Bot.BotCommands
         }
 
         [Button("CreativeTaskDecline")]
-        private async Task CreativeTaskDecline(ButtonInteractArgs args)
+        private async Task CreativeTaskDecline(ButtonInteractArgs buttonArgs)
         {
-            if (args.Query.Message != null)
-                await args.SendDiscreteMessage(
-                    args.Query.Message.Chat.Id,
-                    ["Введите причину отказа"],
+            if (buttonArgs.Query.Message != null)
+                await buttonArgs.SendDiscreteMessage(
+                    buttonArgs.Query.Message.Chat.Id,
+                    ["Введите причину отклонения"],
                     OnCreativeTaskMessageEntered,
-                    data: args.GetLongNumber("ID")
+                    data: buttonArgs.GetLongNumber("ID")
                 );
 
-            static async Task OnCreativeTaskMessageEntered(DiscreteMessageEnteredArgs args)
+            async Task OnCreativeTaskMessageEntered(DiscreteMessageEnteredArgs args)
             {
-                if(args.Responses.Length == 0)
+                if(args.Responses.Length == 1 && buttonArgs.Query.Message != null)
                 {
                     var telegramID = (long)args.Data[0];
                     var user = Program.Data.GetUser(telegramID);
                     if (user != null)
                     {
-                        await args.Bot.SendMessage($"Ваше творческое задание не было принято по причине:\n{args.Responses[0].Text}", telegramID);
-                        await args.Reply($"Вы успешно отвергли задание студента <b>{user.Name}</b>");
+                        TelegramMessageBuilder builder = new("[ПРИНЯТО]\n" + (buttonArgs.Query.Message.Text ?? buttonArgs.Query.Message.Caption));
+                        if (buttonArgs.Query.Message.Document != null)
+                            builder.WithFile(buttonArgs.Query.Message.Document.FileId);
+                        
+                        await args.Bot.EditMessage(builder, buttonArgs.Query.Message.Chat.Id, buttonArgs.Query.Message);
+                        await args.Bot.SendMessage($"Ваше творческое задание <b>было отклонено</b> по причине:\n{args.Responses[0].Text}", telegramID);
+                        await args.Reply($"Вы успешно <b>отклонили</b> задание студента <b>{user.Name}</b>");
                     }
                     else
                         await args.Reply("Студент не был найден!");
