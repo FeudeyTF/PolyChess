@@ -1,5 +1,4 @@
 ﻿using LichessAPI.Clients.Authorized;
-using LichessAPI.Types;
 using LichessAPI.Types.Arena;
 using LichessAPI.Types.Swiss;
 using LichessAPI.Types.Tokens;

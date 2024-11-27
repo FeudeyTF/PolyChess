@@ -1,4 +1,3 @@
-using LichessAPI.Types;
 using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Commands.Basic;
@@ -6,10 +5,8 @@ using PolyChessTGBot.Bot.Commands.Discrete;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Bot.Messages.Discrete;
 using PolyChessTGBot.Extensions;
-using PolyChessTGBot.Managers.Tournaments;
 using System.Diagnostics;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using File = System.IO.File;
