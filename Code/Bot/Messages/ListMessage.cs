@@ -15,7 +15,7 @@ namespace PolyChessTGBot.Bot.Messages
 
         public string Footer;
 
-        public Func<List<TValue>> GetValues;
+        public Func<User, List<TValue>> GetValues;
 
         public Func<TValue, int, User, string> ConvertValueToString;
 
@@ -32,6 +32,11 @@ namespace PolyChessTGBot.Bot.Messages
         public List<List<ListMessageButton<List<TValue>>>> AdditionalKeyboards;
 
         public ListMessage(string id, Func<List<TValue>> getValues, Func<TValue, int, User, string> processString, int valuesPerPage = 10, bool showPagesCount = true, string nextButtonText = "➡️", string previousButtonText = "⬅️", List<List<ListMessageButton<List<TValue>>>>? additionalKeyboards = default)
+            :this(id, (user) => getValues.Invoke(), processString, valuesPerPage, showPagesCount, nextButtonText, previousButtonText, additionalKeyboards)
+        {
+        }
+
+        public ListMessage(string id, Func<User, List<TValue>> getValues, Func<TValue, int, User, string> processString, int valuesPerPage = 10, bool showPagesCount = true, string nextButtonText = "➡️", string previousButtonText = "⬅️", List<List<ListMessageButton<List<TValue>>>>? additionalKeyboards = default)
         {
             ID = id;
             Header = "";
@@ -53,7 +58,7 @@ namespace PolyChessTGBot.Bot.Messages
 
         public async Task Send(TelegramBotClient bot, long channelID, User user, CancellationToken token)
         {
-            var values = GetValues();
+            var values = GetValues(user);
             if (values.Count != 0)
             {
                 string text = Header + "\n";
@@ -139,7 +144,7 @@ namespace PolyChessTGBot.Bot.Messages
                 foreach (var keyboard in AdditionalKeyboards)
                     foreach(var button in keyboard)
                         if (button.ID + ID == args.ButtonID)
-                            await button.Delegate(args, FindValues(args.GetNumber("Page")));
+                            await button.Delegate(args, FindValues(args.GetNumber("Page"), args.Query.From));
             }
         }
 
@@ -147,7 +152,7 @@ namespace PolyChessTGBot.Bot.Messages
         {
             if (args.Query != null && args.Query.Message != null)
             {
-                var values = GetValues();
+                var values = GetValues(args.Query.From);
                 int page = args.GetNumber("Page");
                 int pages = GetPagesCount(values.Count);
                 var userID = args.GetLongNumber("TID");
@@ -178,7 +183,7 @@ namespace PolyChessTGBot.Bot.Messages
         {
             if (args.Query != null && args.Query.Message != null)
             {
-                var values = GetValues();
+                var values = GetValues(args.Query.From);
                 int page = args.GetNumber("Page");
                 int pages = GetPagesCount(values.Count);
                 var userID = args.GetLongNumber("TID");
@@ -206,18 +211,18 @@ namespace PolyChessTGBot.Bot.Messages
             }
         }
 
-        public TValue? FindValue(int index)
+        public TValue? FindValue(int index, User user)
         {
-            var values = GetValues();
+            var values = GetValues(user);
             if (values.Count > index)
                 return values[index];
             return default;
         }
 
-        public List<TValue> FindValues(int page)
+        public List<TValue> FindValues(int page, User user)
         {
             List<TValue> result = [];
-            var values = GetValues();
+            var values = GetValues(user);
             int startIndex = (page - 1) * ValuesPerPage;
             for (int i = startIndex; i < startIndex + (values.Count - startIndex > ValuesPerPage ? ValuesPerPage : values.Count - startIndex); i++)
                 result.Add(values[i]);

@@ -460,14 +460,14 @@ namespace PolyChessTGBot.Bot.BotCommands
             }
         }
 
-        private List<object> GetTournamentsIDs()
+        private List<object> GetTournamentsIDs(Telegram.Bot.Types.User user)
         {
             List<object> result = [];
             foreach (var tournament in Program.Tournaments.TournamentsList)
-                if (tournament.Tournament.StartDate < DateTime.UtcNow)
+                if (tournament.Tournament.StartDate < DateTime.UtcNow && tournament.Rating.Players.Any(p => p.User != null && p.User.TelegramID == user.Id))
                     result.Add(tournament);
             foreach (var tournament in Program.Tournaments.SwissTournamentsList)
-                if (tournament.Tournament.Started < DateTime.UtcNow)
+                if (tournament.Tournament.Started < DateTime.UtcNow && tournament.Rating.Players.Any(p => p.User != null && p.User.TelegramID == user.Id))
                     result.Add(tournament);
             return new List<object>([.. from r in result orderby (r is ArenaTournamentInfo t ? t.Tournament.StartDate : r is SwissTournamentInfo s ? s.Tournament.Started : DateTime.Now) descending select r]);
         }
