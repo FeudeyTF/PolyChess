@@ -366,14 +366,14 @@ namespace PolyChessTGBot.Bot.BotCommands
                             text.Add($"🧩<b>Решение пазлов:</b> {puzzleDashboard.Global.FirstWins} из {Program.MainConfig.Test.RequiredPuzzlesSolved} ({Utils.CreateSimpleBar(puzzleDashboard.Global.FirstWins, Program.MainConfig.Test.RequiredPuzzlesSolved, bars: barsInBar)})");
                         }
                         else
-                            text.Add($"🧩<b>Решение пазлов:</b> Токен не подключён!");
+                            text.Add($"🧩<b>Решение пазлов:</b> Данные не были получены!");
                     }
                     else
-                        text.Add($"🧩<b>Решение пазлов:</b> Токен не верен!");
+                        text.Add($"🧩<b>Решение пазлов:</b> Токен не подключён!");
 
                     float creativeTask = user.CreativeTaskCompleted ? 1f : 0f;
                     totalScore += creativeTask;
-                    text.Add($"🧠<b>Творческое задание:</b> {Utils.CreateSimpleBar(creativeTask, 1, bars: 1)} Не выполнено!");
+                    text.Add($"🧠<b>Творческое задание:</b> {Utils.CreateSimpleBar(creativeTask, 1, bars: 1)} {(creativeTask == 1 ? "Не в" : "В")}ыполнено!");
 
                     text.Add("");
                     text.Add("📊<b>Полный прогресс:</b>");
