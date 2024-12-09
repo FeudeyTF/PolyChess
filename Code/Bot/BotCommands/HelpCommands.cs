@@ -31,6 +31,8 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private readonly ListMessage<object> NextTournaments;
 
+        private readonly ListMessage<Event> Events;
+
         private readonly Dictionary<long, (string Name, string FlairID)> AccountVerifyCodes;
 
         public BotCommands()
@@ -69,6 +71,11 @@ namespace PolyChessTGBot.Bot.BotCommands
                 true,
                 "Далее ➡️",
                 "⬅️ Назад");
+
+            Events = new("events", GetCurrentEvents, EventToString, 5)
+            {
+                Header = "<b>Текущие события:</b>"
+            };
 
             AccountVerifyCodes = [];
             FAQEntries = Program.Data.GetFAQEntries();
@@ -113,6 +120,26 @@ namespace PolyChessTGBot.Bot.BotCommands
                 else
                     await args.Reply("Неправильно введён вопрос!");
             }
+        }
+
+        private string EventToString(Event e, int index, Telegram.Bot.Types.User user)
+        {
+            List<string> msg = [$"Событие <b>{e.Name}</b>:"];
+            msg.Add(e.Description);
+            msg.Add($"Началось: <b>{e.Start:g}</b>");
+            msg.Add($"Закончится: <b>{e.End:g}</b> (через {e.End - DateTime.Now:%d' д. '%h' ч. '%m' м.'})");
+            return string.Join("\n", msg);
+        }
+
+        private List<Event> GetCurrentEvents()
+        {
+            return Program.Data.Events.Where(e => e.Start < DateTime.Now && e.End > DateTime.Now).ToList();
+        }
+
+        [Command("events", "Показывает события, которые сейчас идут", true)]
+        private async Task SendEvents(CommandArgs args)
+        {
+            await Events.Send(args.Bot, args.Message.Chat.Id, args.User, args.Token);
         }
 
         [Command("help", "Выдаёт список с полезными материалами", true)]

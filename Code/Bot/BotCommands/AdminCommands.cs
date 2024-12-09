@@ -78,6 +78,9 @@ namespace PolyChessTGBot.Bot.BotCommands
             addOtherTournaments.SetData("AddOtherTournaments");
             msg.AddButton(addOtherTournaments);
 
+            InlineKeyboardButton addEvent = new("Добавить событие");
+            addEvent.SetData("AddEvent");
+            msg.AddButton(addEvent);
 
             await args.Reply(msg.WithText(string.Join("\n", text)));
         }
@@ -1035,10 +1038,59 @@ namespace PolyChessTGBot.Bot.BotCommands
                             Program.Data.Query($"UPDATE Users SET OtherTournaments='{++student.OtherTournaments}' WHERE TelegramID='{student.TelegramID}'");
 
                         await args.Reply($"Дополнительный бапл был поставлен следующим студентам: {string.Join(", ", addedUsers.Select(u => $"<b>{u.Name}</b>"))}");
+                        await args.Reply($"Оставшиеся студенты: {string.Join(", ", studentsNames)}");
                     }
                 }
             }
     }
 
+        [Button("AddEvent")]
+        private async Task AddEvent(ButtonInteractArgs args)
+        {
+
+            if (args.Query.Message != null)
+                await args.SendDiscreteMessage(
+                    args.Query.Message.Chat.Id,
+                    ["Введите название события",
+                    "Введите описание события",
+                    "Введите дату начала события (- - текущая дата)",
+                    "Введите дату конца события"],
+                    OnEventInfoEntered);
+
+            static async Task OnEventInfoEntered(DiscreteMessageEnteredArgs args)
+            {
+                if (args.Responses.Length == 4)
+                {
+                    var name = args.Responses[0].Text;
+                    var description = args.Responses[1].Text;
+                    var startFormat = args.Responses[2].Text;
+                    var endFormat = args.Responses[3].Text;
+                    if(name != null && description != null && startFormat != null && endFormat != null)
+                    {
+                        DateTime start;
+                        if (startFormat == "-")
+                            start = DateTime.Now;
+                        else if (!DateTime.TryParse(startFormat, out start))
+                            await args.Reply("Неправильный формат начальной даты!");
+                        if (DateTime.TryParse(endFormat, out var end))
+                        {
+                            if (start < end)
+                            {
+                                Program.Data.InsertEvent(new Event(name, description, start, end));
+                                await args.Reply($"Событие <b>{name}</b> было успешно добавлено!");
+                            }
+                            else
+                                await args.Reply("Конечная дата не может быть раньше!");
+                        }
+                        else
+                            await args.Reply("Неправильный формат конечной даты!");
+                    }
+                    else
+                        await args.Reply("Один из параметров не был введён!");
+                }
+                else
+                    await args.Reply("Вы ввели неправильно кол-во аргументов!");
+            }
+        }
     }
 }

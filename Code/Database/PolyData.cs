@@ -1,5 +1,4 @@
 ﻿using Microsoft.Data.Sqlite;
-
 namespace PolyChessTGBot.Database
 {
     internal class PolyData
@@ -7,6 +6,8 @@ namespace PolyChessTGBot.Database
         public string DatabaseName => DB.Database;
 
         public List<User> Users;
+
+        public List<Event> Events;
 
         private readonly SqliteConnection DB;
 
@@ -18,6 +19,7 @@ namespace PolyChessTGBot.Database
                 Directory.CreateDirectory(dirName);
             DB = new(string.Format("Data Source={0}", sqlPath));
             Users = GetAllUsers();
+            Events = GetAllEvents();
         }
 
         public void LoadTables()
@@ -47,6 +49,18 @@ namespace PolyChessTGBot.Database
                   "Footer          Text," +
                   "FileID          Text" +
                   ")");
+            Query("CREATE TABLE IF NOT EXISTS Events (" +
+                  "Name            TEXT," +
+                  "Description      TEXT," +
+                  "Start           NUMERIC," +
+                  "End             NUMERIC" +
+                  ")");
+        }
+
+        public void InsertEvent(Event e)
+        {
+            Query($"INSERT INTO Events (Name, Description, Start, End) VALUES ('{e.Name}', '{e.Description}', '{e.Start.Ticks}', '{e.End.Ticks}')");
+            Events.Add(e);
         }
 
         public User? GetUser(long telegramID)
@@ -63,6 +77,15 @@ namespace PolyChessTGBot.Database
             using var reader = SelectQuery($"SELECT * FROM Users");
             while (reader.Read())
                 result.Add(new(reader.Get<long>("TelegramID"), reader.Get("Name"), reader.Get("LichessName"), reader.Get<int>("Year"), reader.Get<int>("CreativeTaskCompleted"), reader.Get<string>("TokenKey"), reader.Get<int>("OtherTournaments")));
+            return result;
+        }
+
+        private List<Event> GetAllEvents()
+        {
+            List<Event> result = [];
+            using var reader = SelectQuery($"SELECT * FROM Events");
+            while (reader.Read())
+                result.Add(new(reader.Get("Name"), reader.Get("Description"), new DateTime(reader.Get<long>("Start")), new DateTime(reader.Get<long>("End"))));
             return result;
         }
 
