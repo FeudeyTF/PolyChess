@@ -345,7 +345,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                                     break;
                                 }
 
-                    float visitedTournamentsCount = zeroScoreTournaments + oneScoreTournaments;
+                    float visitedTournamentsCount = zeroScoreTournaments + oneScoreTournaments + user.OtherTournaments;
                     List<string> text = ["📌<b>Ваш прогресс по выполнению регламента зачёта:</b>"];
                     text.Add("📚<b>Посещение занятий:</b> Недоступно");
 
@@ -355,6 +355,8 @@ namespace PolyChessTGBot.Bot.BotCommands
                     text.Add($"       <b>Всего</b>: {visitedTournamentsCount} из {Program.MainConfig.Test.RequiredTournamentsCount} ({Utils.CreateSimpleBar(visitedTournamentsCount, Program.MainConfig.Test.RequiredTournamentsCount, bars: barsInBar)})");
                     text.Add("         - Не в топе: " + zeroScoreTournaments);
                     text.Add("         - В топе: " + oneScoreTournaments);
+                    if(user.OtherTournaments != 0)
+                        text.Add("         - Дополнительно: " + user.OtherTournaments);
 
                     if (!string.IsNullOrEmpty(user.TokenKey))
                     {
@@ -373,7 +375,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                     float creativeTask = user.CreativeTaskCompleted ? 1f : 0f;
                     totalScore += creativeTask;
-                    text.Add($"🧠<b>Творческое задание:</b> {Utils.CreateSimpleBar(creativeTask, 1, bars: 1)} {(creativeTask == 1 ? "Не в" : "В")}ыполнено!");
+                    text.Add($"🧠<b>Творческое задание:</b> {Utils.CreateSimpleBar(creativeTask, 1, bars: 1)} {(user.CreativeTaskCompleted ? "В" : "Не в")}ыполнено!");
 
                     text.Add("");
                     text.Add("📊<b>Полный прогресс:</b>");

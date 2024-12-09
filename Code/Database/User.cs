@@ -1,6 +1,6 @@
 ﻿namespace PolyChessTGBot.Database
 {
-    public class User(long telegramID, string name, string lichessName, long year, int creativeTaskCompleted, string? tokenKey)
+    public class User(long telegramID, string name, string lichessName, long year, int creativeTaskCompleted, string? tokenKey, int otherTournaments)
     {
         public long TelegramID = telegramID;
 
@@ -13,6 +13,8 @@
         public bool CreativeTaskCompleted = creativeTaskCompleted != 0;
 
         public string? TokenKey = tokenKey;
+
+        public int OtherTournaments = otherTournaments;
 
         public override string ToString()
         {

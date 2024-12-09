@@ -8,6 +8,7 @@ using PolyChessTGBot.Bot.Messages.Discrete;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
 using PolyChessTGBot.Managers.Tournaments;
+using System.Linq;
 using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -72,6 +73,11 @@ namespace PolyChessTGBot.Bot.BotCommands
             InlineKeyboardButton viewTeamsMembers= new("Посмотреть количество участников от команды");
             viewTeamsMembers.SetData("ViewTeamsMembers");
             msg.AddButton(viewTeamsMembers);
+
+            InlineKeyboardButton addOtherTournaments = new("Добавить доп. турниры");
+            addOtherTournaments.SetData("AddOtherTournaments");
+            msg.AddButton(addOtherTournaments);
+
 
             await args.Reply(msg.WithText(string.Join("\n", text)));
         }
@@ -932,8 +938,8 @@ namespace PolyChessTGBot.Bot.BotCommands
                                     if (tournament != null)
                                     {
                                         Dictionary<string, int> teams = [];
-                                        foreach(var entry in tournament)
-                                            if(entry.Team != null)
+                                        foreach (var entry in tournament)
+                                            if (entry.Team != null)
                                             {
                                                 if (teams.TryGetValue(entry.Team, out var count))
                                                     teams[entry.Team] = ++count;
@@ -941,9 +947,9 @@ namespace PolyChessTGBot.Bot.BotCommands
                                                     teams.Add(entry.Team, 1);
                                             }
                                         teams = (from team in teams
-                                                orderby team.Value
-                                                descending
-                                                select team).ToDictionary();
+                                                 orderby team.Value
+                                                 descending
+                                                 select team).ToDictionary();
 
                                         List<string> text = [
                                             "Команды по количеству участников в турнире",
@@ -981,5 +987,58 @@ namespace PolyChessTGBot.Bot.BotCommands
                 }
             }
         }
+
+        [Button("AddOtherTournaments")]
+        private async Task AddOtherTournaments(ButtonInteractArgs args)
+        {
+            if (args.Query.Message != null)
+                await args.SendDiscreteMessage(
+                    args.Query.Message.Chat.Id,
+                    ["Введите имена студентов, которым нужно проставить дополнительный балл за турниры."],
+                    OnAddTournamentsEntered);
+            static async Task OnAddTournamentsEntered(DiscreteMessageEnteredArgs args)
+            {
+                if (args.Responses.Length == 1)
+                {
+                    var text = args.Responses[0].Text;
+                    if (text != null)
+                    {
+
+                        List<string> studentsNames = (from name in text.Split(',')
+                                                      select name.Trim()).ToList();
+                        List<User> addedUsers = [];
+                        foreach (var user in Program.Data.Users)
+                            if (studentsNames.Remove(user.Name))
+                                addedUsers.Add(user);
+
+                        foreach (var user in Program.Data.Users)
+                        {
+                            foreach(var name in new List<string>(studentsNames))
+                                if (user.Name.Contains(name))
+                                {
+                                    studentsNames.Remove(name);
+                                    addedUsers.Add(user);
+                                }
+                        }
+
+                        foreach (var user in Program.Data.Users)
+                        {
+                            foreach (var name in new List<string>(studentsNames))
+                                if (user.Name.Contains(name, StringComparison.CurrentCultureIgnoreCase))
+                                {
+                                    studentsNames.Remove(name);
+                                    addedUsers.Add(user);
+                                }
+                        }
+
+                        foreach (var student in addedUsers)
+                            Program.Data.Query($"UPDATE Users SET OtherTournaments='{++student.OtherTournaments}' WHERE TelegramID='{student.TelegramID}'");
+
+                        await args.Reply($"Дополнительный бапл был поставлен следующим студентам: {string.Join(", ", addedUsers.Select(u => $"<b>{u.Name}</b>"))}");
+                    }
+                }
+            }
+    }
+
     }
 }
