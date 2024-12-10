@@ -18,6 +18,13 @@ namespace PolyChessTGBot.Database
             if (dirName != null)
                 Directory.CreateDirectory(dirName);
             DB = new(string.Format("Data Source={0}", sqlPath));
+            Users = [];
+            Events = [];
+        }
+
+        public void Initialize()
+        {
+            LoadTables();
             Users = GetAllUsers();
             Events = GetAllEvents();
         }

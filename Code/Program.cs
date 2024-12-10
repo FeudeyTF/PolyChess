@@ -47,7 +47,7 @@ namespace PolyChessTGBot
             Logger.Write($"Программа версии {FileVersionInfo.GetVersionInfo(exeFilePath).FileVersion} от {File.GetLastWriteTime(exeFilePath):g}", LogType.Info); 
 
             Data = new(MainConfig.DatabasePath);
-            Data.LoadTables();
+            Data.Initialize();
             Logger.Write($"База данных '{Data.DatabaseName}' подключена!", LogType.Info);
             Tournaments = new();
 

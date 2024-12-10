@@ -3,6 +3,7 @@ using LichessAPI.Types.Arena;
 using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Bot.Commands;
 using PolyChessTGBot.Bot.Commands.Basic;
+using PolyChessTGBot.Bot.Commands.Discrete;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Bot.Messages.Discrete;
 using PolyChessTGBot.Database;
@@ -11,7 +12,9 @@ using PolyChessTGBot.Managers.Tournaments;
 using System.Linq;
 using System.Text;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
+using File = System.IO.File;
 using User = PolyChessTGBot.Database.User;
 
 namespace PolyChessTGBot.Bot.BotCommands
@@ -1047,7 +1050,6 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Button("AddEvent")]
         private async Task AddEvent(ButtonInteractArgs args)
         {
-
             if (args.Query.Message != null)
                 await args.SendDiscreteMessage(
                     args.Query.Message.Chat.Id,
@@ -1091,6 +1093,35 @@ namespace PolyChessTGBot.Bot.BotCommands
                 else
                     await args.Reply("Вы ввели неправильно кол-во аргументов!");
             }
+        }
+
+        [DiscreteCommand("sendinfo", "Рассылает сообщение ВСЕМ студентам", ["Введите сообщение для рассылки или -, если хотите отменить отправку"], admin: true)]
+        private async Task SendMessageToAllStudents(CommandArgs<Message> args)
+        {
+            if (args.Parameters.Count == 1)
+            {
+                var text = args.Parameters[0].Text;
+                if (text != null)
+                {
+                    if (text == "-")
+                    {
+                        await args.Reply("Вы отменили отправку сообщения!");
+                        return;
+                    }
+                    TelegramMessageBuilder msg = string.Join("\n", [
+                        text,
+                        $"Рассылку отправил: <b>{args.User.FirstName}</b>"
+                        ]);
+                    msg.WithToken(args.Token);
+                    foreach (var student in Program.Data.Users)
+                        await args.Bot.SendMessage(msg, student.TelegramID);
+                    await args.Reply("Вы успешно отослали сообщение студентам! Их количество: " + Program.Data.Users.Count);
+                }
+                else
+                    await args.Reply("Необходимо ввести сообщение!");
+            }
+            else
+                await args.Reply("Необходимо ввести сообщение!");
         }
     }
 }
