@@ -102,20 +102,26 @@ namespace PolyChessTGBot.Bot.BotCommands
                 var question = args.Parameters[0];
                 if (!string.IsNullOrEmpty(question.Text))
                 {
-                    List<string> text =
-                    [
-                        "<b><u>Вопрос от пользователя!</u></b>🙋‍",
-                        $"👤<b>Ник пользователя:</b> @{args.User.Username}",
-                        $"👤<b>Имя пользователя:</b> {args.User.FirstName} {args.User.LastName}",
-                        $"🕑<b>Дата отправки:</b> {question.Date:G}",
-                        $"❓<b>Вопрос:</b>\n{question.Text}"
-                    ];
-                    InlineKeyboardButton button = new("Данные");
-                    button.SetData("QuestionDataID", ("ID", args.User.Id), ("ChannelID", question.MessageId));
-                    var message = new TelegramMessageBuilder(string.Join("\n", text))
-                        .AddButton(button);
-                    await args.Bot.SendMessage(message.WithToken(args.Token), Program.MainConfig.QuestionChannel);
-                    await args.Reply("Ваш вопрос был успешно отправлен!");
+                    var user = Program.Data.GetUser(args.User.Id);
+                    if (user != null)
+                    {
+                        List<string> text =
+                        [
+                            "<b><u>Вопрос от пользователя!</u></b>🙋‍",
+                            $"👤<b>Ник пользователя:</b> @{args.User.Username}",
+                            $"👤<b>Имя студента:</b> {user.Name}",
+                            $"🕑<b>Дата отправки:</b> {question.Date:G}",
+                            $"❓<b>Вопрос:</b>\n{question.Text}"
+                        ];
+                        InlineKeyboardButton button = new("Данные");
+                        button.SetData("QuestionDataID", ("ID", args.User.Id), ("ChannelID", question.MessageId));
+                        var message = new TelegramMessageBuilder(string.Join("\n", text))
+                            .AddButton(button);
+                        await args.Bot.SendMessage(message.WithToken(args.Token), Program.MainConfig.QuestionChannel);
+                        await args.Reply("Ваш вопрос был успешно отправлен!");
+                    }
+                    else
+                        await args.Reply("Вы не студент СПбПУ!");
                 }
                 else
                     await args.Reply("Неправильно введён вопрос!");

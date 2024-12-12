@@ -68,6 +68,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                             message.AddKeyboard([approveButton, declineButton]);
 
                             await args.Bot.SendMessage(message, Program.MainConfig.CreativeTaskChannel);
+                            await args.Reply("Творческое задание было успешно отправлено!");
                         }
                         else
                             await args.Reply("Вы уже выполнили творческое задание!");
