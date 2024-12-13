@@ -485,10 +485,13 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Button("LookGraduated")]
         private async Task LookGraduated(ButtonInteractArgs args)
         {
-            await args.Reply("Идёт подсчёт, ожидайте...");
+            args.Reply("Идёт подсчёт, ожидайте...");
             List<string> graduatedUsers = []; 
             foreach (var user in Program.Data.Users)
             {
+                if (string.IsNullOrEmpty(user.TokenKey))
+                    continue;
+
                 if (!string.IsNullOrEmpty(user.LichessName))
                 {
                     int tournamentsCount = user.OtherTournaments;
@@ -537,14 +540,10 @@ namespace PolyChessTGBot.Bot.BotCommands
                                 }
 
                     int puzzleCount = -1;
-
-                    if (!string.IsNullOrEmpty(user.TokenKey))
-                    {
-                        var lichesAuthUser = new LichessAuthorizedClient(user.TokenKey);
-                        var puzzleDashboard = await lichesAuthUser.GetPuzzleDashboard((int)(DateTime.Now - Program.SemesterStartDate).TotalDays);
-                        if (puzzleDashboard != null)
-                            puzzleCount = puzzleDashboard.Global.FirstWins;
-                    }
+                    LichessAuthorizedClient lichesAuthUser = new(user.TokenKey);
+                    var puzzleDashboard = await lichesAuthUser.GetPuzzleDashboard((int)(DateTime.Now - Program.SemesterStartDate).TotalDays);
+                    if (puzzleDashboard != null)
+                        puzzleCount = puzzleDashboard.Global.FirstWins;
 
                     if (puzzleCount >= Program.MainConfig.Test.RequiredPuzzlesSolved &&
                         tournamentsCount >= Program.MainConfig.Test.RequiredTournamentsCount &&
