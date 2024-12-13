@@ -1,4 +1,5 @@
-﻿using LichessAPI.Types;
+﻿using LichessAPI.Clients.Authorized;
+using LichessAPI.Types;
 using LichessAPI.Types.Arena;
 using PolyChessTGBot.Bot.Buttons;
 using PolyChessTGBot.Bot.Commands;
@@ -68,6 +69,10 @@ namespace PolyChessTGBot.Bot.BotCommands
             InlineKeyboardButton lookPlayer = new("🔍 Посмотреть информацию о студенте");
             lookPlayer.SetData("LookPlayer");
             msg.AddButton(lookPlayer);
+
+            InlineKeyboardButton lookGraduated = new("🔍 Посмотреть студентов, получивших зачёт");
+            lookGraduated.SetData("LookGraduated");
+            msg.AddButton(lookGraduated);
 
             InlineKeyboardButton viewTournamentsTop = new("🔝 Посмотреть лучших по турнирам студентов");
             viewTournamentsTop.SetData("ViewTournamentsTop");
@@ -475,6 +480,82 @@ namespace PolyChessTGBot.Bot.BotCommands
             }
             else
                 await args.Reply("Аккаунт Lichess не найден!");
+        }
+
+        [Button("LookGraduated")]
+        private async Task LookGraduated(ButtonInteractArgs args)
+        {
+            await args.Reply("Идёт подсчёт, ожидайте...");
+            List<string> graduatedUsers = []; 
+            foreach (var user in Program.Data.Users)
+            {
+                if (!string.IsNullOrEmpty(user.LichessName))
+                {
+                    int tournamentsCount = user.OtherTournaments;
+                    foreach (var tournament in Program.Tournaments.TournamentsList)
+                        if (tournament.Tournament.StartDate < DateTime.UtcNow)
+                            foreach (var player in tournament.Rating.Players)
+                                if (player.User != null && player.User.TelegramID == user.TelegramID && player.Score > -1)
+                                {
+                                    if (Program.MainConfig.TournamentRules.TryGetValue(tournament.Tournament.ID, out var rule))
+                                    {
+                                        if (player.Score == 1)
+                                            tournamentsCount += rule.PointsForWinning;
+                                        else if (player.Score == 0)
+                                            tournamentsCount += rule.PointsForBeing;
+                                    }
+                                    else
+                                    {
+                                        if (player.Score == 1)
+                                            tournamentsCount += TournamentScoreRule.DEFAULT_POINTS_FOR_WINNING;
+                                        else if (player.Score == 0)
+                                            tournamentsCount += TournamentScoreRule.DEFAULT_POINTS_FOR_BEING;
+                                    }
+                                    break;
+                                }
+
+                    foreach (var tournament in Program.Tournaments.SwissTournamentsList)
+                        if (tournament.Tournament.Started < DateTime.UtcNow)
+                            foreach (var player in tournament.Rating.Players)
+                                if (player.User != null && player.User.TelegramID == user.TelegramID && player.Score > -1)
+                                {
+                                    if (Program.MainConfig.TournamentRules.TryGetValue(tournament.Tournament.ID, out var rule))
+                                    {
+                                        if (player.Score == 1)
+                                            tournamentsCount += rule.PointsForWinning;
+                                        else if (player.Score == 0)
+                                            tournamentsCount += rule.PointsForBeing;
+                                    }
+                                    else
+                                    {
+                                        if (player.Score == 1)
+                                            tournamentsCount += TournamentScoreRule.DEFAULT_POINTS_FOR_WINNING;
+                                        else if (player.Score == 0)
+                                            tournamentsCount += TournamentScoreRule.DEFAULT_POINTS_FOR_BEING;
+                                    }
+                                    break;
+                                }
+
+                    int puzzleCount = -1;
+
+                    if (!string.IsNullOrEmpty(user.TokenKey))
+                    {
+                        var lichesAuthUser = new LichessAuthorizedClient(user.TokenKey);
+                        var puzzleDashboard = await lichesAuthUser.GetPuzzleDashboard((int)(DateTime.Now - Program.SemesterStartDate).TotalDays);
+                        if (puzzleDashboard != null)
+                            puzzleCount = puzzleDashboard.Global.FirstWins;
+                    }
+
+                    if (puzzleCount >= Program.MainConfig.Test.RequiredPuzzlesSolved &&
+                        tournamentsCount >= Program.MainConfig.Test.RequiredTournamentsCount &&
+                        user.CreativeTaskCompleted
+                        )
+                        graduatedUsers.Add("<b>" + user.Name + "</b> (" + user.LichessName + ")");
+
+                }
+            }
+
+            await args.Reply($"Студенты, получившие зачёт:\n{string.Join("\n", graduatedUsers)}");
         }
 
         private static async Task<TelegramMessageBuilder> GenerateUserInfo(LichessAPI.Types.User user)
@@ -1114,7 +1195,17 @@ namespace PolyChessTGBot.Bot.BotCommands
                         ]);
                     msg.WithToken(args.Token);
                     foreach (var student in Program.Data.Users)
-                        await args.Bot.SendMessage(msg, student.TelegramID);
+                    {
+                        try
+                        {
+                            await args.Bot.SendMessage(msg, student.TelegramID);
+                            Console.WriteLine("SEND MSG TO " + student.Name);
+                        }
+                        catch(Exception e)
+                        {
+                            Console.WriteLine("SENDING TOT " + student.Name + " ERRORED! " + e.ToString());
+                        }
+                    }
                     await args.Reply("Вы успешно отослали сообщение студентам! Их количество: " + Program.Data.Users.Count);
                 }
                 else
