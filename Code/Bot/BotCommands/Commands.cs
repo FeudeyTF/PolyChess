@@ -31,7 +31,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             List<string> message =
             [
                 "🛠<b>Информация о боте</b>🛠",
-                $"👨🏻‍💻<b>Разработчик:</b> {Program.MainConfig.BotAuthor}",
+                $"👨🏻‍💻<b>Разработчики:</b> {Program.MainConfig.BotAuthor}",
                 $"🔀<b>Версия бота:</b> v.{FileVersionInfo.GetVersionInfo(exeFilePath).FileVersion}",
                 $"🕐<b>Дата последнего обновления:</b> {File.GetLastWriteTime(exeFilePath):g}",
                 $"⏱<b>Время работы:</b> {DateTime.Now - Program.Started:%d' дн. '%h' ч. '%m' мин. '%s' сек.'}"
