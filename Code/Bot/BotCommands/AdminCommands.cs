@@ -10,7 +10,6 @@ using PolyChessTGBot.Bot.Messages.Discrete;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
 using PolyChessTGBot.Managers.Tournaments;
-using System.Linq;
 using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types;
