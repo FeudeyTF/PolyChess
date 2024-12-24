@@ -22,7 +22,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             TempPath = Path.Combine(Environment.CurrentDirectory, "Temp");
         }
 
-        [Command("version", "Отправляет информацию о боте", true)]
+        [Command("info", "Отправляет информацию о боте", true)]
         private async Task Version(CommandArgs args)
         {
             string exeFilePath = Path.Combine(
