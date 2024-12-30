@@ -24,7 +24,7 @@ namespace PolyChessTGBot.Bot.Commands.Discrete
             ScopeType = scopeType;
             Admin = admin;
             Visible = visible;
-            Questions = [.. questions];
+            Questions = [..questions];
         }
     }
 }

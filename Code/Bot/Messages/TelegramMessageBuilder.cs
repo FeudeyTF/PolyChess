@@ -124,7 +124,7 @@ namespace PolyChessTGBot.Bot.Messages
             => WithMedia(new InputMediaVideo(file)
             {
                 Caption = caption ?? Text,
-                CaptionEntities = captionEntities ?? [.. Entities],
+                CaptionEntities = captionEntities ?? [..Entities],
                 ParseMode = parseMode ?? ParseMode,
                 Duration = duration,
                 HasSpoiler = hasSpoiler,
@@ -147,7 +147,7 @@ namespace PolyChessTGBot.Bot.Messages
             => WithMedia(new InputMediaAnimation(file)
             {
                 Caption = caption ?? Text,
-                CaptionEntities = captionEntities ?? [.. Entities],
+                CaptionEntities = captionEntities ?? [..Entities],
                 ParseMode = parseMode ?? ParseMode,
                 Duration = duration,
                 HasSpoiler = hasSpoiler,
@@ -168,7 +168,7 @@ namespace PolyChessTGBot.Bot.Messages
             => WithMedia(new InputMediaAudio(file)
             {
                 Caption = caption ?? Text,
-                CaptionEntities = captionEntities ?? [.. Entities],
+                CaptionEntities = captionEntities ?? [..Entities],
                 ParseMode = parseMode ?? ParseMode,
                 Duration = duration,
                 Title = title,
@@ -185,7 +185,7 @@ namespace PolyChessTGBot.Bot.Messages
             => WithMedia(new InputMediaPhoto(file)
             {
                 Caption = caption ?? Text,
-                CaptionEntities = captionEntities ?? [.. Entities],
+                CaptionEntities = captionEntities ?? [..Entities],
                 ParseMode = parseMode ?? ParseMode,
                 HasSpoiler = hasSpoiler
             });
@@ -200,7 +200,7 @@ namespace PolyChessTGBot.Bot.Messages
             => WithMedia(new InputMediaDocument(file)
             {
                 Caption = caption ?? Text,
-                CaptionEntities = captionEntities ?? [.. Entities],
+                CaptionEntities = captionEntities ?? [..Entities],
                 ParseMode = parseMode ?? ParseMode,
                 DisableContentTypeDetection = disableContentTypeDetection,
                 Thumbnail = thumbnail,
@@ -270,7 +270,7 @@ namespace PolyChessTGBot.Bot.Messages
         public TelegramMessageBuilder AddEntity(MessageEntity entity)
         {
             Entities ??= [];
-            Entities = [.. Entities, entity];
+            Entities = [..Entities, entity];
             return this;
         }
 
