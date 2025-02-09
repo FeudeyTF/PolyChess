@@ -1,4 +1,5 @@
 ﻿using PolyChessTGBot.Bot.Messages;
+using System.Drawing;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -9,7 +10,7 @@ namespace PolyChessTGBot.Extensions
     {
         public const int MAX_CAPTION_SIZE = 1024;
 
-       public const int MAX_TEXT_SIZE = 4096;
+        public const int MAX_TEXT_SIZE = 4096;
 
         public static async Task SendMessage(this TelegramBotClient bot, TelegramMessageBuilder message, ChatId chatID)
         {
@@ -93,6 +94,29 @@ namespace PolyChessTGBot.Extensions
                     await bot.EditMessageCaptionAsync(chatID, oldMessage.MessageId, message.Text, message.ParseMode, message.Entities, keyboard, message.CancellationToken);
                 }
             }
+        }
+
+        public static async Task<List<Image>> GetUserProfilePhotos(this TelegramBotClient bot, long userId, CancellationToken token)
+        {
+            List<Image> result = [];
+            var profilePhotos = await Program.Bot.Telegram.GetUserProfilePhotosAsync(userId, cancellationToken: token);
+            var profilePhoto = profilePhotos.Photos.FirstOrDefault();
+            if(profilePhoto != null)
+            {
+                foreach (var photo in profilePhoto)
+                {
+                    var file = await Program.Bot.Telegram.GetFileAsync(photo.FileId, token);
+                    if (file != null && file.FilePath != null)
+                    {
+                        using (var stream = new MemoryStream(photo.Width * photo.Height))
+                        {
+                            await Program.Bot.Telegram.DownloadFileAsync(file.FilePath, stream, token);
+                            result.Add(Image.FromStream(stream));
+                        }
+                    }
+                }
+            }
+            return result;
         }
     }
 }
