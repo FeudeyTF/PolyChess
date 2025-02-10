@@ -27,6 +27,7 @@ namespace PolyChessTGBot.Managers.Images
             var scoreColor = Color.Gold;
 
             Image result = new Bitmap(width, height);
+            
             using (Graphics g = Graphics.FromImage(result))
             {
                 g.CompositingQuality = CompositingQuality.HighQuality;
@@ -90,8 +91,8 @@ namespace PolyChessTGBot.Managers.Images
 
                 var teamsY = datesY + 80;
 
-                g.DrawString("Команды:", normalFont, new SolidBrush(secondaryTextColor), leftColumn, teamsY);
-                g.DrawTag(team, leftColumn, teamsY - 3, normalFont);
+                g.DrawString("Команда:", normalFont, new SolidBrush(secondaryTextColor), leftColumn, teamsY);
+                g.DrawTag(team, leftColumn + g.MeasureString("Команда:", normalFont).Width, teamsY - 3, normalFont);
             }
             return result;
         }
