@@ -45,10 +45,10 @@ namespace PolyChessTGBot.Bot.BotCommands
             if (args.Parameters.Count == 1)
             {
                 var msg = args.Parameters[0];
-                if(msg.Document != null)
+                if (msg.Document != null)
                 {
                     var user = Program.Data.GetUser(args.User.Id);
-                    if(user != null)
+                    if (user != null)
                     {
                         if (!user.CreativeTaskCompleted)
                         {
@@ -83,6 +83,44 @@ namespace PolyChessTGBot.Bot.BotCommands
                 await args.Reply("Вы не отправили сообщение!");
         }
 
+        [DiscreteCommand("register", "Отправляет данные для регистрации на турнире СПбГУ", ["Введите ваше ФИО (полностью)", "Введите серию и номер паспорта"], true)]
+        private async Task SendRegisterSPbSU(CommandArgs<Message> args)
+        {
+            if (args.Parameters.Count == 2)
+            {
+                var user = Program.Data.GetUser(args.User.Id);
+                if (user != null)
+                {
+                    var name = args.Parameters[0].Text;
+                    var passport = args.Parameters[1].Text;
+                    if (name != null && passport != null)
+                    {
+                        name = name.Replace("\n", "").Replace("\r", "");
+                        passport = passport.Replace(" ", "");
+                        if (long.TryParse(passport, out _))
+                        {
+                            using var reader = Program.Data.SelectQuery("SELECT * FROM Registers WHERE Name=@0 OR Passport=@1", name, passport);
+                            if (!reader.Read())
+                            {
+                                Program.Data.Query("INSERT INTO Registers (Name, Passport) VALUES (@0, @1)", name, passport);
+                                await args.Reply("Вы успешно записались на шахматное мероприятие в СПбГУ!");
+                            }
+                            else
+                                await args.Reply("Вы уже есть в списке!");
+                        }
+                        else
+                            await args.Reply("Вы неправильно ввели серию и номер паспорта");
+                    }
+                    else
+                        await args.Reply("Вы неправильно ввели серию и номер паспорта или имя");
+                }
+                else
+                    await args.Reply("Вас нет в системе!");
+            }
+            else
+                await args.Reply("Вы не отправили сообщение!");
+        }
+
         [Button("CreativeTaskApprove")]
         private async Task CreativeTaskApprove(ButtonInteractArgs args)
         {
@@ -95,9 +133,9 @@ namespace PolyChessTGBot.Bot.BotCommands
                     user.CreativeTaskCompleted = true;
                     Program.Data.Query($"UPDATE Users SET CreativeTaskCompleted='1' WHERE TelegramID='{telegramID}'");
                     await args.Bot.SendMessage($"Ваше творческое задание было <b>принято</b>! Поздравляю, вы - <b>молодец</b>", telegramID);
-                  
+
                     TelegramMessageBuilder builder = new("[ПРИНЯТО]\n" + (args.Query.Message.Text ?? args.Query.Message.Caption));
-                    if(args.Query.Message.Document != null)
+                    if (args.Query.Message.Document != null)
                         builder.WithFile(args.Query.Message.Document.FileId);
 
                     await args.Bot.EditMessage(builder, args.Query.Message.Chat.Id, args.Query.Message);
@@ -121,7 +159,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
             async Task OnCreativeTaskMessageEntered(DiscreteMessageEnteredArgs args)
             {
-                if(args.Responses.Length == 1 && buttonArgs.Query.Message != null)
+                if (args.Responses.Length == 1 && buttonArgs.Query.Message != null)
                 {
                     var telegramID = (long)args.Data[0];
                     var user = Program.Data.GetUser(telegramID);
@@ -130,7 +168,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                         TelegramMessageBuilder builder = new("[ПРИНЯТО]\n" + (buttonArgs.Query.Message.Text ?? buttonArgs.Query.Message.Caption));
                         if (buttonArgs.Query.Message.Document != null)
                             builder.WithFile(buttonArgs.Query.Message.Document.FileId);
-                        
+
                         await args.Bot.EditMessage(builder, buttonArgs.Query.Message.Chat.Id, buttonArgs.Query.Message);
                         await args.Bot.SendMessage($"Ваше творческое задание <b>было отклонено</b> по причине:\n{args.Responses[0].Text}", telegramID);
                         await args.Reply($"Вы успешно <b>отклонили</b> задание студента <b>{user.Name}</b>");
