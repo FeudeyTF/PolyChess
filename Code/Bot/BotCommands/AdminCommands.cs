@@ -90,10 +90,6 @@ namespace PolyChessTGBot.Bot.BotCommands
             addEvent.SetData("AddEvent");
             msg.AddButton(addEvent);
 
-            InlineKeyboardButton getTable = new("Получить таблицу для СПбГУ");
-            getTable.SetData("GetTable");
-            msg.AddButton(getTable);
-
             await args.Reply(msg.WithText(string.Join("\n", text)));
         }
 
@@ -1177,24 +1173,6 @@ namespace PolyChessTGBot.Bot.BotCommands
                 else
                     await args.Reply("Вы ввели неправильно кол-во аргументов!");
             }
-        }
-
-        [Button("GetTable")]
-        private async Task GetTable(ButtonInteractArgs args)
-        {
-            Program.Logger.Write(args.Query.From.Username + " скачал бд", Logs.LogType.Info);
-            List<string> csv = ["Имя;Серия и номер паспорта"];
-            using var reader = Program.Data.SelectQuery("SELECT * FROM Registers");
-            while (reader.Read())
-            {
-                csv.Add(reader.Get("Name") + ";" + reader.Get("Passport"));
-            }
-            string msg = string.Join("\n", csv);
-            string name = "students.csv";
-            File.Create(name).Close();
-            File.WriteAllText(name, msg, Encoding.UTF8);
-            using var file = File.OpenRead(name);
-            await args.Reply(new TelegramMessageBuilder().WithFile(new InputFileStream(file, name)));
         }
 
         [DiscreteCommand("sendinfo", "Рассылает сообщение ВСЕМ студентам", ["Введите сообщение для рассылки или -, если хотите отменить отправку"], admin: true)]
