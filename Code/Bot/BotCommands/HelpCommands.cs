@@ -10,9 +10,15 @@ using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Bot.Messages.Discrete;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
+using PolyChessTGBot.Managers.Images;
 using PolyChessTGBot.Managers.Tournaments;
+using System.Drawing;
+using System.Drawing.Imaging;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
+using static System.Net.Mime.MediaTypeNames;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using User = PolyChessTGBot.Database.User;
 
 namespace PolyChessTGBot.Bot.BotCommands
@@ -32,6 +38,8 @@ namespace PolyChessTGBot.Bot.BotCommands
         private readonly ListMessage<object> NextTournaments;
 
         private readonly ListMessage<Event> Events;
+
+        private readonly ListMessage<object> AllTournaments;
 
         private readonly Dictionary<long, (string Name, string FlairID)> AccountVerifyCodes;
 
@@ -64,6 +72,12 @@ namespace PolyChessTGBot.Bot.BotCommands
                 Header = "<b> - Информация о будущих турнирах!</b>"
             };
 
+            AllTournaments = new("gdfgsdf", GetAllTournaments, NextTournamentToString, 5, true, "Далее ➡️", "⬅️ Назад")
+            {
+                Header = "<b> - Информация о будущих турнирах!</b>"
+            };
+
+
             AdminCheckUsers = new("checkUsers",
                 () => Program.Data.Users,
                 (user, index, tgUser) => user.ToString(),
@@ -80,6 +94,16 @@ namespace PolyChessTGBot.Bot.BotCommands
             AccountVerifyCodes = [];
             FAQEntries = Program.Data.GetFAQEntries();
             HelpLinks = Program.Data.GetHelpLinks();
+        }
+
+        private List<object> GetAllTournaments()
+        {
+            List<object> result = [];
+            foreach (var tournament in Program.Tournaments.TournamentsList)
+                    result.Add(tournament);
+            foreach (var tournament in Program.Tournaments.SwissTournamentsList)
+                    result.Add(tournament);
+            return new List<object>([.. from r in result orderby (r is ArenaTournamentInfo t ? t.Tournament.StartDate : r is SwissTournamentInfo s ? s.Tournament.Started : DateTime.Now) select r]);
         }
 
         private List<HelpLink> GetHelpLinksValue() => HelpLinks;
@@ -289,8 +313,19 @@ namespace PolyChessTGBot.Bot.BotCommands
                         InlineKeyboardButton viewNextTournaments = new("🏟 Посмотреть будущие турниры");
                         viewNextTournaments.SetData("ViewNextTournaments", ("ID", args.User.Id));
                         message.AddButton(viewNextTournaments);
-
+                        /*
+                        var photo = (await Program.Bot.Telegram.GetUserProfilePhotos(args.User.Id, args.Token)).FirstOrDefault();
+                        if (photo != null)
+                        {
+                            var profileCard = ImageManager.GenerateProfileImage(photo, user, lichessUser, 0.7f, "Политех");
+                            profileCard.Save(Path.Combine("Temp", "profile.png"));
+                            var file = System.IO.File.OpenRead(Path.Combine("Temp", "profile.png"));
+                            message.WithMedia(new InputMediaPhoto(new InputFileStream(file, "profile.png")));
+                            await args.Reply(message);
+                        }
+                        */
                         await args.Reply(message);
+
                     }
                     else
                         await args.Reply($"Ник на Lichess: <b>Аккаунт не найден</b>. Перепривяжите аккаунт с помощью /reg");
@@ -322,7 +357,6 @@ namespace PolyChessTGBot.Bot.BotCommands
         private async Task ViewProgress(ButtonInteractArgs args)
         {
             User? user = Program.Data.GetUser(args.GetLongNumber("ID"));
-
             float totalScore = 0;
             int totalRatingsCount = 3;
             int barsInBar = 15;

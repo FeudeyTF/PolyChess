@@ -41,11 +41,12 @@ namespace PolyChessTGBot
             if (DateTime.TryParse(MainConfig.SemesterEndDate, out var endDate))
                 SemesterEndDate = endDate;
             Logger = new(DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".log", MainConfig.LogsFolder);
+            Logger.Write($"Текущий семестр: {SemesterStartDate:d}-{SemesterEndDate:d}", LogType.Info);
             string exeFilePath = Path.Combine(
                 Environment.CurrentDirectory,
                 Assembly.GetExecutingAssembly().GetName().Name + ".exe");
             Logger.Write($"Программа версии {FileVersionInfo.GetVersionInfo(exeFilePath).FileVersion} от {File.GetLastWriteTime(exeFilePath):g}", LogType.Info); 
-
+         
             Data = new(MainConfig.DatabasePath);
             Data.Initialize();
             Logger.Write($"База данных '{Data.DatabaseName}' подключена!", LogType.Info);

@@ -14,7 +14,6 @@ using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
-using static System.Net.Mime.MediaTypeNames;
 using File = System.IO.File;
 using User = PolyChessTGBot.Database.User;
 
@@ -43,6 +42,10 @@ namespace PolyChessTGBot.Bot.BotCommands
             InlineKeyboardButton updateTournaments = new("🤝 Загрузить турниры");
             updateTournaments.SetData("DownloadTournaments");
             msg.AddButton(updateTournaments);
+
+            InlineKeyboardButton viewTournaments = new("🤝 Показать все турниры");
+            viewTournaments.SetData("ViewAllTournaments");
+            msg.AddButton(viewTournaments);
 
             InlineKeyboardButton deleteHelp = new("✏️ Изменить полезную ссылку");
             deleteHelp.SetData("DeleteHelpLinks");
@@ -916,14 +919,17 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Button("DownloadTournaments")]
         private async Task DownloadTournaments(ButtonInteractArgs args)
         {
-            if (!string.IsNullOrEmpty(Program.MainConfig.MainPolytechTeamID))
+            if (Program.MainConfig.TeamsWithTournaments.Count > 0)
             {
-                await args.Reply("Началась загрузка турниров... Это может занять некоторое время");
-                var updatedTournaments = await Program.Tournaments.UpdateTournaments(Program.MainConfig.MainPolytechTeamID);
-                if (updatedTournaments.Count > 0)
-                    await args.Reply($"Турниры {string.Join(", ", updatedTournaments.Select(t => "<b>" + t.name + "</b>"))} успешно добавлены!");
-                else
-                    await args.Reply("Все турниры уже загружены! Обновления не требуется");
+                foreach (var teamId in Program.MainConfig.TeamsWithTournaments)
+                {
+                    await args.Reply($"Началась загрузка турниров из {teamId}... Это может занять некоторое время");
+                    var updatedTournaments = await Program.Tournaments.UpdateTournaments(teamId);
+                    if (updatedTournaments.Count > 0)
+                        await args.Reply($"Турниры {string.Join(", ", updatedTournaments.Select(t => "<b>" + t.name + "</b>"))} успешно добавлены!");
+                    else
+                        await args.Reply("Все турниры уже загружены! Обновления не требуется");
+                }
             }
             else
                 await args.Reply("Команда Политеха не найдена!");
@@ -1072,6 +1078,13 @@ namespace PolyChessTGBot.Bot.BotCommands
                         await args.Reply("Необходимо ввести ссылку на турнир!");
                 }
             }
+        }
+
+        [Button("ViewAllTournaments")]
+        private async Task ViewAllTournaments(ButtonInteractArgs args)
+        {
+            if (args.Query.Message != null)
+                await AllTournaments.Send(args.Bot, args.Query.Message.Chat.Id, args.Query.From, args.Token);
         }
 
         [Button("AddOtherTournaments")]
