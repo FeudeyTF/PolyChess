@@ -10,15 +10,9 @@ using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Bot.Messages.Discrete;
 using PolyChessTGBot.Database;
 using PolyChessTGBot.Extensions;
-using PolyChessTGBot.Managers.Images;
 using PolyChessTGBot.Managers.Tournaments;
-using System.Drawing;
-using System.Drawing.Imaging;
-using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
-using static System.Net.Mime.MediaTypeNames;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using User = PolyChessTGBot.Database.User;
 
 namespace PolyChessTGBot.Bot.BotCommands
