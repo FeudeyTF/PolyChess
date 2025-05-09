@@ -224,7 +224,7 @@ namespace PolyChessTGBot.Managers.Tournaments
                 foreach (var tournament in new List<ArenaTournamentInfo>(TournamentsList))
                     if (tournament.Tournament.ID == id)
                         TournamentsList.Remove(tournament);
-                await Program.Lichess.SaveTournamentSheet(GetTournamentPath(id), id);
+                await Program.Lichess.SaveTournamentSheet(GetTournamentPath(id), id, true);
                 if (arenaTournament.IsSemesterTournament())
                 {
                     using var reader = File.OpenText(GetTournamentPath(arenaTournament.ID));
