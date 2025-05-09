@@ -39,7 +39,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             await args.Reply(string.Join("\n", message));
         }
 
-        [DiscreteCommand("task", "Отправляет выполненное творческое задание Павлу", ["Отправьте сообщение с файлом с выполненным заданием"])]
+        [DiscreteCommand("task", "Отправляет выполненное творческое задание Павлу", ["Отправьте сообщение с файлом с выполненным заданием"], true)]
         private async Task SendCreativeTask(CommandArgs<Message> args)
         {
             if (args.Parameters.Count == 1)
