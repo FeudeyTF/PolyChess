@@ -93,6 +93,10 @@ namespace PolyChessTGBot.Bot.BotCommands
             addEvent.SetData("AddEvent");
             msg.AddButton(addEvent);
 
+            InlineKeyboardButton getTournamentsTable = new("Получить таблицу турниров");
+            getTournamentsTable.SetData("GetTournamentsTable");
+            msg.AddButton(getTournamentsTable);
+
             await args.Reply(msg.WithText(string.Join("\n", text)));
         }
 
@@ -488,7 +492,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Button("LookGraduated")]
         private async Task LookGraduated(ButtonInteractArgs args)
         {
-            args.Reply("Идёт подсчёт, ожидайте...");
+            await args.Reply("Идёт подсчёт, ожидайте...");
             List<string> graduatedUsers = []; 
             foreach (var user in Program.Data.Users)
             {
@@ -1186,6 +1190,80 @@ namespace PolyChessTGBot.Bot.BotCommands
                 else
                     await args.Reply("Вы ввели неправильно кол-во аргументов!");
             }
+        }
+
+        [Button("GetTournamentsTable")]
+        private async Task GetTournamentsTable(ButtonInteractArgs args)
+        {
+            List<string> text = ["Имя;Аккаунт;Результат"];
+            Dictionary<User, TournamentsScore> players = [];
+
+            foreach (var tournament in Program.Tournaments.TournamentsList)
+                if (tournament.Tournament.IsSemesterTournament())
+                    foreach (var player in tournament.Rating.Players)
+                    {
+                        if (player.User != null)
+                        {
+                            if (players.TryGetValue(player.User, out var scores))
+                            {
+                                if (player.Score == 0)
+                                    scores.Zeros++;
+                                else if (player.Score == 1)
+                                    scores.Ones++;
+                            }
+                            else
+                            {
+                                if (player.Score == 0)
+                                    players.Add(player.User, new(0, 1));
+                                else if (player.Score == 1)
+                                    players.Add(player.User, new(1, 0));
+                            }
+                        }
+                    }
+
+            foreach (var tournament in Program.Tournaments.SwissTournamentsList)
+                if (tournament.Tournament.IsSemesterTournament())
+                    foreach (var player in tournament.Rating.Players)
+                    {
+                        if (player.User != null)
+                        {
+                            if (players.TryGetValue(player.User, out var scores))
+                            {
+                                if (player.Score == 0)
+                                    scores.Zeros++;
+                                else if (player.Score == 1)
+                                    scores.Ones++;
+                            }
+                            else
+                            {
+                                if (player.Score == 0)
+                                    players.Add(player.User, new(0, 1));
+                                else if (player.Score == 1)
+                                    players.Add(player.User, new(1, 0));
+                            }
+                        }
+                    }
+            for (int i = 0; i < players.Count; i++)
+            {
+                var player = players.ElementAt(i);
+                text.Add($"{player.Key.Name};{player.Key.LichessName};{player.Value.Ones + player.Value.Zeros + player.Key.OtherTournaments}");
+            }
+
+            TelegramMessageBuilder message = "Файл с таблицей участия в турнирах";
+            if (!Directory.Exists(TempPath))
+                Directory.CreateDirectory(TempPath);
+            var csvFilePath = Path.Combine(TempPath, "tournaments.csv");
+            if (File.Exists(csvFilePath))
+                File.Delete(csvFilePath);
+            using (var streamWriter = new StreamWriter(File.Create(csvFilePath), Encoding.UTF8))
+            {
+                foreach (var entry in text)
+                    streamWriter.WriteLine(entry);
+                streamWriter.Close();
+            }
+            var stream = File.Open(csvFilePath, FileMode.Open);
+            message.WithFile(stream, "Table.csv");
+            await args.Reply(message);
         }
 
         [DiscreteCommand("sendinfo", "Рассылает сообщение ВСЕМ студентам", ["Введите сообщение для рассылки или -, если хотите отменить отправку"], admin: true)]
