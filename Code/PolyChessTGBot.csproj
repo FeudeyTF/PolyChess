@@ -20,6 +20,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Managers\Новая папка\**" />
+    <EmbeddedResource Remove="Managers\Новая папка\**" />
+    <None Remove="Managers\Новая папка\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Fleck" Version="1.2.0" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.11" />
     <PackageReference Include="System.Drawing.Common" Version="9.0.1" />
@@ -28,9 +34,5 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LichessAPI\LichessAPI.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Managers\Новая папка\" />
   </ItemGroup>
 </Project>
