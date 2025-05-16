@@ -29,4 +29,8 @@
   <ItemGroup>
     <ProjectReference Include="..\LichessAPI\LichessAPI.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Managers\Новая папка\" />
+  </ItemGroup>
 </Project>

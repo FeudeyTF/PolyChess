@@ -93,9 +93,9 @@ namespace PolyChessTGBot.Bot.BotCommands
             addEvent.SetData("AddEvent");
             msg.AddButton(addEvent);
 
-            InlineKeyboardButton getTournamentsTable = new("Получить таблицу турниров");
-            getTournamentsTable.SetData("GetTournamentsTable");
-            msg.AddButton(getTournamentsTable);
+            InlineKeyboardButton getSemesterResults = new("Получить таблицу результатов семестра");
+            getSemesterResults.SetData(nameof(GetSemesterResults));
+            msg.AddButton(getSemesterResults);
 
             await args.Reply(msg.WithText(string.Join("\n", text)));
         }
@@ -1192,10 +1192,10 @@ namespace PolyChessTGBot.Bot.BotCommands
             }
         }
 
-        [Button("GetTournamentsTable")]
-        private async Task GetTournamentsTable(ButtonInteractArgs args)
+        [Button(nameof(GetSemesterResults))]
+        private async Task GetSemesterResults(ButtonInteractArgs args)
         {
-            List<string> text = ["Имя;Аккаунт;Результат"];
+            List<string> text = ["Имя;Аккаунт;Турниры;Задачи;Посещения;Творческое задание;Зачёт"];
             Dictionary<User, TournamentsScore> players = [];
 
             foreach (var tournament in Program.Tournaments.TournamentsList)
@@ -1245,14 +1245,29 @@ namespace PolyChessTGBot.Bot.BotCommands
                     }
             for (int i = 0; i < players.Count; i++)
             {
-                var player = players.ElementAt(i);
-                text.Add($"{player.Key.Name};{player.Key.LichessName};{player.Value.Ones + player.Value.Zeros + player.Key.OtherTournaments}");
+                var playerData = players.ElementAt(i);
+                var user = playerData.Key;
+                var score = playerData.Value;
+                var tournamentsCount = score.Ones + score.Zeros + user.OtherTournaments;
+
+                int puzzleSolved = -1;
+                if (!string.IsNullOrEmpty(user.TokenKey))
+                {
+                    var lichesAuthUser = new LichessAuthorizedClient(user.TokenKey);
+                    var puzzleDashboard = await lichesAuthUser.GetPuzzleDashboard((int)(DateTime.Now - Program.SemesterStartDate).TotalDays);
+                    if (puzzleDashboard != null)
+                        puzzleSolved = puzzleDashboard.Global.FirstWins;
+                }
+
+                var lessonsCount = Program.Data.GetUserAttendance(user.TelegramID).Count;
+                var isUserHaveMark = tournamentsCount >= Program.MainConfig.Test.RequiredTournamentsCount && lessonsCount >= Program.Data.Lessons.Count * Program.MainConfig.Test.RequiredVisitedLessonsPercent / 100 && puzzleSolved >= Program.MainConfig.Test.RequiredPuzzlesSolved && user.CreativeTaskCompleted;
+                text.Add($"{user.Name};{user.LichessName};{tournamentsCount};{(puzzleSolved == -1 ? "Токен не подключён" : puzzleSolved)};{lessonsCount};{(user.CreativeTaskCompleted ? "Выполнено" : "Не выполнено")};{(isUserHaveMark ? "Зачёт" : "Незачёт")}");
             }
 
-            TelegramMessageBuilder message = "Файл с таблицей участия в турнирах";
+            TelegramMessageBuilder message = "Файл с таблицей результатов семестра";
             if (!Directory.Exists(TempPath))
                 Directory.CreateDirectory(TempPath);
-            var csvFilePath = Path.Combine(TempPath, "tournaments.csv");
+            var csvFilePath = Path.Combine(TempPath, "results.csv");
             if (File.Exists(csvFilePath))
                 File.Delete(csvFilePath);
             using (var streamWriter = new StreamWriter(File.Create(csvFilePath), Encoding.UTF8))

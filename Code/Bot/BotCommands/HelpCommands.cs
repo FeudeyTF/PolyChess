@@ -352,8 +352,8 @@ namespace PolyChessTGBot.Bot.BotCommands
         {
             User? user = Program.Data.GetUser(args.GetLongNumber("ID"));
             float totalScore = 0;
-            int totalRatingsCount = 3;
-            int barsInBar = 15;
+            int totalRatingsCount = 4;
+            int barsInBar = 20;
 
             int zeroScoreTournaments = 0;
             int oneScoreTournaments = 0;
@@ -406,10 +406,16 @@ namespace PolyChessTGBot.Bot.BotCommands
                                     break;
                                 }
 
-                    float visitedTournamentsCount = zeroScoreTournaments + oneScoreTournaments + user.OtherTournaments;
                     List<string> text = ["📌<b>Ваш прогресс по выполнению регламента зачёта:</b>"];
-                    text.Add("📚<b>Посещение занятий:</b> Недоступно");
+                    if (Program.Data.Lessons.Count > 0)
+                    {
+                        var lessons = Program.Data.GetUserAttendance(user.TelegramID);
+                        float attendancePercent = (float)lessons.Count / Program.Data.Lessons.Count;
+                        text.Add($"📚<b>Посещение занятий:</b> {lessons.Count}/{Program.Data.Lessons.Count} ({(int)(attendancePercent * 100)}%)");
+                        totalScore += attendancePercent;
+                    }
 
+                    float visitedTournamentsCount = zeroScoreTournaments + oneScoreTournaments + user.OtherTournaments;
                     totalScore += Math.Min(visitedTournamentsCount / Program.MainConfig.Test.RequiredTournamentsCount, 1f);
 
                     text.Add($"🤝<b>Участие в турнирах:</b>");
@@ -440,7 +446,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                     text.Add("");
                     text.Add("📊<b>Полный прогресс:</b>");
-                    text.Add($"{Math.Round(totalScore * barsInBar / totalRatingsCount)} из 15 {Utils.CreateSimpleBar(totalScore, totalRatingsCount, bars: barsInBar)}");
+                    text.Add($"{Math.Round(totalScore * barsInBar / totalRatingsCount)} из 20 {Utils.CreateSimpleBar(totalScore, totalRatingsCount, bars: barsInBar)}");
                     TelegramMessageBuilder msg = new(string.Join("\n", text));
 
                     if (string.IsNullOrEmpty(user.TokenKey) && user.TelegramID == args.Query.From.Id)

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.Sqlite;
+using System.Collections.Generic;
 namespace PolyChessTGBot.Database
 {
     internal class PolyData
@@ -8,6 +9,10 @@ namespace PolyChessTGBot.Database
         public List<User> Users;
 
         public List<Event> Events;
+
+        public List<Attendance> Attendances;
+
+        public Dictionary<int, Lesson> Lessons;
 
         private readonly SqliteConnection DB;
 
@@ -20,6 +25,8 @@ namespace PolyChessTGBot.Database
             DB = new(string.Format("Data Source={0}", sqlPath));
             Users = [];
             Events = [];
+            Attendances = [];
+            Lessons = [];
         }
 
         public void Initialize()
@@ -27,6 +34,8 @@ namespace PolyChessTGBot.Database
             LoadTables();
             Users = GetAllUsers();
             Events = GetAllEvents();
+            Lessons = GetLessons();
+            Attendances = GetAttendance();
         }
 
         public void LoadTables()
@@ -41,8 +50,12 @@ namespace PolyChessTGBot.Database
                   "OtherTournaments         INT DEFAULT 0" +
                   ")");
             Query("CREATE TABLE IF NOT EXISTS Attendance (" +
-                  "LessonDate      INTEGER PRIMARY KEY, " +
-                  "UserID          INTEGER" +
+                  "LessonID              INTEGER, " +
+                  "UserID                INTEGER" +
+                  ")");
+            Query("CREATE TABLE IF NOT EXISTS Lessons (" +
+                  "ID              INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                  "LessonDate      INTEGER" +
                   ")");
             Query("CREATE TABLE IF NOT EXISTS FAQ (" +
                   "ID              INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -96,6 +109,31 @@ namespace PolyChessTGBot.Database
             return result;
         }
 
+        private List<Attendance> GetAttendance()
+        {
+            List<Attendance> result = [];
+            using var reader = SelectQuery($"SELECT * FROM Attendance");
+            while (reader.Read())
+            {
+                var user = GetUser(reader.Get<long>("UserID"));
+                if (user != null)
+                {
+                    if(Lessons.TryGetValue(reader.Get<int>("LessonID"), out var lesson))
+                        result.Add(new Attendance(user, lesson));
+                }
+            }
+            return result;
+        }
+
+        private Dictionary<int, Lesson> GetLessons()
+        {
+            Dictionary <int, Lesson> result = [];
+            using var reader = SelectQuery($"SELECT * FROM Lessons");
+            while (reader.Read())
+                    result.Add(reader.Get<int>("ID"), new Lesson(reader.Get<int>("ID"), new DateTime(reader.Get<long>("LessonDate"))));
+            return result;
+        }
+
         public List<HelpLink> GetHelpLinks()
         {
             using var reader = SelectQuery("SELECT * FROM HelpLinks");
@@ -112,6 +150,15 @@ namespace PolyChessTGBot.Database
             while (reader.Read())
                 questions.Add(new(reader.Get<int>("ID"), reader.Get("Question"), reader.Get("Answer")));
             return questions;
+        }
+
+        public List<Attendance> GetUserAttendance(long telegramId)
+        {
+            List<Attendance> result = [];
+            foreach (var attendance in Attendances)
+                if (telegramId == attendance.User.TelegramID)
+                    result.Add(attendance);
+            return result;
         }
 
         public int Query(string query, params object[] args)
