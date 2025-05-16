@@ -77,8 +77,6 @@ namespace PolyChessTGBot
         public int RequiredVisitedLessonsPercent;
 
         public int RequiredPuzzlesSolved;
-
-        public int RequiredAttendancePercent;
     }
 
     public class SocketSettings
