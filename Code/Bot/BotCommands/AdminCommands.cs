@@ -1238,7 +1238,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 await args.SendDiscreteMessage(
                     args.Query.Message.Chat.Id,
                     ["Введите дату урока",
-                    "Введите имя/ник студента"],
+                    "Введите имена/ники студентов"],
                     OnLessonDataEntered);
 
             static async Task OnLessonDataEntered(DiscreteMessageEnteredArgs args)
@@ -1248,36 +1248,47 @@ namespace PolyChessTGBot.Bot.BotCommands
                     var lessonDateString = args.Responses[0].Text;
                     if (DateTime.TryParse(lessonDateString, out var lessonDate))
                     {
-                        User? user = null;
-                        var name = args.Responses[1].Text;
-                        foreach (var dataUser in Program.Data.Users)
-                            if (dataUser.LichessName == name || dataUser.Name == name)
-                            {
-                                user = dataUser;
-                                break;
-                            }
 
                         Lesson? lesson = default;
-                        foreach(var l in Program.Data.Lessons)
-                            if(l.Value.LessonDate == lessonDate)
+                        foreach (var l in Program.Data.Lessons)
+                            if (l.Value.LessonDate == lessonDate)
                             {
                                 lesson = l.Value;
                                 break;
                             }
-                        if(lesson == null)
+                        if (lesson == null)
                         {
                             await args.Reply("Урок не найден!");
                             return;
                         }
 
-                        if (user == null)
+                        List<User> foundedUsers = [];
+                        var text = args.Responses[1].Text;
+                        if(text == null)
                         {
-                            await args.Reply("Студент не найден!");
+                            await args.Reply("Нужно указать имена студентов!");
                             return;
                         }
-                        Attendance attendance = new(user, lesson);
-                        Program.Data.Query("INSERT INTO Attendance (UserID, LessonID) VALUES (@0, @1)", attendance.User.TelegramID, attendance.Lesson.ID);
-                        await args.Reply($"Студент <b>{user.Name}</b> успешно отмечен на уроке <b>{attendance.Lesson.LessonDate:g}</b>!");
+
+                        foreach (var name in text.Split('\n', ','))
+                        {
+                            User? user = null;
+                            foreach (var dataUser in Program.Data.Users)
+                                if (dataUser.LichessName == name || dataUser.Name == name)
+                                {
+                                    user = dataUser;
+                                    break;
+                                }
+
+                            if (user == null)
+                            {
+                                await args.Reply("Студент не найден!");
+                                return;
+                            }
+                            Attendance attendance = new(user, lesson);
+                            Program.Data.Query("INSERT INTO Attendance (UserID, LessonID) VALUES (@0, @1)", attendance.User.TelegramID, attendance.Lesson.ID);
+                        }
+                        await args.Reply($"Студенты <b>{string.Join(", ", foundedUsers.Select(u => u.Name))}</b> успешно отмечены на уроке <b>{lesson.LessonDate:g}</b>!");
                     }
                     else
                         await args.Reply("Неправильный формат времени!");
