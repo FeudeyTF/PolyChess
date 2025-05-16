@@ -93,6 +93,14 @@ namespace PolyChessTGBot.Bot.BotCommands
             addEvent.SetData("AddEvent");
             msg.AddButton(addEvent);
 
+            InlineKeyboardButton addLessonButton = new("Добавить занятие");
+            addLessonButton.SetData(nameof(AddLesson));
+
+            InlineKeyboardButton addAttendance = new("Добавить посещение");
+            addAttendance.SetData(nameof(AddAttendance));
+
+            msg.AddKeyboard([addLessonButton, addAttendance]);
+
             InlineKeyboardButton getSemesterResults = new("Получить таблицу результатов семестра");
             getSemesterResults.SetData(nameof(GetSemesterResults));
             msg.AddButton(getSemesterResults);
@@ -1189,6 +1197,91 @@ namespace PolyChessTGBot.Bot.BotCommands
                 }
                 else
                     await args.Reply("Вы ввели неправильно кол-во аргументов!");
+            }
+        }
+
+        [Button(nameof(AddLesson))]
+        private async Task AddLesson(ButtonInteractArgs args)
+        {
+
+            if (args.Query.Message != null)
+                await args.SendDiscreteMessage(
+                    args.Query.Message.Chat.Id,
+                    ["Введите дату урока"],
+                    OnLessonDataEntered);
+
+            static async Task OnLessonDataEntered(DiscreteMessageEnteredArgs args)
+            {
+                if(args.Responses.Length == 1)
+                {
+                    var lessonDateString = args.Responses[0].Text;
+                    if (DateTime.TryParse(lessonDateString, out var lessonDate))
+                    {
+                        Lesson lesson = new(default, lessonDate);
+                        string sql = "INSERT INTO Lessons (LessonDate) VALUES (@0);";
+                        int id = Program.Data.QueryScalar<int>(sql + "SELECT CAST(last_insert_rowid() as INT);", lesson.LessonDate.Ticks);
+                        lesson.ID = id;
+                        Program.Data.Lessons.Add(lesson.ID, lesson);
+                        await args.Reply($"Урок был успешно добавлен! Дата урока: {lessonDate:g}");
+                    }
+                    else
+                        await args.Reply("Неправильный формат времени!");
+                }
+            }
+        }
+
+        [Button(nameof(AddAttendance))]
+        private async Task AddAttendance(ButtonInteractArgs args)
+        {
+
+            if (args.Query.Message != null)
+                await args.SendDiscreteMessage(
+                    args.Query.Message.Chat.Id,
+                    ["Введите дату урока",
+                    "Введите имя/ник студента"],
+                    OnLessonDataEntered);
+
+            static async Task OnLessonDataEntered(DiscreteMessageEnteredArgs args)
+            {
+                if (args.Responses.Length == 2)
+                {
+                    var lessonDateString = args.Responses[0].Text;
+                    if (DateTime.TryParse(lessonDateString, out var lessonDate))
+                    {
+                        User? user = null;
+                        var name = args.Responses[1].Text;
+                        foreach (var dataUser in Program.Data.Users)
+                            if (dataUser.LichessName == name || dataUser.Name == name)
+                            {
+                                user = dataUser;
+                                break;
+                            }
+
+                        Lesson? lesson = default;
+                        foreach(var l in Program.Data.Lessons)
+                            if(l.Value.LessonDate == lessonDate)
+                            {
+                                lesson = l.Value;
+                                break;
+                            }
+                        if(lesson == null)
+                        {
+                            await args.Reply("Урок не найден!");
+                            return;
+                        }
+
+                        if (user == null)
+                        {
+                            await args.Reply("Студент не найден!");
+                            return;
+                        }
+                        Attendance attendance = new(user, lesson);
+                        Program.Data.Query("INSERT INTO Attendance (UserID, LessonID) VALUES (@0, @1)", attendance.User.TelegramID, attendance.Lesson.ID);
+                        await args.Reply($"Студент <b>{user.Name}</b> успешно отмечен на уроке <b>{attendance.Lesson.LessonDate:g}</b>!");
+                    }
+                    else
+                        await args.Reply("Неправильный формат времени!");
+                }
             }
         }
 
