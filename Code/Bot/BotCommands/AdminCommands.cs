@@ -1285,6 +1285,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                                 await args.Reply($"Студент <b>{name}</b> не найден!");
                                 continue;
                             }
+                            foundedUsers.Add(user);
                             Attendance attendance = new(user, lesson);
                             Program.Data.Query("INSERT INTO Attendance (UserID, LessonID) VALUES (@0, @1)", attendance.User.TelegramID, attendance.Lesson.ID);
                         }
