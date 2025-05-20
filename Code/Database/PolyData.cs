@@ -1,5 +1,4 @@
 ﻿using Microsoft.Data.Sqlite;
-using System.Collections.Generic;
 namespace PolyChessTGBot.Database
 {
     internal class PolyData
