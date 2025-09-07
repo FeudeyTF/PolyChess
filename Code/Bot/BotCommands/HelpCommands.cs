@@ -88,6 +88,13 @@ namespace PolyChessTGBot.Bot.BotCommands
             AccountVerifyCodes = [];
             FAQEntries = Program.Data.GetFAQEntries();
             HelpLinks = Program.Data.GetHelpLinks();
+            foreach (var testField in Program.MainConfig.TestFiles)
+            {
+                List<string> message = [testField.Title, "", "<b>Варианты ответа:</b>"];
+                for (int i = 0; i < testField.Options.Count; i++)
+                    message.Add($"{i + 1}) {testField.Options[i].Value}");
+                _testMessages.Add(new TelegramMessageBuilder(string.Join("\n", message)).WithPhoto(new InputFileId(testField.FileId)));
+            }
         }
 
         private List<object> GetAllTournaments()

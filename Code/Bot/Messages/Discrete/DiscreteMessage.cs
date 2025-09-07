@@ -26,7 +26,7 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
             {
                 DiscreteMessage msg = new(queries, onEntered, onNextSended, onNextRecieved);
                 await msg.Send(channelId, token, data);
-                ActiveChannels.Add(channelId, msg);
+                //ActiveChannels.Add(channelId, msg);
             }
         }
 

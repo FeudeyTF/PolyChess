@@ -48,6 +48,8 @@ namespace PolyChessTGBot
 
         public Dictionary<string, TournamentScoreRule> TournamentRules = [];
 
+        public List<TestFieldInfo> TestFiles = [];
+
         public static ConfigFile Load(string name)
         {
             ConfigFile emptyConfig = new();
@@ -95,5 +97,21 @@ namespace PolyChessTGBot
         public int PointsForWinning = DEFAULT_POINTS_FOR_WINNING;
 
         public int PointsForBeing = DEFAULT_POINTS_FOR_BEING;
+    }
+
+    public class TestFieldInfo
+    {
+        public string Title = string.Empty;
+
+        public string FileId = string.Empty;
+
+        public List<TestOption> Options = [];
+    }
+
+    public class TestOption
+    {
+        public string Value = string.Empty;
+
+        public bool IsCorrect;
     }
 }
