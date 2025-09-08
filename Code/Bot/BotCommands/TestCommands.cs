@@ -74,7 +74,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 return;
             }
 
-            await args.Reply("Вы начали проходить входной тест! Отвечайте тестовым сообщением, содержащим один вариант ответа, например, f4f5");
+            await args.Reply("Вы начали проходить входной тест! Отвечайте тестовым сообщением, содержащим один вариант ответа, например, Фf7 или номер варианта ответа");
             await DiscreteMessage.Send(args.Message.Chat.Id, _testMessages, HandleTestEntered, args.Token);
         }
 
@@ -106,7 +106,9 @@ namespace PolyChessTGBot.Bot.BotCommands
                     return;
                 }
 
-                if (correctAnswer.Value.Equals(answer, StringComparison.CurrentCultureIgnoreCase))
+                var correctAnswerIndex = option.Options.IndexOf(correctAnswer);
+
+                if (correctAnswer.Value.Equals(answer, StringComparison.CurrentCultureIgnoreCase) || correctAnswer.Value.Equals((correctAnswerIndex + 1).ToString(), StringComparison.CurrentCultureIgnoreCase))
                 {
                     csv.Add("1");
                     correctAnswersCount++;
