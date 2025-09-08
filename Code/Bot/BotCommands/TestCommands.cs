@@ -88,6 +88,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
             List<string> csv = [args.User.Id.ToString(), args.User.Username, args.User.FirstName + " " + args.User.LastName];
 
+            var correctAnswersCount = 0;
             for (int i = 0; i < args.Responses.Length; i++)
             {
                 var answer = args.Responses[i].Text;
@@ -105,7 +106,6 @@ namespace PolyChessTGBot.Bot.BotCommands
                     return;
                 }
 
-                var correctAnswersCount = 0;
                 if (correctAnswer.Value.Equals(answer, StringComparison.CurrentCultureIgnoreCase))
                 {
                     csv.Add("1");
@@ -113,8 +113,8 @@ namespace PolyChessTGBot.Bot.BotCommands
                 }
                 else
                     csv.Add("0");
-                csv.Add(correctAnswersCount.ToString());
             }
+            csv.Add(correctAnswersCount.ToString());
 
             _graduatedUsers.Add(args.User.Id);
             _testTable.Add(string.Join(',', csv));
