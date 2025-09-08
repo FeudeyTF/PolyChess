@@ -86,7 +86,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 return;
             }
 
-            List<string> csv = [args.User.Id.ToString(), args.User.Username, args.User.FirstName + " " + args.User.LastName];
+            List<string> csv = [args.User.Id.ToString(), args.User.Username, string.Join(' ', args.User.FirstName, args.User.LastName)];
 
             var correctAnswersCount = 0;
             for (int i = 0; i < args.Responses.Length; i++)
