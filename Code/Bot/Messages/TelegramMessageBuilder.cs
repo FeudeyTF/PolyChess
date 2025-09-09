@@ -102,10 +102,10 @@ namespace PolyChessTGBot.Bot.Messages
             => WithVideo(
                 new InputFileId(fileID),
                 caption,
-                width, 
-                height, 
-                duration, 
-                hasSpoiler, 
+                width,
+                height,
+                duration,
+                hasSpoiler,
                 supportsStreaming,
                 captionEntities,
                 parseMode, thumbnail);
@@ -270,7 +270,7 @@ namespace PolyChessTGBot.Bot.Messages
         public TelegramMessageBuilder AddEntity(MessageEntity entity)
         {
             Entities ??= [];
-            Entities = [..Entities, entity];
+            Entities = [.. Entities, entity];
             return this;
         }
 
@@ -297,9 +297,9 @@ namespace PolyChessTGBot.Bot.Messages
 
         public TelegramMessageBuilder AddKeyboard(List<InlineKeyboardButton> keyboard)
         {
-            if(ReplyMarkup == null)
+            if (ReplyMarkup == null)
                 ReplyMarkup = new InlineKeyboardMarkup(keyboard);
-            else if(ReplyMarkup is InlineKeyboardMarkup keyboardMarkup)
+            else if (ReplyMarkup is InlineKeyboardMarkup keyboardMarkup)
                 ReplyMarkup = new InlineKeyboardMarkup(keyboardMarkup.InlineKeyboard.Append(keyboard));
             return this;
         }
@@ -323,7 +323,7 @@ namespace PolyChessTGBot.Bot.Messages
                 Entities = message.Entities,
                 ThreadID = message.MessageThreadId
             };
-            if(message.Video != null)
+            if (message.Video != null)
             {
                 var video = message.Video;
                 InputFile? thumbnail = video.Thumbnail == null ? null : new InputFileId(video.Thumbnail.FileId);

@@ -82,7 +82,7 @@ namespace PolyChessTGBot.Bot
                     dic.Add(commandList.Key, commandList.Value);
             foreach (var commandList in dic)
                 await Program.Bot.Telegram.SetMyCommandsAsync(commandList.Value, Utils.GetScopeByType(commandList.Key));
-           
+
         }
 
         private async Task UpdateHandler(ITelegramBotClient client, Update update, CancellationToken token)
@@ -100,7 +100,7 @@ namespace PolyChessTGBot.Bot
                         break;
                     }
                 case UpdateType.CallbackQuery:
-                    if(update.CallbackQuery != null && update.CallbackQuery.Data != null)
+                    if (update.CallbackQuery != null && update.CallbackQuery.Data != null)
                     {
                         var data = TelegramButtonData.ParseDataString(update.CallbackQuery.Data);
                         if (data != null)
@@ -131,8 +131,8 @@ namespace PolyChessTGBot.Bot
 
                 if (text != null && text.StartsWith('/'))
                 {
-                    if(!await CommandRegistrator.ExecuteCommand(text, message, user, token))
-                        if(!await DiscreteCommandRegistrator.ExecuteCommand(text, message, user, token))
+                    if (!await CommandRegistrator.ExecuteCommand(text, message, user, token))
+                        if (!await DiscreteCommandRegistrator.ExecuteCommand(text, message, user, token))
                             await Program.Bot.Telegram.SendMessage(new TelegramMessageBuilder("Команда не была найдена!").WithToken(token), message.Chat.Id);
                 }
 
@@ -184,12 +184,12 @@ namespace PolyChessTGBot.Bot
                     => !Program.MainConfig.SkippingApiRequestErrors.Contains(apiRequestException.ErrorCode) ?
                         $"[Telegram Ошибка] [{apiRequestException.ErrorCode}]: {apiRequestException.Message}" :
                         "",
-                    
+
                 RequestException =>
                     "Потеряно соединение с ботом. Переподключение...",
                 _ => exception.ToString()
             };
-            if(!string.IsNullOrEmpty(message))
+            if (!string.IsNullOrEmpty(message))
             {
                 Logger.Write(message, LogType.Error);
                 foreach (var debugChatID in Program.MainConfig.DebugChats)

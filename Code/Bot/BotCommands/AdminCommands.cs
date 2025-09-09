@@ -81,7 +81,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             viewTournamentsTop.SetData("ViewTournamentsTop");
             msg.AddButton(viewTournamentsTop);
 
-            InlineKeyboardButton viewTeamsMembers= new("Посмотреть количество участников от команды");
+            InlineKeyboardButton viewTeamsMembers = new("Посмотреть количество участников от команды");
             viewTeamsMembers.SetData("ViewTeamsMembers");
             msg.AddButton(viewTeamsMembers);
 
@@ -231,7 +231,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     args.Query.Message.Chat.Id,
                     [
                         "Введите новое название (-, если оставить прежним)",
-                        "Введите новый текст этой ссылки (-, если оставить прежним)", 
+                        "Введите новый текст этой ссылки (-, если оставить прежним)",
                         "Отправьте новый файл этой ссылки (-, если оставить прежним)"
                     ],
                     OnHelpLinkChangeEntered,
@@ -321,7 +321,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Button("AddHelpLink")]
         private async Task AddeHelpLink(ButtonInteractArgs args)
         {
-            if(args.Query.Message != null)
+            if (args.Query.Message != null)
                 await args.SendDiscreteMessage(
                     args.Query.Message.Chat.Id,
                     [
@@ -361,7 +361,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Button("AddFAQEntry")]
         private async Task AddFAQEntry(ButtonInteractArgs args)
         {
-            if(args.Query.Message != null)
+            if (args.Query.Message != null)
                 await args.SendDiscreteMessage(
                     args.Query.Message.Chat.Id,
                     [
@@ -501,7 +501,7 @@ namespace PolyChessTGBot.Bot.BotCommands
         private async Task LookGraduated(ButtonInteractArgs args)
         {
             await args.Reply("Идёт подсчёт, ожидайте...");
-            List<string> graduatedUsers = []; 
+            List<string> graduatedUsers = [];
             foreach (var user in Program.Data.Users)
             {
                 if (string.IsNullOrEmpty(user.TokenKey))
@@ -1124,7 +1124,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                         foreach (var user in Program.Data.Users)
                         {
-                            foreach(var name in new List<string>(studentsNames))
+                            foreach (var name in new List<string>(studentsNames))
                                 if (user.Name.Contains(name))
                                 {
                                     studentsNames.Remove(name);
@@ -1150,7 +1150,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     }
                 }
             }
-    }
+        }
 
         [Button("AddEvent")]
         private async Task AddEvent(ButtonInteractArgs args)
@@ -1172,7 +1172,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     var description = args.Responses[1].Text;
                     var startFormat = args.Responses[2].Text;
                     var endFormat = args.Responses[3].Text;
-                    if(name != null && description != null && startFormat != null && endFormat != null)
+                    if (name != null && description != null && startFormat != null && endFormat != null)
                     {
                         DateTime start;
                         if (startFormat == "-")
@@ -1212,7 +1212,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
             static async Task OnLessonDataEntered(DiscreteMessageEnteredArgs args)
             {
-                if(args.Responses.Length == 1)
+                if (args.Responses.Length == 1)
                 {
                     var lessonDateString = args.Responses[0].Text;
                     if (DateTime.TryParse(lessonDateString, out var lessonDate))
@@ -1264,7 +1264,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                         List<User> foundedUsers = [];
                         var text = args.Responses[1].Text;
-                        if(text == null)
+                        if (text == null)
                         {
                             await args.Reply("Нужно указать имена студентов!");
                             return;
@@ -1411,7 +1411,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                             await args.Bot.SendMessage(msg, student.TelegramID);
                             Console.WriteLine("SEND MSG TO " + student.Name);
                         }
-                        catch(Exception e)
+                        catch (Exception e)
                         {
                             Console.WriteLine("SENDING TOT " + student.Name + " ERRORED! " + e.ToString());
                         }

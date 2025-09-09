@@ -49,7 +49,7 @@ namespace PolyChessTGBot.Bot.Commands.Basic
                 }
             }
             string commandName = index < 0 ? commandText.ToLower() : commandText[..index].ToLower();
-            List<string> commandArgs = index < 0 ? []: Utils.ParseParameters(commandText[index..]);
+            List<string> commandArgs = index < 0 ? [] : Utils.ParseParameters(commandText[index..]);
 
             CommandArgs args = new(message, Program.Bot.Telegram, user, commandArgs, token);
             foreach (var command in Commands)
@@ -59,19 +59,19 @@ namespace PolyChessTGBot.Bot.Commands.Basic
 
                     if (!command.AdminCommand || Program.MainConfig.Admins.Contains(user.Id))
                     {
-                        #if !DEBUG
+#if !DEBUG
                         try
                         {
-                        #endif
-                            await command.Delegate(args);
-                        #if !DEBUG
+#endif
+                        await command.Delegate(args);
+#if !DEBUG
                         }
                         catch (Exception e)
                         {
                             Program.Logger.Write(e.ToString(), LogType.Error);
                             await args.Reply("Произошла ошибка при выполнении команды! Обратитесь к вашему системному администратору");
                         }
-                        #endif
+#endif
                     }
                     else
                         await args.Reply("Эта команда доступна только админам!");

@@ -27,7 +27,7 @@ namespace PolyChessTGBot.Managers.Images
             var scoreColor = Color.Gold;
 
             Image result = new Bitmap(width, height);
-            
+
             using (Graphics g = Graphics.FromImage(result))
             {
                 g.CompositingQuality = CompositingQuality.HighQuality;

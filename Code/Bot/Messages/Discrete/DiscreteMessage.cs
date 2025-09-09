@@ -22,7 +22,7 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
         /// </summary>
         public static async Task Send(long channelId, List<TelegramMessageBuilder> queries, Func<DiscreteMessageEnteredArgs, Task> onEntered, CancellationToken token, Func<DiscreteMessageNextSendedArgs, Task>? onNextSended = default, Func<DiscreteMessageNextRecievedArgs, Task>? onNextRecieved = default, params List<object> data)
         {
-            if(CanSendMessage(channelId))
+            if (CanSendMessage(channelId))
             {
                 DiscreteMessage msg = new(queries, onEntered, onNextSended, onNextRecieved);
                 await msg.Send(channelId, token, data);
@@ -40,7 +40,7 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
 
         private readonly List<TelegramMessageBuilder> Queries;
 
-        public DiscreteMessage(List<string> queries, Func<DiscreteMessageEnteredArgs, Task> onEntered) : this([..queries.Select(q => new TelegramMessageBuilder(q))], onEntered) {}
+        public DiscreteMessage(List<string> queries, Func<DiscreteMessageEnteredArgs, Task> onEntered) : this([.. queries.Select(q => new TelegramMessageBuilder(q))], onEntered) { }
 
         public DiscreteMessage(List<TelegramMessageBuilder> queries, Func<DiscreteMessageEnteredArgs, Task> onEntered, Func<DiscreteMessageNextSendedArgs, Task>? onNextSended = default, Func<DiscreteMessageNextRecievedArgs, Task>? onNextRecieved = default)
         {
@@ -55,7 +55,7 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
 
         private async Task HandleBotUpdate(BotUpdateEventArgs args)
         {
-            if(args.Update.Type == UpdateType.Message && args.Update.Message != null && args.Update.Message.From != null && Channels.TryGetValue(args.Update.Message.Chat.Id, out var info))
+            if (args.Update.Type == UpdateType.Message && args.Update.Message != null && args.Update.Message.From != null && Channels.TryGetValue(args.Update.Message.Chat.Id, out var info))
             {
                 args.Handled = true;
                 if (info.Add(args.Update.Message))
@@ -68,8 +68,8 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
                 }
                 else
                 {
-                    if(OnNextRecieved != null)
-                        await OnNextRecieved(new(info.Progress - 1, Queries[info.Progress -1], args.Update.Message, args.Bot, args.Update.Message.Chat.Id, args.Update.Message.From, info.Data));
+                    if (OnNextRecieved != null)
+                        await OnNextRecieved(new(info.Progress - 1, Queries[info.Progress - 1], args.Update.Message, args.Bot, args.Update.Message.Chat.Id, args.Update.Message.From, info.Data));
                     await args.Bot.SendMessage(Queries[info.Progress].WithToken(args.Token), args.Update.Message.Chat.Id);
                 }
             }
@@ -96,7 +96,7 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
             GC.SuppressFinalize(this);
         }
 
-        private  class ChannelInfo
+        private class ChannelInfo
         {
             public Message[] Responses;
 
@@ -118,7 +118,7 @@ namespace PolyChessTGBot.Bot.Messages.Discrete
             {
                 if (Progress < QueriesCount)
                     Responses[Progress++] = message;
-                if(Progress == QueriesCount)
+                if (Progress == QueriesCount)
                     return true;
                 return false;
             }

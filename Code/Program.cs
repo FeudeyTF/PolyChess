@@ -45,8 +45,8 @@ namespace PolyChessTGBot
             string exeFilePath = Path.Combine(
                 Environment.CurrentDirectory,
                 Assembly.GetExecutingAssembly().GetName().Name + ".exe");
-            Logger.Write($"Программа версии {FileVersionInfo.GetVersionInfo(exeFilePath).FileVersion} от {File.GetLastWriteTime(exeFilePath):g}", LogType.Info); 
-         
+            Logger.Write($"Программа версии {FileVersionInfo.GetVersionInfo(exeFilePath).FileVersion} от {File.GetLastWriteTime(exeFilePath):g}", LogType.Info);
+
             Data = new(MainConfig.DatabasePath);
             Data.Initialize();
             Logger.Write($"База данных '{Data.DatabaseName}' подключена!", LogType.Info);
@@ -61,9 +61,9 @@ namespace PolyChessTGBot
 
         public static async Task Main(string[] args)
         {
-            #if !DEBUG // Сильно замедляет программу вначале
+#if !DEBUG // Сильно замедляет программу вначале
             await Tournaments.LoadTournaments();
-            #endif
+#endif
             if (string.IsNullOrEmpty(MainConfig.BotToken))
             {
                 Logger.Write("Обнаружен пустой токен в конфиге!", LogType.Error);
@@ -118,7 +118,7 @@ namespace PolyChessTGBot
                             if (field != null)
                             {
                                 object? parameter = null;
-                                switch(field.FieldType.Name)
+                                switch (field.FieldType.Name)
                                 {
                                     case "Int32":
                                         if (int.TryParse(parameters[1], out int intValue))
@@ -136,7 +136,7 @@ namespace PolyChessTGBot
                                         parameter = parameters[1];
                                         break;
                                 }
-                                if(parameter == null)
+                                if (parameter == null)
                                 {
                                     Console.WriteLine("Тип параметра не поддерживается ввода!");
                                     continue;

@@ -2,10 +2,7 @@
 using PolyChessTGBot.Bot.Commands.Basic;
 using PolyChessTGBot.Bot.Messages;
 using PolyChessTGBot.Bot.Messages.Discrete;
-using System.Collections.Generic;
 using System.Text;
-using Telegram.Bot.Types;
-using static System.Net.Mime.MediaTypeNames;
 using File = System.IO.File;
 
 namespace PolyChessTGBot.Bot.BotCommands
@@ -14,7 +11,7 @@ namespace PolyChessTGBot.Bot.BotCommands
     {
         private readonly List<TelegramMessageBuilder> _testMessages = [];
 
-        private readonly List<long> _graduatedUsers = []; 
+        private readonly List<long> _graduatedUsers = [];
 
         private bool _isTestRunning = false;
 
@@ -56,13 +53,13 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Command("test", "Запустит тест", true)]
         private async Task TestCommand(CommandArgs args)
         {
-            if(!_isTestRunning)
+            if (!_isTestRunning)
             {
                 await args.Reply("В данный момент нельзя начать проходить тест!");
                 return;
             }
 
-            if(_testMessages.Count == 0)
+            if (_testMessages.Count == 0)
             {
                 await args.Reply("Вопросы для теста отсутсвуют. Обратитесь в организатору");
                 return;
@@ -80,7 +77,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
         private async Task HandleTestEntered(DiscreteMessageEnteredArgs args)
         {
-            if(_graduatedUsers.Contains(args.User.Id))
+            if (_graduatedUsers.Contains(args.User.Id))
             {
                 await args.Reply("Вы уже прошли тест!");
                 return;
@@ -92,7 +89,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             for (int i = 0; i < args.Responses.Length; i++)
             {
                 var answer = args.Responses[i].Text;
-                if(answer == null)
+                if (answer == null)
                 {
                     await args.Reply($"Ваш ответ #{i + 1} не содержал текстового ответа! Перепройдите тест");
                     return;
@@ -100,7 +97,7 @@ namespace PolyChessTGBot.Bot.BotCommands
 
                 var option = Program.MainConfig.TestFiles[i];
                 var correctAnswer = option.Options.FirstOrDefault(o => o.IsCorrect);
-                if(correctAnswer == null)
+                if (correctAnswer == null)
                 {
                     await args.Reply($"Вопрос #{i + 1} неправильно создан! Пожалуйста, обратитесь к организатору");
                     return;

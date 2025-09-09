@@ -49,11 +49,11 @@ namespace PolyChessTGBot.Bot.Commands.Basic
 
                     if (!command.AdminCommand || Program.MainConfig.Admins.Contains(user.Id))
                     {
-                        #if !DEBUG
+#if !DEBUG
                         try
                         {
-                        #endif
-                            await command.Message.Send(message.Chat.Id, token);
+#endif
+                        await command.Message.Send(message.Chat.Id, token);
 #if !DEBUG
                         }
                         catch (Exception e)

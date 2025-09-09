@@ -32,7 +32,7 @@ namespace PolyChessTGBot.Bot.Messages
         public List<List<ListMessageButton<List<TValue>>>> AdditionalKeyboards;
 
         public ListMessage(string id, Func<List<TValue>> getValues, Func<TValue, int, User, string> processString, int valuesPerPage = 10, bool showPagesCount = true, string nextButtonText = "➡️", string previousButtonText = "⬅️", List<List<ListMessageButton<List<TValue>>>>? additionalKeyboards = default)
-            :this(id, (user) => getValues.Invoke(), processString, valuesPerPage, showPagesCount, nextButtonText, previousButtonText, additionalKeyboards)
+            : this(id, (user) => getValues.Invoke(), processString, valuesPerPage, showPagesCount, nextButtonText, previousButtonText, additionalKeyboards)
         {
         }
 
@@ -142,7 +142,7 @@ namespace PolyChessTGBot.Bot.Messages
             else
             {
                 foreach (var keyboard in AdditionalKeyboards)
-                    foreach(var button in keyboard)
+                    foreach (var button in keyboard)
                         if (button.ID + ID == args.ButtonID)
                             await button.Delegate(args, FindValues(args.GetNumber("Page"), args.Query.From));
             }
@@ -166,7 +166,7 @@ namespace PolyChessTGBot.Bot.Messages
                     text += Footer;
                     var message = new TelegramMessageBuilder(text)
                         .WithMarkup(GenerateKeyBoard(page + 1, GetPagesCount(values.Count), user));
-                    if(GetDocumentID != null && values.Count > startIndex)
+                    if (GetDocumentID != null && values.Count > startIndex)
                     {
                         var document = GetDocumentID(values[startIndex]);
                         if (!string.IsNullOrEmpty(document))

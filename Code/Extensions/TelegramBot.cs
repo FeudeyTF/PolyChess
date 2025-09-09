@@ -14,7 +14,7 @@ namespace PolyChessTGBot.Extensions
 
         public static async Task SendMessage(this TelegramBotClient bot, TelegramMessageBuilder message, ChatId chatID)
         {
-            if(message.CancellationToken == default)
+            if (message.CancellationToken == default)
                 Console.WriteLine(message.Text + " NULL TOKEN!");
             if (message.File != null)
             {
@@ -25,13 +25,13 @@ namespace PolyChessTGBot.Extensions
 #if DEBUG
                     var textLength = message.Text.Length;
                     int messageCount = textLength / MAX_TEXT_SIZE + 1;
-                    for(int i = 0; i < messageCount - 1; i++)
+                    for (int i = 0; i < messageCount - 1; i++)
                         await bot.SendTextMessageAsync(chatID, message.Text[(i * MAX_TEXT_SIZE)..(i + 2 * MAX_TEXT_SIZE)], message.ThreadID, message.ParseMode, message.Entities, message.DisableWebPagePreview, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
                     await bot.SendDocumentAsync(chatID, message.File, message.ThreadID, message.Thumbnail, message.Text[((messageCount - 1) * MAX_TEXT_SIZE)..], message.ParseMode, message.Entities, message.DisableContentTypeDetection, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
 #endif
                 }
             }
-            else if(message.MediaFiles != null)
+            else if (message.MediaFiles != null)
             {
                 await bot.SendMediaGroupAsync(chatID, message.MediaFiles, message.ThreadID, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.CancellationToken);
             }
@@ -45,7 +45,7 @@ namespace PolyChessTGBot.Extensions
                     await bot.SendVideoAsync(chatID, video.Media, message.ThreadID, video.Duration, video.Width, video.Height, video.Thumbnail, video.Caption, video.ParseMode, video.CaptionEntities, video.HasSpoiler, video.SupportsStreaming, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
                 else if (message.Media is InputMediaAnimation animation)
                     await bot.SendAnimationAsync(chatID, animation.Media, message.ThreadID, animation.Duration, animation.Width, animation.Height, animation.Thumbnail, animation.Caption, animation.ParseMode, animation.CaptionEntities, animation.HasSpoiler, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
-                else if(message.Media is InputMediaDocument document)
+                else if (message.Media is InputMediaDocument document)
                     await bot.SendDocumentAsync(chatID, document.Media, message.ThreadID, message.Thumbnail, message.Text, message.ParseMode, message.Entities, message.DisableContentTypeDetection, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
             }
             else
@@ -58,7 +58,7 @@ namespace PolyChessTGBot.Extensions
                     var textLength = message.Text.Length;
                     int messageCount = textLength / MAX_TEXT_SIZE + 1;
                     for (int i = 0; i < messageCount - 1; i++)
-                            await bot.SendTextMessageAsync(chatID, message.Text[(i * MAX_TEXT_SIZE)..((i + 1) * MAX_TEXT_SIZE)], message.ThreadID, message.ParseMode, message.Entities, message.DisableWebPagePreview, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
+                        await bot.SendTextMessageAsync(chatID, message.Text[(i * MAX_TEXT_SIZE)..((i + 1) * MAX_TEXT_SIZE)], message.ThreadID, message.ParseMode, message.Entities, message.DisableWebPagePreview, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
                     await bot.SendTextMessageAsync(chatID, message.Text[((messageCount - 1) * MAX_TEXT_SIZE)..], message.ThreadID, message.ParseMode, message.Entities, message.DisableWebPagePreview, message.DisableNotification, message.ProtectContent, message.ReplyToMessageID, message.AllowSendingWithoutReply, message.ReplyMarkup, message.CancellationToken);
 #endif                
                 }
@@ -89,7 +89,7 @@ namespace PolyChessTGBot.Extensions
                 {
                     await bot.EditMessageTextAsync(chatID, oldMessage.MessageId, message.Text, message.ParseMode, message.Entities, message.DisableWebPagePreview, keyboard, message.CancellationToken);
                 }
-                else if(oldMessage.Caption != message.Text)
+                else if (oldMessage.Caption != message.Text)
                 {
                     await bot.EditMessageCaptionAsync(chatID, oldMessage.MessageId, message.Text, message.ParseMode, message.Entities, keyboard, message.CancellationToken);
                 }
@@ -101,7 +101,7 @@ namespace PolyChessTGBot.Extensions
             List<Image> result = [];
             var profilePhotos = await Program.Bot.Telegram.GetUserProfilePhotosAsync(userId, cancellationToken: token);
             var profilePhoto = profilePhotos.Photos.FirstOrDefault();
-            if(profilePhoto != null)
+            if (profilePhoto != null)
             {
                 foreach (var photo in profilePhoto)
                 {

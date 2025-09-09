@@ -117,7 +117,7 @@ namespace PolyChessTGBot.Database
                 var user = GetUser(reader.Get<long>("UserID"));
                 if (user != null)
                 {
-                    if(Lessons.TryGetValue(reader.Get<int>("LessonID"), out var lesson))
+                    if (Lessons.TryGetValue(reader.Get<int>("LessonID"), out var lesson))
                         result.Add(new Attendance(user, lesson));
                 }
             }
@@ -126,10 +126,10 @@ namespace PolyChessTGBot.Database
 
         private Dictionary<int, Lesson> GetLessons()
         {
-            Dictionary <int, Lesson> result = [];
+            Dictionary<int, Lesson> result = [];
             using var reader = SelectQuery($"SELECT * FROM Lessons");
             while (reader.Read())
-                    result.Add(reader.Get<int>("ID"), new Lesson(reader.Get<int>("ID"), new DateTime(reader.Get<long>("LessonDate"))));
+                result.Add(reader.Get<int>("ID"), new Lesson(reader.Get<int>("ID"), new DateTime(reader.Get<long>("LessonDate"))));
             return result;
         }
 

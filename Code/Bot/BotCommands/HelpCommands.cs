@@ -101,9 +101,9 @@ namespace PolyChessTGBot.Bot.BotCommands
         {
             List<object> result = [];
             foreach (var tournament in Program.Tournaments.TournamentsList)
-                    result.Add(tournament);
+                result.Add(tournament);
             foreach (var tournament in Program.Tournaments.SwissTournamentsList)
-                    result.Add(tournament);
+                result.Add(tournament);
             return new List<object>([.. from r in result orderby (r is ArenaTournamentInfo t ? t.Tournament.StartDate : r is SwissTournamentInfo s ? s.Tournament.Started : DateTime.Now) select r]);
         }
 
@@ -429,7 +429,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     text.Add($"       <b>Всего</b>: {visitedTournamentsCount} из {Program.MainConfig.Test.RequiredTournamentsCount} ({Utils.CreateSimpleBar(visitedTournamentsCount, Program.MainConfig.Test.RequiredTournamentsCount, bars: barsInBar)})");
                     text.Add("         - Не в топе: " + zeroScoreTournaments);
                     text.Add("         - В топе: " + oneScoreTournaments);
-                    if(user.OtherTournaments != 0)
+                    if (user.OtherTournaments != 0)
                         text.Add("         - Дополнительно: " + user.OtherTournaments);
 
                     if (!string.IsNullOrEmpty(user.TokenKey))
@@ -664,7 +664,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                     result.Add($" - Время: <b>{TimeSpan.FromSeconds(tournament.Clock.Limit).Minutes}+{tournament.Clock.Increment}</b>");
                     result.Add($" - Длительность: <b>{TimeSpan.FromMinutes(tournament.Minutes):hh\\:mm}</b>");
                     result.Add($" - Доступен ли Берсерк: <b>{(tournament.Berserkable ? "Да" : "Нет")}</b>");
-                    result.Add($" - Рейтинговый: <b>{(tournament.Rated ? "Да" : "Нет")}</b>"); 
+                    result.Add($" - Рейтинговый: <b>{(tournament.Rated ? "Да" : "Нет")}</b>");
                 }
             }
             else if (info is SwissTournamentInfo swissTournamentInfo)

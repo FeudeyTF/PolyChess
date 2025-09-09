@@ -6,7 +6,7 @@
 
         public int Zeros;
 
-        public TournamentsScore(int ones, int zeros) 
+        public TournamentsScore(int ones, int zeros)
         {
             Ones = ones;
             Zeros = zeros;
