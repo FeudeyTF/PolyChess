@@ -88,6 +88,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             AccountVerifyCodes = [];
             FAQEntries = Program.Data.GetFAQEntries();
             HelpLinks = Program.Data.GetHelpLinks();
+            _testMessages.Add("Введите своё ФИО");
             foreach (var testField in Program.MainConfig.TestFiles)
             {
                 List<string> message = [testField.Title, "", "<b>Варианты ответа:</b>"];

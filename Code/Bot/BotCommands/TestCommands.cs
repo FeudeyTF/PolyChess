@@ -25,7 +25,16 @@ namespace PolyChessTGBot.Bot.BotCommands
             if (_isTestRunning)
             {
                 _testTable.Clear();
-                _testTable.Add(string.Join(',', ["ID", "Ник", "Имя", .. Program.MainConfig.TestFiles.Select(t => Program.MainConfig.TestFiles.IndexOf(t) + 1), "Всего"]));
+                _testTable.Add(string.Join(',', 
+                [
+                    "ID",
+                    "Ник",
+                    "Имя",
+                    "ФИО", 
+                    .. Program.MainConfig.TestFiles.Select(t => "Балл за " + (Program.MainConfig.TestFiles.IndexOf(t) + 1)),
+                    .. Program.MainConfig.TestFiles.Select(t => "Ответ на " + (Program.MainConfig.TestFiles.IndexOf(t) + 1)),
+                    "Всего"
+                ]));
             }
             else
             {
@@ -83,36 +92,41 @@ namespace PolyChessTGBot.Bot.BotCommands
                 return;
             }
 
-            List<string> csv = [args.User.Id.ToString(), args.User.Username, string.Join(' ', args.User.FirstName, args.User.LastName)];
+            List<string> csv = [args.User.Id.ToString(), args.User.Username, string.Join(' ', args.User.FirstName, args.User.LastName), args.Responses[0].Text];
 
             var correctAnswersCount = 0;
-            for (int i = 0; i < args.Responses.Length; i++)
+            for (int i = 1; i < args.Responses.Length; i++)
             {
                 var answer = args.Responses[i].Text;
                 if (answer == null)
                 {
-                    await args.Reply($"Ваш ответ #{i + 1} не содержал текстового ответа! Перепройдите тест");
+                    await args.Reply($"Ваш ответ #{i} не содержал текстового ответа! Перепройдите тест");
                     return;
                 }
 
-                var option = Program.MainConfig.TestFiles[i];
+                var option = Program.MainConfig.TestFiles[i - 1];
                 var correctAnswer = option.Options.FirstOrDefault(o => o.IsCorrect);
                 if (correctAnswer == null)
                 {
-                    await args.Reply($"Вопрос #{i + 1} неправильно создан! Пожалуйста, обратитесь к организатору");
+                    await args.Reply($"Вопрос #{i} неправильно создан! Пожалуйста, обратитесь к организатору");
                     return;
                 }
 
                 var correctAnswerIndex = option.Options.IndexOf(correctAnswer);
 
-                if (correctAnswer.Value.Equals(answer, StringComparison.CurrentCultureIgnoreCase) || correctAnswer.Value.Equals((correctAnswerIndex + 1).ToString(), StringComparison.CurrentCultureIgnoreCase))
+                if (correctAnswer.Value.Equals(answer, StringComparison.CurrentCultureIgnoreCase) || answer.Equals((correctAnswerIndex + 1).ToString(), StringComparison.CurrentCultureIgnoreCase))
                 {
                     csv.Add("1");
                     correctAnswersCount++;
                 }
                 else
                     csv.Add("0");
+
             }
+
+            for (int i = 1; i < args.Responses.Length; i++)
+                csv.Add(args.Responses[i].Text!);
+
             csv.Add(correctAnswersCount.ToString());
 
             _graduatedUsers.Add(args.User.Id);
