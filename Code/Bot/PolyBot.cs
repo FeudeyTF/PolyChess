@@ -172,7 +172,71 @@ namespace PolyChessTGBot.Bot
                         }
                     }
                 }
+
+                if (message.Location != null)
+                {
+                    if(message.Location.LivePeriod == null)
+                    {
+                        await Telegram.SendMessage("Для того, чтобы отметиться на уроке, нужно транслировать геопозицию, а не отправить!", user.Id);
+                        return;
+                    }
+
+                    await HandleLocation(user, message.Location);
+                }
+
                 Logger.Write($"Получено сообщение: [{user.FirstName} {user.LastName} (@{user.Username}) в {message.Chat.Id}]: {message.Text}", LogType.Info);
+            }
+        }
+
+        private async Task HandleLocation(User user, Location location)
+        {
+            if(GetDistance(location, new()
+            {
+                Latitude = Program.MainConfig.SchoolLocation.X,
+                Longitude = Program.MainConfig.SchoolLocation.Y,
+
+            }) <= 0.3)
+            {
+                var currentTime = DateTime.Now;
+                var currentLesson = Program.Data.Lessons.Values.FirstOrDefault(
+                    l => l.LessonDate.Day == currentTime.Day && l.LessonDate.Month == currentTime.Month
+                );
+
+                if(currentLesson == null)
+                {
+                    await Telegram.SendMessage("Сегодня нет урока!", user.Id);
+                    return;
+                }
+
+                if(Program.Data.Attendances.Any(a => a.User.TelegramID == user.Id && a.Lesson.LessonDate == currentLesson.LessonDate))
+                {
+                    await Telegram.SendMessage("Вы уже отметились на уроке!", user.Id);
+                    return;
+                }
+
+                var dataUser = Program.Data.GetUser(user.Id);
+                if(dataUser == null)
+                {
+                    await Telegram.SendMessage("Вы не являетесь участником секции!", user.Id);
+                    return;
+                }
+
+                Program.Data.AddUserAttendance(dataUser, currentLesson);
+                await Telegram.SendMessage("Вы успешно отмечены на уроке!", user.Id);
+            }
+            else
+                await Telegram.SendMessage("Вы не на уроке!", user.Id);
+
+            static double GetDistance(Location location1, Location location2)
+            {
+                var delta = Math.Acos(
+                    Math.Sin(location1.Latitude) * Math.Sin(location1.Latitude) +
+                    Math.Cos(location1.Latitude) * Math.Cos(location1.Latitude) *
+                    Math.Cos(location1.Longitude - location1.Longitude)
+                );
+                const double EarthArc = 111.1;
+
+                return delta * EarthArc;
             }
         }
 

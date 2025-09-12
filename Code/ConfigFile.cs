@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using System.Numerics;
 
 namespace PolyChessTGBot
 {
@@ -49,6 +50,8 @@ namespace PolyChessTGBot
         public Dictionary<string, TournamentScoreRule> TournamentRules = [];
 
         public List<TestFieldInfo> TestFiles = [];
+
+        public Vector2 SchoolLocation = new(59.965128f, 30.398474f);
 
         public static ConfigFile Load(string name)
         {

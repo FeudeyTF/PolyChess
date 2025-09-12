@@ -207,6 +207,12 @@ namespace PolyChessTGBot.Database
             return (T?)output;
         }
 
+        public void AddUserAttendance(User user, Lesson lesson)
+        {
+            Query($"INSERT INTO Attendance (UserID, LessonsID) VALUES ('{user.TelegramID}', '{lesson.ID}')");
+            Attendances.Add(new(user, lesson));
+        }
+
         private SqliteParameter AddParameter(SqliteCommand command, string name, object data)
         {
             SqliteParameter dbDataParameter = command.CreateParameter();
