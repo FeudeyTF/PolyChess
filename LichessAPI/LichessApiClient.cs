@@ -67,7 +67,7 @@ namespace LichessAPI
         }
 
         protected async Task<HttpResponseMessage> SendRequestMessage(HttpRequestMessage message)
-        { 
+        {
             var msg = await HttpClient.SendAsync(message);
             OnMessageSent(message, msg);
             return msg;

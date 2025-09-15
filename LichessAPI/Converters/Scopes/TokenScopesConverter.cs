@@ -33,4 +33,3 @@ namespace LichessAPI.Converters.Scopes
         }
     }
 }
- 

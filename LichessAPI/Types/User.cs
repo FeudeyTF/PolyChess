@@ -20,7 +20,7 @@ namespace LichessAPI.Types
         [JsonConverter(typeof(LichessDateTimeConverter))]
         public DateTime LastSeenDate;
 
-        public Dictionary<string, int> Playtime  = [];
+        public Dictionary<string, int> Playtime = [];
 
         public Profile? Profile;
 
@@ -28,7 +28,7 @@ namespace LichessAPI.Types
 
         public string URL = string.Empty;
 
-        public Dictionary<string, int> Count  = [];
+        public Dictionary<string, int> Count = [];
 
         public bool Followable;
 

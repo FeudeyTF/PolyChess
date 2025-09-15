@@ -175,7 +175,7 @@ namespace PolyChessTGBot.Bot
 
                 if (message.Location != null)
                 {
-                    if(message.Location.LivePeriod == null)
+                    if (message.Location.LivePeriod == null)
                     {
                         await Telegram.SendMessage("Для того, чтобы отметиться на уроке, нужно транслировать геопозицию, а не отправить!", user.Id);
                         return;
@@ -190,7 +190,7 @@ namespace PolyChessTGBot.Bot
 
         private async Task HandleLocation(User user, Location location)
         {
-            if(GetDistance(location, new()
+            if (GetDistance(location, new()
             {
                 Latitude = Program.MainConfig.SchoolLocation.X,
                 Longitude = Program.MainConfig.SchoolLocation.Y,
@@ -202,20 +202,20 @@ namespace PolyChessTGBot.Bot
                     l => l.LessonDate.Day == currentTime.Day && l.LessonDate.Month == currentTime.Month
                 );
 
-                if(currentLesson == null)
+                if (currentLesson == null)
                 {
                     await Telegram.SendMessage("Сегодня нет урока!", user.Id);
                     return;
                 }
 
-                if(Program.Data.Attendances.Any(a => a.User.TelegramID == user.Id && a.Lesson.LessonDate == currentLesson.LessonDate))
+                if (Program.Data.Attendances.Any(a => a.User.TelegramID == user.Id && a.Lesson.LessonDate == currentLesson.LessonDate))
                 {
                     await Telegram.SendMessage("Вы уже отметились на уроке!", user.Id);
                     return;
                 }
 
                 var dataUser = Program.Data.GetUser(user.Id);
-                if(dataUser == null)
+                if (dataUser == null)
                 {
                     await Telegram.SendMessage("Вы не являетесь участником секции!", user.Id);
                     return;

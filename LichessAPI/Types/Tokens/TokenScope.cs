@@ -17,7 +17,7 @@
         public static TokenScope? Parse(string value)
         {
             var slicedToken = value.Split(Separator);
-            if(slicedToken.Length == 2)
+            if (slicedToken.Length == 2)
             {
                 var type = Enum.Parse<TokenScopeType>(slicedToken[0], true);
                 var accessLevel = Enum.Parse<TokenScopeAccessLevel>(slicedToken[1], true);

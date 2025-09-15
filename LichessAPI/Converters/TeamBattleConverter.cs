@@ -29,9 +29,9 @@ namespace LichessAPI.Converters
                     {
                         var list = JsonSerializer.Deserialize<List<string>>(value, options);
                         if (result.Teams != null && list != null)
-                            if(list.Count == 1)
+                            if (list.Count == 1)
                                 result.Teams.Add(list[0], []);
-                            else if(list.Count > 1)
+                            else if (list.Count > 1)
                                 result.Teams.Add(list[0], list[1..]);
                     }
                 }

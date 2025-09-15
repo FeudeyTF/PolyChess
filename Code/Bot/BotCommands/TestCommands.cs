@@ -25,12 +25,12 @@ namespace PolyChessTGBot.Bot.BotCommands
             if (_isTestRunning)
             {
                 _testTable.Clear();
-                _testTable.Add(string.Join(',', 
+                _testTable.Add(string.Join(',',
                 [
                     "ID",
                     "Ник",
                     "Имя",
-                    "ФИО", 
+                    "ФИО",
                     .. Program.MainConfig.TestFiles.Select(t => "Балл за " + (Program.MainConfig.TestFiles.IndexOf(t) + 1)),
                     .. Program.MainConfig.TestFiles.Select(t => "Ответ на " + (Program.MainConfig.TestFiles.IndexOf(t) + 1)),
                     "Всего"

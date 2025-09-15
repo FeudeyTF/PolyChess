@@ -9,7 +9,7 @@ namespace LichessAPI.Converters.Scopes
         public override TokenScope Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             var str = reader.GetString();
-            if(!string.IsNullOrEmpty(str) && TokenScope.TryParse(str, out var tokenScope))
+            if (!string.IsNullOrEmpty(str) && TokenScope.TryParse(str, out var tokenScope))
                 return tokenScope;
             return default;
         }
