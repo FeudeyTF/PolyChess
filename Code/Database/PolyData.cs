@@ -133,6 +133,13 @@ namespace PolyChessTGBot.Database
             return result;
         }
 
+        public void AddLesson(DateTime date)
+        {
+            Query($"INSERT INTO Lessons (LessonDate) VALUES ('{date.Ticks}')");
+            int id = QueryScalar<int>("SELECT last_insert_rowid()");
+            Lessons.Add(id, new Lesson(id, date));
+        }
+
         public List<HelpLink> GetHelpLinks()
         {
             using var reader = SelectQuery("SELECT * FROM HelpLinks");

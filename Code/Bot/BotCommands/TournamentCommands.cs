@@ -90,5 +90,35 @@ namespace PolyChessTGBot.Bot.BotCommands
             else
                 await args.Reply("Неправильный синтаксис! Правильно: /getplayerscore \"ID турнира\" \"Ник студента\"");
         }
+
+        [Command("addlesson", "Добавляет урок в базу данных", admin: true)]
+        private async Task AddLesson(CommandArgs args)
+        {
+            if (args.Parameters.Count == 1)
+            {
+                if (DateTime.TryParse(args.Parameters[0], out var lessonDate))
+                {
+                    if (lessonDate < Program.SemesterStartDate || lessonDate > Program.SemesterEndDate)
+                    {
+                        await args.Reply($"Дата урока должна быть в пределах семестра: {Program.SemesterStartDate:d} - {Program.SemesterEndDate:d}");
+                        return;
+                    }
+                    foreach (var lesson in Program.Data.Lessons.Values)
+                    {
+                        if (lesson.LessonDate == lessonDate.Date)
+                        {
+                            await args.Reply("Урок с такой датой уже существует!");
+                            return;
+                        }
+                    }
+                    Program.Data.AddLesson(lessonDate);
+                    await args.Reply($"Урок от <b>{lessonDate:d}</b> успешно добавлен!");
+                }
+                else
+                    await args.Reply("Неправильный формат даты! Пример правильного формата: 2024-09-01");
+            }
+            else
+                await args.Reply("Неправильный синтаксис! Правильно: /addlesson \"Дата урока\"");
+        }
     }
 }

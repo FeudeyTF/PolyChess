@@ -127,6 +127,18 @@ namespace PolyChessTGBot.Bot
             var user = message.From;
             if (user != null)
             {
+                if (message.Location != null)
+                {
+                    if (message.Location.LivePeriod == null)
+                    {
+                        await Telegram.SendMessage("Для того, чтобы отметиться на уроке, нужно транслировать геопозицию, а не просто отправить!", user.Id);
+                        return;
+                    }
+
+                    await HandleLocation(user, message.Location);
+                    return;
+                }
+
                 var text = message.Text;
 
                 if (text != null && text.StartsWith('/'))
@@ -173,17 +185,6 @@ namespace PolyChessTGBot.Bot
                     }
                 }
 
-                if (message.Location != null)
-                {
-                    if (message.Location.LivePeriod == null)
-                    {
-                        await Telegram.SendMessage("Для того, чтобы отметиться на уроке, нужно транслировать геопозицию, а не отправить!", user.Id);
-                        return;
-                    }
-
-                    await HandleLocation(user, message.Location);
-                }
-
                 Logger.Write($"Получено сообщение: [{user.FirstName} {user.LastName} (@{user.Username}) в {message.Chat.Id}]: {message.Text}", LogType.Info);
             }
         }
@@ -205,6 +206,12 @@ namespace PolyChessTGBot.Bot
                 if (currentLesson == null)
                 {
                     await Telegram.SendMessage("Сегодня нет урока!", user.Id);
+                    return;
+                }
+
+                if(currentTime.Hour < 18 || currentTime.Hour > 19)
+                {
+                    await Telegram.SendMessage("Отметиться можно только с 18 до 19 часов вечера", user.Id);
                     return;
                 }
 
