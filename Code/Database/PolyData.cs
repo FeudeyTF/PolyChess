@@ -216,7 +216,7 @@ namespace PolyChessTGBot.Database
 
         public void AddUserAttendance(User user, Lesson lesson)
         {
-            Query($"INSERT INTO Attendance (UserID, LessonsID) VALUES ('{user.TelegramID}', '{lesson.ID}')");
+            Query($"INSERT INTO Attendance (UserID, LessonID) VALUES ('{user.TelegramID}', '{lesson.ID}')");
             Attendances.Add(new(user, lesson));
         }
 
