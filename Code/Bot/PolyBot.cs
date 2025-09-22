@@ -209,7 +209,7 @@ namespace PolyChessTGBot.Bot
                     return;
                 }
 
-                if(currentTime.Hour < 18 || currentTime.Hour > 19)
+                if (currentTime.Hour < 18 || currentTime.Hour > 19)
                 {
                     await Telegram.SendMessage("Отметиться можно только с 18 до 19 часов вечера", user.Id);
                     return;
