@@ -83,6 +83,39 @@ namespace PolyChessTGBot.Bot.BotCommands
                 await args.Reply("Вы не отправили сообщение!");
         }
 
+        [DiscreteCommand("register", "Регистрирует студента в боте", ["Отправьте своё ФИО, указанное в анкете для отбора в клуб"], true)]
+        private async Task Register(CommandArgs<Message> args)
+        {
+            if (args.Parameters.Count == 1)
+            {
+                var name = args.Parameters[0].Text;
+                if(name == null)
+                {
+                    await args.Reply("Необходимо ввести ФИО");
+                    return;
+                }
+
+                if (Program.Data.GetUser(args.User.Id) != null)
+                {
+                    await args.Reply("Вы уже зарегистрированы в боте!");
+                    return;
+                }
+
+                var user = Program.Data.Users.FirstOrDefault(u => u.Name == name);
+                if(user == null)
+                {
+                    await args.Reply("Ваше имя не найдено! Либо оно неправильно введено, либо его нет в базе!");
+                    return;
+                }
+
+                user.TelegramID = args.User.Id;
+                Program.Data.Query("UPDATE Users SET TelegramID=@0 WHERE Name=@1", user.TelegramID, user.Name);
+                await args.Reply("Регистрация успешно завершена! Привяжите свой Lichess аккаунт с помощью команды /reg.");
+            }
+            else
+                await args.Reply("Вы не отправили сообщение!");
+        }
+
         [Button("CreativeTaskApprove")]
         private async Task CreativeTaskApprove(ButtonInteractArgs args)
         {

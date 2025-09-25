@@ -105,6 +105,11 @@ namespace PolyChessTGBot.Bot.BotCommands
             getSemesterResults.SetData(nameof(GetSemesterResults));
             msg.AddButton(getSemesterResults);
 
+
+            InlineKeyboardButton addStudents = new("Добавить студентов");
+            addStudents.SetData(nameof(AddStudentsButton));
+            msg.AddButton(addStudents);
+
             await args.Reply(msg.WithText(string.Join("\n", text)));
         }
 
@@ -1233,7 +1238,6 @@ namespace PolyChessTGBot.Bot.BotCommands
         [Button(nameof(AddAttendance))]
         private async Task AddAttendance(ButtonInteractArgs args)
         {
-
             if (args.Query.Message != null)
                 await args.SendDiscreteMessage(
                     args.Query.Message.Chat.Id,
@@ -1384,6 +1388,25 @@ namespace PolyChessTGBot.Bot.BotCommands
             var stream = File.Open(csvFilePath, FileMode.Open);
             message.WithFile(stream, "Table.csv");
             await args.Reply(message);
+        }
+
+        [Button(nameof(AddStudentsButton))]
+        private async Task AddStudentsButton(ButtonInteractArgs args)
+        {
+            if (args.Query.Message != null)
+                await args.SendDiscreteMessage(
+                    args.Query.Message.Chat.Id,
+                    ["Введите студентов через запятую или перенос строки"],
+                    OnStudentsAdded);
+
+            static async Task OnStudentsAdded(DiscreteMessageEnteredArgs args)
+            {
+                var students = args.Responses[0].Text!.Split('\n', ',');
+                foreach(var student in students)
+                    Program.Data.AddUser(student);
+
+                await args.Reply($"Пользователи ({students.Length}) успешно добавлены!");
+            }
         }
 
         [DiscreteCommand("sendinfo", "Рассылает сообщение ВСЕМ студентам", ["Введите сообщение для рассылки или -, если хотите отменить отправку"], admin: true)]
