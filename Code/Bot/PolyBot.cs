@@ -191,12 +191,13 @@ namespace PolyChessTGBot.Bot
 
         private async Task HandleLocation(User user, Location location)
         {
-            if (GetDistance(location, new()
+            var distance = GetDistance(location, new()
             {
                 Latitude = Program.MainConfig.SchoolLocation.X,
                 Longitude = Program.MainConfig.SchoolLocation.Y,
 
-            }) <= 0.3)
+            });
+            if (distance <= 0.3)
             {
                 var currentTime = DateTime.Now;
                 var currentLesson = Program.Data.Lessons.Values.FirstOrDefault(
@@ -237,9 +238,9 @@ namespace PolyChessTGBot.Bot
             static double GetDistance(Location location1, Location location2)
             {
                 var delta = Math.Acos(
-                    Math.Sin(location1.Latitude) * Math.Sin(location1.Latitude) +
-                    Math.Cos(location1.Latitude) * Math.Cos(location1.Latitude) *
-                    Math.Cos(location1.Longitude - location1.Longitude)
+                    Math.Sin(location1.Latitude) * Math.Sin(location2.Latitude) +
+                    Math.Cos(location1.Latitude) * Math.Cos(location2.Latitude) *
+                    Math.Cos(location1.Longitude - location2.Longitude)
                 );
                 const double EarthArc = 111.1;
 
