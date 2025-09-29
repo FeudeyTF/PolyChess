@@ -1402,7 +1402,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             static async Task OnStudentsAdded(DiscreteMessageEnteredArgs args)
             {
                 var students = args.Responses[0].Text!.Split('\n', ',');
-                foreach(var student in students)
+                foreach (var student in students)
                     Program.Data.AddUser(student);
 
                 await args.Reply($"Пользователи ({students.Length}) успешно добавлены!");

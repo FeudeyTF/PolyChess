@@ -89,7 +89,7 @@ namespace PolyChessTGBot.Bot.BotCommands
             if (args.Parameters.Count == 1)
             {
                 var name = args.Parameters[0].Text;
-                if(name == null)
+                if (name == null)
                 {
                     await args.Reply("Необходимо ввести ФИО");
                     return;
@@ -102,7 +102,7 @@ namespace PolyChessTGBot.Bot.BotCommands
                 }
 
                 var user = Program.Data.Users.FirstOrDefault(u => u.Name == name);
-                if(user == null)
+                if (user == null)
                 {
                     await args.Reply("Ваше имя не найдено! Либо оно неправильно введено, либо его нет в базе!");
                     return;

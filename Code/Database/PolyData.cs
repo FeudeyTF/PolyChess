@@ -166,7 +166,7 @@ namespace PolyChessTGBot.Database
                     result.Add(attendance);
             return result;
         }
-        
+
         public void AddUser(string name)
         {
             Program.Data.Users.Add(new User(0, name, null, default, default, null, default));
