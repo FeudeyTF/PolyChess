@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36408.4 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyChess", "PolyChess.Source/PolyChess.csproj", "{D5DA51D5-6B0B-4711-99CF-4D6543B77BD6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyChess", "PolyChess/PolyChess.csproj", "{D5DA51D5-6B0B-4711-99CF-4D6543B77BD6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
