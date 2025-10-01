@@ -18,5 +18,11 @@ namespace PolyChess.Components.Data
         public PolyContext(DbContextOptions<PolyContext> options) : base(options)
         {
         }
+
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            base.ConfigureConventions(configurationBuilder);
+            configurationBuilder.Properties<DateTime>().HaveConversion<DateTimeConverter>();
+        }
     }
 }
