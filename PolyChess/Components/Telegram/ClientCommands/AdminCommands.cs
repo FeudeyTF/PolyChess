@@ -25,6 +25,12 @@ namespace PolyChess.Components.Telegram.ClientCommands
         [TelegramCommand("addlesson", "Добавляет урок", IsAdmin = true, IsHidden = true)]
         private async Task AddLesson(TelegramCommandExecutionContext ctx, DateTime startDate, DateTime endDate)
         {
+            if (startDate >= endDate)
+            {
+                await ctx.ReplyAsync("Ошибка! Дата начала идёт после даты конца.");
+                return;
+            }
+
             Lesson lesson = new()
             {
                 StartDate = startDate,
@@ -33,7 +39,7 @@ namespace PolyChess.Components.Telegram.ClientCommands
 
             _polyContext.Lessons.Add(lesson);
             await _polyContext.SaveChangesAsync();
-            await ctx.SendMessageAsync(new TelegramMessageBuilder("Урок в <b>{date}</b> успешно добавлен!"), ctx.Message.Chat.Id);
+            await ctx.SendMessageAsync(new TelegramMessageBuilder($"Урок с <b>{startDate:g} до {endDate:g}</b> успешно добавлен!"), ctx.Message.Chat.Id);
         }
 
         [TelegramCommand("updatetournaments", "Выгружает турниры с Lichess в локальное хранилище", IsAdmin = true, IsHidden = true)]
