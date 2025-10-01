@@ -4,18 +4,24 @@
     {
         public List<ICommandAggregator<TContext>> Aggregators { get; private set; }
 
+        private readonly Dictionary<string, ICommand<TContext>> _cashedCommands;
+
         public CommandManager(List<ICommandAggregator<TContext>> aggregators)
         {
             Aggregators = aggregators;
+
+            _cashedCommands = [];
+            foreach (var aggregator in Aggregators)
+                foreach (var command in aggregator.Commands)
+                    _cashedCommands.Add(command.Name, command);
         }
 
         public async Task ExecuteAsync(string name, TContext context)
         {
-            foreach (var aggregator in Aggregators)
+            if(_cashedCommands.TryGetValue(name, out var command))
             {
-                var command = aggregator.Commands.FirstOrDefault(c => c.Name == name);
                 if (command == null || !(await command.IsCommandRunable(context)))
-                    continue;
+                    return;
                 await command.ExecuteAsync(context);
             }
         }
