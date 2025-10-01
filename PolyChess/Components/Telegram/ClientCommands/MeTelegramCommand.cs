@@ -15,6 +15,7 @@ using PolyChess.Core.Telegram.Messages.Discrete;
 using PolyChess.Core.Telegram.Messages.Discrete.Messages;
 using PolyChess.Core.Telegram.Messages.Pagination;
 using PolyChess.Core.Telegram.Messages.Pagination.Builders;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PolyChess.Components.Telegram.ClientCommands
@@ -322,7 +323,7 @@ namespace PolyChess.Components.Telegram.ClientCommands
             }
         }
 
-        private List<object> GetNextTournaments()
+        private List<object> GetNextTournaments(Message message)
         {
             List<object> result = [];
             foreach (var tournament in _tournaments.TournamentsList)
@@ -367,9 +368,17 @@ namespace PolyChess.Components.Telegram.ClientCommands
             return string.Join("\n", result);
         }
 
-        private IEnumerable<object> GetMyTournaments()
+        private List<object> GetMyTournaments(Message message)
         {
-            return [];
+            var userId = message.From != null ? message.From.Id : message.Chat.Id;
+            List<object> result = [];
+            foreach (var tournament in _tournaments.TournamentsList)
+                if (tournament.Tournament.StartDate < DateTime.UtcNow && tournament.Rating.Players.Any(p => p.Student != null && p.Student.TelegramId == userId))
+                    result.Add(tournament);
+            foreach (var tournament in _tournaments.SwissTournamentsList)
+                if (tournament.Tournament.Started < DateTime.UtcNow && tournament.Rating.Players.Any(p => p.Student != null && p.Student.TelegramId == userId))
+                    result.Add(tournament);
+            return new List<object>([.. from r in result orderby (r is ArenaTournamentInfo t ? t.Tournament.StartDate : r is SwissTournamentInfo s ? s.Tournament.Started : DateTime.Now) descending select r]);
         }
 
         private string MyTournamentToString(object info, int index)

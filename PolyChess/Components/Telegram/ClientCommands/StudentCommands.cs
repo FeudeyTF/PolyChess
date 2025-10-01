@@ -12,6 +12,7 @@ using PolyChess.Core.Telegram.Messages.Discrete;
 using PolyChess.Core.Telegram.Messages.Discrete.Messages;
 using PolyChess.Core.Telegram.Messages.Pagination;
 using PolyChess.Core.Telegram.Messages.Pagination.Builders;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PolyChess.Components.Telegram.ClientCommands
@@ -347,13 +348,13 @@ namespace PolyChess.Components.Telegram.ClientCommands
             await ctx.SendMessageAsync(_faqMessage, ctx.Message.Chat.Id);
         }
 
-        private DbSet<FaqEntry> GetFaqEntries()
+        private DbSet<FaqEntry> GetFaqEntries(Message message)
             => _polyContext.FaqEntries;
 
         private string FaqEntryToString(FaqEntry entry, int index)
             => $"{index + 1}) <b>{entry.Question}</b>\n - {entry.Answer}";
 
-        private DbSet<HelpEntry> GetHelpEntries()
+        private DbSet<HelpEntry> GetHelpEntries(Message message)
             => _polyContext.HelpEntries;
 
         private string HelpEntryToString(HelpEntry entry, int index)

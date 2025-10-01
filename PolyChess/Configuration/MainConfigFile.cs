@@ -32,5 +32,7 @@ namespace PolyChess.Configuration
         public long CreativeTaskChannel { get; set; }
 
         public List<string> LichessFlairs { get; set; } = [];
+
+        public List<string> TeamsWithTournaments { get; set; } = [];
     }
 }

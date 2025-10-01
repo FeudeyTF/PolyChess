@@ -5,7 +5,7 @@ namespace PolyChess.Core.Telegram.Messages.Pagination
 {
     internal class PaginationMessage<TValue> : ITelegramMessage
     {
-        public Func<IEnumerable<TValue>> ItemsRetriever;
+        public Func<Message, IEnumerable<TValue>> ItemsRetriever;
 
         public int ItemsPerPage;
 
@@ -15,7 +15,7 @@ namespace PolyChess.Core.Telegram.Messages.Pagination
 
         private readonly ITelegramProvider _telegramProvider;
 
-        public PaginationMessage(string type, int itemsPerPage, Func<IEnumerable<TValue>> itemsRetriever, IPaginationMessageBuilder<TValue> builder, ITelegramProvider provider)
+        public PaginationMessage(string type, int itemsPerPage, Func<Message, IEnumerable<TValue>> itemsRetriever, IPaginationMessageBuilder<TValue> builder, ITelegramProvider provider)
         {
             Type = type;
             ItemsRetriever = itemsRetriever;
@@ -27,7 +27,7 @@ namespace PolyChess.Core.Telegram.Messages.Pagination
 
         public async Task SendAsync(ITelegramBotClient client, ChatId chatId, CancellationToken token)
         {
-            List<TValue> itemsList = [.. ItemsRetriever()];
+            List<TValue> itemsList = [.. ItemsRetriever(new Message() { Chat = new() { Id = chatId.Identifier ?? 0 } })];
             var totalItems = itemsList.Count;
             var totalPages = (int)Math.Ceiling((double)totalItems / ItemsPerPage);
 
@@ -39,12 +39,12 @@ namespace PolyChess.Core.Telegram.Messages.Pagination
 
         public Task EditAsync(ITelegramBotClient client, Message oldMessage, CancellationToken token)
         {
-            throw new NotImplementedException("Pagination message doesn't implements edit method"); ;
+            throw new NotImplementedException("Pagination message doesn't implements edit method");
         }
 
         public async Task EditAsync(ITelegramBotClient client, Message oldMessage, int page, CancellationToken token)
         {
-            List<TValue> itemsList = [.. ItemsRetriever()];
+            List<TValue> itemsList = [.. ItemsRetriever(oldMessage)];
             var totalItems = itemsList.Count;
             var totalPages = (int)Math.Ceiling((double)totalItems / ItemsPerPage);
 

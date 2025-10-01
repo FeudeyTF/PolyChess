@@ -58,7 +58,7 @@ namespace PolyChess
             );
 
             MeTelegramCommand telegramCommands = new(telegramProvider, lichessClient, polyContext, tournaments, _configuration, new(telegramProvider));
-            AdminCommands adminCommands = new(polyContext);
+            AdminCommands adminCommands = new(polyContext, tournaments, _configuration);
             StudentCommands studentCommands = new(polyContext, _configuration, telegramProvider, lichessClient);
 
             AttendanceHandler attendanceHandler = new(_configuration, polyContext);

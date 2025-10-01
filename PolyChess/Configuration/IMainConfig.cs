@@ -29,6 +29,8 @@ namespace PolyChess.Configuration
         public TestSettings Test { get; set; }
 
         public Dictionary<string, TournamentScoreRule> TournamentRules { get; set; }
+
+        public List<string> TeamsWithTournaments { get; set; }
     }
 
     internal class TestSettings
