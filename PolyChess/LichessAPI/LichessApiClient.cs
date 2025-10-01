@@ -12,7 +12,7 @@ namespace LichessAPI
 
         public event Action<HttpRequestMessage, HttpResponseMessage> OnMessageSent;
 
-        private HttpClient _httpClient { get; }
+        private readonly HttpClient _httpClient;
 
         static LichessApiClient()
         {
@@ -28,9 +28,9 @@ namespace LichessAPI
             SerializerOptions.Converters.Add(new TokenScopeConverter());
         }
 
-        public LichessApiClient()
+        public LichessApiClient(HttpClient? httpClient = default)
         {
-            _httpClient = new();
+            _httpClient = httpClient ?? new();
             OnMessageSent = (query, response) => { };
         }
 
