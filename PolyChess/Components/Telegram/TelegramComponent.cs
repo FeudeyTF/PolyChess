@@ -38,6 +38,7 @@ namespace PolyChess.Components.Telegram
             _telegramProvider.OnUpdate += HandleTelegramUpdate;
             _telegramProvider.OnMessage += HandleTelegramMessage;
             _telegramProvider.OnCallback += HandleTelegramCallback;
+            _telegramProvider.OnException += HandleTelegramException;
         }
 
         public async Task StartAsync()
@@ -118,6 +119,12 @@ namespace PolyChess.Components.Telegram
                 );
                 await client.AnswerCallbackQuery(query.Id, cancellationToken: token);
             }
+        }
+
+        private Task HandleTelegramException(ITelegramBotClient client, Exception exception, global::Telegram.Bot.Polling.HandleErrorSource source, CancellationToken token)
+        {
+            _logger.Write(exception.ToString(), LogLevel.Error);
+            return Task.CompletedTask;
         }
     }
 }

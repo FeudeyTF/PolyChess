@@ -293,8 +293,8 @@ namespace PolyChess.Components.Tournaments
             foreach (var filePath in Directory.GetFiles(GetSwissTournamentFolder()))
                 savedSwissTournaments.Add(Path.GetFileName(filePath)[..^4]);
 
-            swissTournaments = [.. swissTournaments.Except(swissTournaments.Where(t => savedSwissTournaments.Contains(t.ID)))];
-            arenaTournaments = [.. arenaTournaments.Except(arenaTournaments.Where(t => savedArenaTournaments.Contains(t.ID)))];
+            swissTournaments = [.. swissTournaments.Except(swissTournaments.Where(t => savedSwissTournaments.Contains(t.ID) || !IsSemesterTournament(t)))];
+            arenaTournaments = [.. arenaTournaments.Except(arenaTournaments.Where(t => savedArenaTournaments.Contains(t.ID) || !IsSemesterTournament(t)))];
 
             foreach (var tournament in TournamentsList)
             {

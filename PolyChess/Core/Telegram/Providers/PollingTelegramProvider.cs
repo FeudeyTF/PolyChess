@@ -13,6 +13,8 @@ namespace PolyChess.Core.Telegram.Providers
 
         public event OnCallbackDelegate OnCallback;
 
+        public event OnExceptionDelegate OnException;
+
         public ITelegramBotClient Client { get; }
 
         private readonly ReceiverOptions _receiverOptions;
@@ -24,8 +26,9 @@ namespace PolyChess.Core.Telegram.Providers
         public PollingTelegramProvider(ITelegramBotClient client, ReceiverOptions receiverOptions, CancellationToken token)
         {
             OnUpdate = (client, update, token) => Task.CompletedTask;
-            OnMessage = (client, update, token) => Task.CompletedTask;
-            OnCallback = (client, update, token) => Task.CompletedTask;
+            OnMessage = (client, message, token) => Task.CompletedTask;
+            OnCallback = (client, callback, token) => Task.CompletedTask;
+            OnException = (client, exception, source, token) => Task.CompletedTask;
             Client = client;
             _token = token;
             _updateHandler = new DefaultUpdateHandler(HandleUpdate, HandleError);
@@ -49,7 +52,7 @@ namespace PolyChess.Core.Telegram.Providers
 
         private async Task HandleError(ITelegramBotClient client, Exception exception, HandleErrorSource source, CancellationToken token)
         {
-            await Task.CompletedTask;
+            await OnException(client, exception, source, token);
         }
 
         public async Task SendMessageAsync(ITelegramMessage message, ChatId chatId)

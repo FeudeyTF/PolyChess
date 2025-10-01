@@ -1,4 +1,5 @@
 ﻿using Telegram.Bot;
+using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 
 namespace PolyChess.Core.Telegram
@@ -9,6 +10,8 @@ namespace PolyChess.Core.Telegram
 
     internal delegate Task OnCallbackDelegate(ITelegramBotClient client, CallbackQuery query, CancellationToken token);
 
+    internal delegate Task OnExceptionDelegate(ITelegramBotClient client, Exception exception, HandleErrorSource source, CancellationToken token);
+
     internal interface ITelegramProvider
     {
         public event OnUpdateDelegate OnUpdate;
@@ -16,6 +19,8 @@ namespace PolyChess.Core.Telegram
         public event OnMessageDelegate OnMessage;
 
         public event OnCallbackDelegate OnCallback;
+
+        public event OnExceptionDelegate OnException;
 
         public ITelegramBotClient Client { get; }
 

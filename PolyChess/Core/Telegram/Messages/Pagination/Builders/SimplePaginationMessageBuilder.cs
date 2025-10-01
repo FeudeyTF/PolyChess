@@ -1,5 +1,4 @@
-﻿using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
+﻿using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PolyChess.Core.Telegram.Messages.Pagination.Builders
 {
@@ -16,7 +15,7 @@ namespace PolyChess.Core.Telegram.Messages.Pagination.Builders
         {
             var text = BuildMessageText(values, page, totalPages);
             var keyboard = BuildPaginationKeyboard(page, totalPages, type);
-            return new TelegramMessageBuilder(text, parseMode: ParseMode.MarkdownV2, replyMarkup: keyboard);
+            return new TelegramMessageBuilder(text, replyMarkup: keyboard);
         }
 
         private string BuildMessageText(List<TValue> items, int page, int totalPages)

@@ -45,7 +45,7 @@ namespace PolyChess.Components.Telegram.ClientCommands
             _helpMessage = new("HelpEntries", 1, GetHelpEntries, helpBuilder, provider);
 
             SimplePaginationMessageBuilder<FaqEntry> faqBuilder = new(FaqEntryToString);
-            _faqMessage = new("FaqEntries", 1, GetFaqEntries, faqBuilder, provider);
+            _faqMessage = new("FaqEntries", 5, GetFaqEntries, faqBuilder, provider);
         }
 
 
@@ -352,7 +352,7 @@ namespace PolyChess.Components.Telegram.ClientCommands
             => _polyContext.FaqEntries;
 
         private string FaqEntryToString(FaqEntry entry, int index)
-            => $"{index + 1}) <b>{entry.Question}</b>\n - {entry.Answer}";
+            => $"{entry.Id}) <b>{entry.Question}</b>\n - {entry.Answer}";
 
         private DbSet<HelpEntry> GetHelpEntries(Message message)
             => _polyContext.HelpEntries;
