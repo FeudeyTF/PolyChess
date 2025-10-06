@@ -18,7 +18,7 @@
 
         public async Task ExecuteAsync(string name, TContext context)
         {
-            if(_cashedCommands.TryGetValue(name, out var command))
+            if (_cashedCommands.TryGetValue(name, out var command))
             {
                 if (command == null || !(await command.IsCommandRunable(context)))
                     return;
