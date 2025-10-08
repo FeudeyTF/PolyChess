@@ -2,9 +2,9 @@
 {
     internal class TournamentsScore
     {
-        public int Ones;
+        public int Ones { get; set; }
 
-        public int Zeros;
+        public int Zeros { get; set; }
 
         public TournamentsScore(int ones, int zeros)
         {

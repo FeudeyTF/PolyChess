@@ -4,10 +4,10 @@ namespace PolyChess.Components.Tournaments
 {
     internal class TournamentUser<TValue>(Student? user, int score, TValue entry)
     {
-        public Student? Student = user;
+        public Student? Student { get; set; } = user;
 
-        public int Score = score;
+        public int Score { get; set; } = score;
 
-        public TValue TournamentEntry = entry;
+        public TValue TournamentEntry { get; set; } = entry;
     }
 }

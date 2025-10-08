@@ -4,9 +4,9 @@ namespace PolyChess.Components.Tournaments
 {
     internal class SwissTournamentInfo
     {
-        public SwissTournament Tournament;
+        public SwissTournament Tournament { get; set; }
 
-        public TournamentRating<SwissSheetEntry> Rating;
+        public TournamentRating<SwissSheetEntry> Rating { get; set; }
 
         public SwissTournamentInfo(SwissTournament tournament, TournamentRating<SwissSheetEntry> rating)
         {

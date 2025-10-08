@@ -2,9 +2,9 @@
 {
     internal struct Division(int min, int max)
     {
-        public int Min = min;
+        public int Min { get; set; } = min;
 
-        public int Max = max;
+        public int Max { get; set; } = max;
 
         public bool InDivision(int rating)
             => rating >= Min && rating <= Max;
