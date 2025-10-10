@@ -29,7 +29,7 @@ namespace PolyChess.Components.Telegram.ClientCommands
         }
 
         [TelegramCommand("addlesson", "Добавляет урок", IsAdmin = true, IsHidden = true)]
-        private async Task AddLesson(TelegramCommandExecutionContext ctx, DateTime startDate, DateTime endDate)
+        private async Task AddLesson(TelegramCommandExecutionContext ctx, DateTime startDate, DateTime endDate, float? latitude = default, float? longitude = default)
         {
             if (startDate >= endDate)
             {
@@ -37,10 +37,15 @@ namespace PolyChess.Components.Telegram.ClientCommands
                 return;
             }
 
+            latitude ??= _mainConfig.SchoolLocation.X;
+            longitude ??= _mainConfig.SchoolLocation.Y;
+
             Lesson lesson = new()
             {
                 StartDate = startDate,
-                EndDate = endDate
+                EndDate = endDate,
+                Latitude = latitude.Value,
+                Longitude = longitude.Value
             };
 
             _polyContext.Lessons.Add(lesson);

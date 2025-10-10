@@ -1,6 +1,5 @@
 ﻿using PolyChess.Components.Data;
 using PolyChess.Components.Data.Tables;
-using PolyChess.Configuration;
 using PolyChess.Core.Telegram;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -12,13 +11,10 @@ namespace PolyChess.Components.Telegram.Handlers
     {
         public UpdateType Type => UpdateType.Message;
 
-        private readonly IMainConfig _mainConfig;
-
         private readonly PolyContext _polyContext;
 
-        public AttendanceHandler(IMainConfig config, PolyContext context)
+        public AttendanceHandler(PolyContext context)
         {
-            _mainConfig = config;
             _polyContext = context;
         }
 
@@ -34,18 +30,6 @@ namespace PolyChess.Components.Telegram.Handlers
                 if (message.Location.LivePeriod == null)
                 {
                     await client.SendMessageAsync("Для того, чтобы отметиться на уроке, нужно транслировать геопозицию, а не просто отправить!", message.Chat.Id, token);
-                    return true;
-                }
-
-                var distance = GetDistance(message.Location, new()
-                {
-                    Latitude = _mainConfig.SchoolLocation.X,
-                    Longitude = _mainConfig.SchoolLocation.Y
-                });
-
-                if (distance > 0.3)
-                {
-                    await client.SendMessageAsync("Вы не на уроке!", message.Chat.Id, token);
                     return true;
                 }
 
@@ -71,6 +55,21 @@ namespace PolyChess.Components.Telegram.Handlers
                     await client.SendMessageAsync("Вы уже отметились на уроке!", message.Chat.Id, token);
                     return true;
                 }
+
+                var distance = GetDistance(message.Location,
+                    new()
+                    {
+                        Latitude = currentLesson.Latitude,
+                        Longitude = currentLesson.Longitude
+                    }
+                );
+
+                if (distance > 0.3)
+                {
+                    await client.SendMessageAsync("Вы не на уроке!", message.Chat.Id, token);
+                    return true;
+                }
+
 
                 var student = _polyContext.Students.FirstOrDefault(s => s.TelegramId == user.Id);
                 if (student == null)
