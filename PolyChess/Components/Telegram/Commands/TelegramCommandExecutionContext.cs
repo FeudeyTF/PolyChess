@@ -1,5 +1,4 @@
-﻿using PolyChess.Configuration;
-using PolyChess.Core.Commands;
+﻿using PolyChess.Core.Commands;
 using PolyChess.Core.Telegram;
 using PolyChess.Core.Telegram.Messages;
 using Telegram.Bot.Types;
@@ -16,16 +15,16 @@ namespace PolyChess.Components.Telegram.Commands
 
         public Message Message { get; }
 
-        public IMainConfig Config { get; }
+        public List<long> Admins { get; }
 
         public CancellationToken Token { get; }
 
-        public TelegramCommandExecutionContext(User user, List<string> args, Message message, IMainConfig config, ITelegramProvider provider, CancellationToken token)
+        public TelegramCommandExecutionContext(User user, List<string> args, Message message, List<long> admins, ITelegramProvider provider, CancellationToken token)
         {
             User = user;
             Arguments = args;
             Provider = provider;
-            Config = config;
+            Admins = admins;
             Message = message;
             Token = token;
         }

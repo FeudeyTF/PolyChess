@@ -19,7 +19,7 @@ namespace PolyChess.Components.Telegram.Commands
 
         public override Task<bool> IsCommandRunable(TelegramCommandExecutionContext ctx)
         {
-            return Task.FromResult(!IsAdmin || ctx.Config.TelegramAdmins.Contains(ctx.User.Id));
+            return Task.FromResult(!IsAdmin || ctx.Admins.Contains(ctx.User.Id));
         }
     }
 }

@@ -102,7 +102,7 @@ namespace PolyChess.Components.Telegram
                     var (name, args) = parser.Parse();
                     await _commandManager.ExecuteAsync(
                         name,
-                        new TelegramCommandExecutionContext(message.From, args, message, _mainConfig, _telegramProvider, token)
+                        new TelegramCommandExecutionContext(message.From, args, message, _mainConfig.TelegramAdmins, _telegramProvider, token)
                     );
                 }
             }
