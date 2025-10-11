@@ -15,10 +15,14 @@ namespace PolyChess.Core.Commands.Aggregators.Typed
             { typeof(string), typeof(StringCommandParameter) },
             { typeof(long), typeof(NumberCommandParameter<long>) },
             { typeof(int), typeof(NumberCommandParameter<int>) },
+            { typeof(double), typeof(NumberCommandParameter<long>) },
+            { typeof(float), typeof(NumberCommandParameter<int>) },
             { typeof(DateTime), typeof(DateTimeCommandParameter) },
 
             { typeof(long?), typeof(NumberCommandParameter<long>) },
             { typeof(int?), typeof(NumberCommandParameter<int>) },
+            { typeof(double?), typeof(NumberCommandParameter<long>) },
+            { typeof(float?), typeof(NumberCommandParameter<int>) },
             { typeof(DateTime?), typeof(DateTimeCommandParameter) }
         };
 
