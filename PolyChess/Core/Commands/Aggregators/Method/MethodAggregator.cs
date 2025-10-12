@@ -1,5 +1,4 @@
-﻿using PolyChess.Core.Commands.Aggregators.Typed;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace PolyChess.Core.Commands.Aggregators.Method
 {

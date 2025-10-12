@@ -2,7 +2,7 @@
 
 namespace PolyChess.ProgramConsole
 {
-#pragma warning disable CS1998
+#pragma warning disable CS1998, CA1822
     internal class ConsoleCommands : ConsoleCommandAggregator
     {
         [ConsoleCommand("exit")]
@@ -12,5 +12,5 @@ namespace PolyChess.ProgramConsole
             Environment.Exit(0);
         }
     }
-#pragma warning restore CS1998
+#pragma warning restore CS1998, CA1822
 }

@@ -1,10 +1,9 @@
-﻿using PolyChess.Core.Commands.Aggregators.Method;
-using PolyChess.Core.Commands.Parametrized;
+﻿using PolyChess.Core.Commands.Parametrized;
 using PolyChess.Core.Commands.Parametrized.Parameters;
 using System.Reflection;
 using System.Runtime.Serialization;
 
-namespace PolyChess.Core.Commands.Aggregators.Typed
+namespace PolyChess.Core.Commands.Aggregators.Method
 {
     internal delegate ICommand<TContext>? DefaultMethodCommandBuilderDelegate<TContext>(ICommandAttribute attribute, object? invoker, Func<object?, object?[], object?> invokerMethod, List<ICommandParameter> parameters, List<ICommandParameter> optionalParameters, List<object?> optionalParametersDefaults) where TContext : ICommandExecutionContext;
 

@@ -2,7 +2,6 @@
 using PolyChess.Components.Telegram.Commands;
 using PolyChess.Core.Commands;
 using PolyChess.Core.Commands.Aggregators.Method;
-using PolyChess.Core.Commands.Aggregators.Typed;
 using PolyChess.Core.Commands.Parametrized;
 using System.Reflection;
 

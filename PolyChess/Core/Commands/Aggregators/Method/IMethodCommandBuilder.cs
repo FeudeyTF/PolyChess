@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace PolyChess.Core.Commands.Aggregators.Typed
+namespace PolyChess.Core.Commands.Aggregators.Method
 {
     internal interface IMethodCommandBuilder<TContext> where TContext : ICommandExecutionContext
     {

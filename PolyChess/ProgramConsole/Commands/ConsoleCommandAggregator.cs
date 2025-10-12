@@ -1,6 +1,5 @@
 ﻿using PolyChess.Core.Commands;
 using PolyChess.Core.Commands.Aggregators.Method;
-using PolyChess.Core.Commands.Aggregators.Typed;
 using PolyChess.Core.Commands.Parametrized;
 
 namespace PolyChess.ProgramConsole.Commands
