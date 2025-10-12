@@ -95,11 +95,13 @@ namespace PolyChess.Core.Commands.Aggregators.Typed
                     commandOptionalParametersDefaultValues
                 );
 
+#pragma warning disable SYSLIB0050
                 ICommandParameter? CreateCommandParameterInstance(Type type)
                 {
                     if (type.IsAssignableTo(typeof(ICommandParameter)))
                     {
                         return (ICommandParameter)FormatterServices.GetUninitializedObject(type);
+
                     }
                     else if (TypeOverrides.TryGetValue(type, out var defaultType))
                     {
@@ -107,6 +109,7 @@ namespace PolyChess.Core.Commands.Aggregators.Typed
                     }
                     return null;
                 }
+#pragma warning restore SYSLIB0050
             }
             return null;
         }
