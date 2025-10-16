@@ -2,7 +2,7 @@
 using PolyChess.Core.Commands.Aggregators.Method;
 using PolyChess.Core.Commands.Parametrized;
 
-namespace PolyChess.ProgramConsole.Commands
+namespace PolyChess.CLI.Commands
 {
     internal class ConsoleCommandAggregator : ICommandAggregator<ConsoleCommandExecutionContext>
     {

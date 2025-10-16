@@ -1,5 +1,7 @@
 ﻿using LichessAPI.Clients;
 using Microsoft.EntityFrameworkCore;
+using PolyChess.CLI;
+using PolyChess.CLI.Commands;
 using PolyChess.Components;
 using PolyChess.Components.Data;
 using PolyChess.Components.Telegram;
@@ -12,8 +14,6 @@ using PolyChess.Core.Commands.Parsers;
 using PolyChess.Core.Configuration;
 using PolyChess.Core.Logging.Types;
 using PolyChess.Core.Telegram.Providers;
-using PolyChess.ProgramConsole;
-using PolyChess.ProgramConsole.Commands;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 
@@ -32,7 +32,7 @@ namespace PolyChess
         static Program()
         {
             _logger = new();
-            _consoleCommandManager = new([new ConsoleCommands()]);
+            _consoleCommandManager = new([new DefaultCommands()]);
         }
 
         /// <summary>

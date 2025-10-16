@@ -1,9 +1,9 @@
-﻿using PolyChess.ProgramConsole.Commands;
+﻿using PolyChess.CLI.Commands;
 
-namespace PolyChess.ProgramConsole
+namespace PolyChess.CLI
 {
 #pragma warning disable CS1998, CA1822
-    internal class ConsoleCommands : ConsoleCommandAggregator
+    internal class DefaultCommands : ConsoleCommandAggregator
     {
         [ConsoleCommand("exit")]
         public async Task Exit(ConsoleCommandExecutionContext ctx)
