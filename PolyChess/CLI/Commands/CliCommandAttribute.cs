@@ -2,11 +2,11 @@
 
 namespace PolyChess.CLI.Commands
 {
-    internal class ConsoleCommandAttribute : Attribute, ICommandAttribute
+    internal class CliCommandAttribute : Attribute, ICommandAttribute
     {
         public string Name { get; }
 
-        public ConsoleCommandAttribute(string name)
+        public CliCommandAttribute(string name)
         {
             Name = name;
         }

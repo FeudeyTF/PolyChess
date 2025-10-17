@@ -27,7 +27,7 @@ namespace PolyChess
 
         private static readonly ConsoleLogger _logger;
 
-        private static readonly CommandManager<ConsoleCommandExecutionContext> _consoleCommandManager;
+        private static readonly CommandManager<CliCommandExecutionContext> _consoleCommandManager;
 
         static Program()
         {
@@ -102,7 +102,7 @@ namespace PolyChess
                     continue;
                 SeparatorCommandArgumentsParser parser = new("", ' ', text);
                 var (name, arguments) = parser.Parse();
-                await _consoleCommandManager.ExecuteAsync(name, new ConsoleCommandExecutionContext(arguments));
+                await _consoleCommandManager.ExecuteAsync(name, new CliCommandExecutionContext(arguments));
             }
         }
     }

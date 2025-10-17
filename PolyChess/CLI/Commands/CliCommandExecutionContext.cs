@@ -2,11 +2,11 @@
 
 namespace PolyChess.CLI.Commands
 {
-    internal class ConsoleCommandExecutionContext : ICommandExecutionContext
+    internal class CliCommandExecutionContext : ICommandExecutionContext
     {
         public List<string> Arguments { get; }
 
-        public ConsoleCommandExecutionContext(List<string> arguments)
+        public CliCommandExecutionContext(List<string> arguments)
         {
             Arguments = arguments;
         }

@@ -3,10 +3,10 @@
 namespace PolyChess.CLI
 {
 #pragma warning disable CS1998, CA1822
-    internal class DefaultCommands : ConsoleCommandAggregator
+    internal class DefaultCommands : CliCommandAggregator
     {
-        [ConsoleCommand("exit")]
-        public async Task Exit(ConsoleCommandExecutionContext ctx)
+        [CliCommand("exit")]
+        public async Task Exit(CliCommandExecutionContext ctx)
         {
             ctx.SendMessage("Программа закрывается...");
             Environment.Exit(0);
