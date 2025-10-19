@@ -348,6 +348,31 @@ namespace PolyChess.Components.Telegram.ClientCommands
             await ctx.SendMessageAsync(_faqMessage, ctx.Message.Chat.Id);
         }
 
+        [TelegramCommand("attendance", "Показывает посещаемость")]
+        private async Task Attendance(TelegramCommandExecutionContext ctx)
+        {
+            var student = _polyContext.Students.FirstOrDefault(s => s.TelegramId == ctx.User.Id);
+            if (student == null)
+            {
+                await ctx.ReplyAsync("Вы не студент!");
+                return;
+            }
+
+            var attendace = _polyContext.Attendances.Where(a => a.Student.TelegramId == student.TelegramId);
+            List<string> msg =
+            [
+                "Ваша посещаемость:"
+            ];
+
+            if (!attendace.Any())
+                msg.Add("Ни одного занятия не посещено!");
+
+            foreach (var lesson in _polyContext.Lessons)
+                msg.Add($"Занятие {lesson.StartDate}): {(attendace.Any(a => a.Lesson.Id == lesson.Id) ? "Посещено" : "Не посещено")}");
+
+            await ctx.ReplyAsync(string.Join("\n", msg));
+        }
+
         private DbSet<FaqEntry> GetFaqEntries(Message message)
             => _polyContext.FaqEntries;
 
