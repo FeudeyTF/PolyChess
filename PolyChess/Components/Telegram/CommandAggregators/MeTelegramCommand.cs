@@ -51,8 +51,8 @@ namespace PolyChess.Components.Telegram.ClientCommands
             SimplePaginationMessageBuilder<object> myTournamentsBuilder = new(MyTournamentToString);
             SimplePaginationMessageBuilder<object> nextTournamentsBuilder = new(NextTournamentToString);
 
-            _myTournamentsMessage = new("myTournaments", 1, GetMyTournaments, myTournamentsBuilder, telegramProvider);
-            _nextTournamentsMessage = new("nextTournaments", 1, GetNextTournaments, nextTournamentsBuilder, telegramProvider);
+            _myTournamentsMessage = new(nameof(_myTournamentsMessage), 1, GetMyTournaments, myTournamentsBuilder, telegramProvider);
+            _nextTournamentsMessage = new(nameof(_nextTournamentsMessage), 1, GetNextTournaments, nextTournamentsBuilder, telegramProvider);
         }
 
         [TelegramCommand("me", "Выдаёт информацию о Вас")]
