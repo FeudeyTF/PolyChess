@@ -82,7 +82,7 @@ namespace PolyChess.Components.Telegram.ClientCommands
             TelegramMessageBuilder message = new();
             List<string> text =
             [
-                $"👋 Приветствую, <b>{student.Surname} {student.Name}</b>",
+                $"👋 Приветствую, <b>{student.Name} {student.Patronymic}</b>",
                 $"♟ <b>Имя аккаунта на Lichess:</b> {lichessUser.Username}",
                 $"🕓 <b>Дата регистрации:</b> {lichessUser.RegisterDate:g}",
                 $"🕓 <b>Последний вход:</b> {lichessUser.LastSeenDate:g}",
