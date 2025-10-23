@@ -18,7 +18,7 @@ using PolyChess.Core.Telegram.Messages.Pagination.Builders;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace PolyChess.Components.Telegram.ClientCommands
+namespace PolyChess.Components.Telegram.CommandAggregators
 {
     /// <summary>
     /// TODO: Полностью переписать код команды

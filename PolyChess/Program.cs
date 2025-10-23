@@ -5,7 +5,7 @@ using PolyChess.CLI.Commands;
 using PolyChess.Components;
 using PolyChess.Components.Data;
 using PolyChess.Components.Telegram;
-using PolyChess.Components.Telegram.ClientCommands;
+using PolyChess.Components.Telegram.CommandAggregators;
 using PolyChess.Components.Telegram.Handlers;
 using PolyChess.Components.Tournaments;
 using PolyChess.Configuration;

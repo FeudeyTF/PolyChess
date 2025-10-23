@@ -8,7 +8,7 @@ using PolyChess.Core.Telegram.Messages;
 using PolyChess.Core.Telegram.Messages.Discrete;
 using PolyChess.Core.Telegram.Messages.Discrete.Messages;
 
-namespace PolyChess.Components.Telegram.ClientCommands
+namespace PolyChess.Components.Telegram.CommandAggregators
 {
     internal class AdminCommands : TelegramCommandAggregator
     {
