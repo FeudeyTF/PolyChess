@@ -223,20 +223,20 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                         if (puzzleDashboard != null)
                         {
                             totalScore += Math.Min((float)puzzleDashboard.Global.FirstWins / _mainConfig.Test.RequiredPuzzlesSolved, 1f);
-                            text.Add($"🧩<b>Решение пазлов:</b> {puzzleDashboard.Global.FirstWins} из {_mainConfig.Test.RequiredPuzzlesSolved} ({StringUtils.CreateSimpleBar(puzzleDashboard.Global.FirstWins, _mainConfig.Test.RequiredPuzzlesSolved, bars: barsInBar)})");
+                            text.Add($"🧩 <b>Решение пазлов:</b> {puzzleDashboard.Global.FirstWins} из {_mainConfig.Test.RequiredPuzzlesSolved} ({StringUtils.CreateSimpleBar(puzzleDashboard.Global.FirstWins, _mainConfig.Test.RequiredPuzzlesSolved, bars: barsInBar)})");
                         }
                         else
-                            text.Add($"🧩<b>Решение пазлов:</b> Данные не были получены!");
+                            text.Add($"🧩 <b>Решение пазлов:</b> Данные не были получены!");
                     }
                     else
-                        text.Add($"🧩<b>Решение пазлов:</b> Токен не подключён!");
+                        text.Add($"🧩 <b>Решение пазлов:</b> Токен не подключён!");
 
                     float creativeTask = student.CreativeTaskCompleted ? 1f : 0f;
                     totalScore += creativeTask;
-                    text.Add($"🧠<b>Творческое задание:</b> {StringUtils.CreateSimpleBar(creativeTask, 1, bars: 1)} {(student.CreativeTaskCompleted ? "В" : "Не в")}ыполнено!");
+                    text.Add($"🧠 <b>Творческое задание:</b> {StringUtils.CreateSimpleBar(creativeTask, 1, bars: 1)} {(student.CreativeTaskCompleted ? "В" : "Не в")}ыполнено!");
 
                     text.Add("");
-                    text.Add("📊<b>Полный прогресс:</b>");
+                    text.Add("📊 <b>Полный прогресс:</b>");
                     text.Add($"{Math.Round(totalScore * barsInBar / totalRatingsCount)} из 20 {StringUtils.CreateSimpleBar(totalScore, totalRatingsCount, bars: barsInBar)}");
                     TelegramMessageBuilder msg = new(string.Join("\n", text));
 
