@@ -1,6 +1,6 @@
-﻿using LichessAPI.Clients;
-using LichessAPI.Types.Arena;
-using LichessAPI.Types.Swiss;
+﻿using PolyChess.LichessAPI.Clients;
+using PolyChess.LichessAPI.Types.Arena;
+using PolyChess.LichessAPI.Types.Swiss;
 using PolyChess.Components.Data;
 using PolyChess.Components.Data.Tables;
 using PolyChess.Configuration;

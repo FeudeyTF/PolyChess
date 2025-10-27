@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace LichessAPI.Types.Swiss
+namespace PolyChess.LichessAPI.Types.Swiss
 {
     public class SwissTournament
     {

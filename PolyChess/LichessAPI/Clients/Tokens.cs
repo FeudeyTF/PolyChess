@@ -1,7 +1,7 @@
-﻿using LichessAPI.Types.Tokens;
+﻿using PolyChess.LichessAPI.Types.Tokens;
 using System.Text.Json;
 
-namespace LichessAPI.Clients
+namespace PolyChess.LichessAPI.Clients
 {
     public partial class LichessClient : LichessApiClient
     {

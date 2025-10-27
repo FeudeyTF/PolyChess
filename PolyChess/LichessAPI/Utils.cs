@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace LichessAPI
+namespace PolyChess.LichessAPI
 {
     internal static class Utils
     {

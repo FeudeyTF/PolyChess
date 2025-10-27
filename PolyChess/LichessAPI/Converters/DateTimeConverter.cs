@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace LichessAPI.Converters
+namespace PolyChess.LichessAPI.Converters
 {
     internal class LichessDateTimeConverter : JsonConverter<DateTime>
     {

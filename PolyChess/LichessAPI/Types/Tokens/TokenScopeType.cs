@@ -1,4 +1,4 @@
-﻿namespace LichessAPI.Types.Tokens
+﻿namespace PolyChess.LichessAPI.Types.Tokens
 {
     public enum TokenScopeType
     {

@@ -1,6 +1,6 @@
-﻿using LichessAPI.Clients;
+﻿using PolyChess.LichessAPI.Clients;
 
-namespace LichessAPI.Types
+namespace PolyChess.LichessAPI.Types
 {
     public class LightUser
     {

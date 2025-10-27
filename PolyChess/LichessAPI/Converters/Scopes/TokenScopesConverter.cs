@@ -1,8 +1,8 @@
-﻿using LichessAPI.Types.Tokens;
+﻿using PolyChess.LichessAPI.Types.Tokens;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace LichessAPI.Converters.Scopes
+namespace PolyChess.LichessAPI.Converters.Scopes
 {
     internal class TokenScopesConverter : JsonConverter<List<TokenScope>>
     {

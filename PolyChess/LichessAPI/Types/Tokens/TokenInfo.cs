@@ -1,7 +1,7 @@
-﻿using LichessAPI.Converters.Scopes;
+﻿using PolyChess.LichessAPI.Converters.Scopes;
 using System.Text.Json.Serialization;
 
-namespace LichessAPI.Types.Tokens
+namespace PolyChess.LichessAPI.Types.Tokens
 {
     public class TokenInfo
     {

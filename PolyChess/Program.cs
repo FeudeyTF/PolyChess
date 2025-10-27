@@ -1,4 +1,4 @@
-﻿using LichessAPI.Clients;
+﻿using PolyChess.LichessAPI.Clients;
 using Microsoft.EntityFrameworkCore;
 using PolyChess.CLI;
 using PolyChess.CLI.Commands;

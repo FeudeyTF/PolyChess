@@ -1,9 +1,9 @@
-﻿using LichessAPI.Types.Puzzles;
+﻿using PolyChess.LichessAPI.Types.Puzzles;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace LichessAPI.Converters
+namespace PolyChess.LichessAPI.Converters
 {
     internal class ThemeTypeConverter : JsonConverter<ThemeType>
     {

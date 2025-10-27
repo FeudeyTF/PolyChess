@@ -1,4 +1,4 @@
-﻿namespace LichessAPI.Types.Arena
+﻿namespace PolyChess.LichessAPI.Types.Arena
 {
     public class ArenaNumbers
     {

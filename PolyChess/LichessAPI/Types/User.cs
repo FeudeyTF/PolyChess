@@ -1,7 +1,7 @@
-﻿using LichessAPI.Converters;
+﻿using PolyChess.LichessAPI.Converters;
 using System.Text.Json.Serialization;
 
-namespace LichessAPI.Types
+namespace PolyChess.LichessAPI.Types
 {
     public class User
     {

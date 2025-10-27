@@ -1,4 +1,4 @@
-﻿namespace LichessAPI
+﻿namespace PolyChess.LichessAPI
 {
     public enum GameType
     {

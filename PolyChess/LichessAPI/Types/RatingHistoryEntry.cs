@@ -1,4 +1,4 @@
-﻿namespace LichessAPI.Types
+﻿namespace PolyChess.LichessAPI.Types
 {
     public class RatingHistoryEntry
     {

@@ -1,3 +1,3 @@
-﻿namespace LichessAPI.Converters
+﻿namespace PolyChess.LichessAPI.Converters
 {
 }

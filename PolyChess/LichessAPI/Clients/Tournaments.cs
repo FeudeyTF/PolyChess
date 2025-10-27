@@ -1,7 +1,7 @@
-﻿using LichessAPI.Types.Arena;
-using LichessAPI.Types.Swiss;
+﻿using PolyChess.LichessAPI.Types.Arena;
+using PolyChess.LichessAPI.Types.Swiss;
 
-namespace LichessAPI.Clients
+namespace PolyChess.LichessAPI.Clients
 {
     public partial class LichessClient : LichessApiClient
     {

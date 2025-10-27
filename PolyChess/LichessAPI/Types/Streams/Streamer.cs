@@ -1,4 +1,4 @@
-﻿namespace LichessAPI.Types.Streams
+﻿namespace PolyChess.LichessAPI.Types.Streams
 {
     public class Streamer
     {

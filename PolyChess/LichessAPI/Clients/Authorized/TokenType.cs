@@ -1,4 +1,4 @@
-﻿namespace LichessAPI.Clients.Authorized
+﻿namespace PolyChess.LichessAPI.Clients.Authorized
 {
     public enum TokenType
     {

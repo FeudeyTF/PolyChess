@@ -1,8 +1,8 @@
-﻿using LichessAPI.Clients;
-using LichessAPI.Clients.Authorized;
-using LichessAPI.Types.Arena;
-using LichessAPI.Types.Swiss;
-using LichessAPI.Types.Tokens;
+﻿using PolyChess.LichessAPI.Clients;
+using PolyChess.LichessAPI.Clients.Authorized;
+using PolyChess.LichessAPI.Types.Arena;
+using PolyChess.LichessAPI.Types.Swiss;
+using PolyChess.LichessAPI.Types.Tokens;
 using PolyChess.Components.Data;
 using PolyChess.Components.Telegram.Buttons;
 using PolyChess.Components.Telegram.Commands;

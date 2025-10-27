@@ -1,4 +1,4 @@
-﻿using LichessAPI.Types.Arena;
+﻿using PolyChess.LichessAPI.Types.Arena;
 
 namespace PolyChess.Components.Tournaments
 {

@@ -1,4 +1,4 @@
-﻿namespace LichessAPI.Types.Puzzles
+﻿namespace PolyChess.LichessAPI.Types.Puzzles
 {
     public class PuzzleDashboard
     {

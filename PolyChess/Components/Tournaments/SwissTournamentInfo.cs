@@ -1,4 +1,4 @@
-﻿using LichessAPI.Types.Swiss;
+﻿using PolyChess.LichessAPI.Types.Swiss;
 
 namespace PolyChess.Components.Tournaments
 {

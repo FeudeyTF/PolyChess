@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace LichessAPI.Types
+namespace PolyChess.LichessAPI.Types
 {
     public class Perfomance
     {

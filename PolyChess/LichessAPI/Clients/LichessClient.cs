@@ -1,4 +1,4 @@
-﻿namespace LichessAPI.Clients
+﻿namespace PolyChess.LichessAPI.Clients
 {
     public partial class LichessClient : LichessApiClient
     {

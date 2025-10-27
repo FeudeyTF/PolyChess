@@ -1,8 +1,8 @@
-﻿using LichessAPI.Converters;
-using LichessAPI.Converters.Scopes;
+﻿using PolyChess.LichessAPI.Converters;
+using PolyChess.LichessAPI.Converters.Scopes;
 using System.Text.Json;
 
-namespace LichessAPI
+namespace PolyChess.LichessAPI
 {
     public abstract class LichessApiClient
     {
