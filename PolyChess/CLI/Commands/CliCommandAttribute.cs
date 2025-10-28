@@ -2,6 +2,7 @@
 
 namespace PolyChess.CLI.Commands
 {
+    [AttributeUsage(AttributeTargets.Method)]
     internal class CliCommandAttribute : Attribute, ICommandAttribute
     {
         public string Name { get; }

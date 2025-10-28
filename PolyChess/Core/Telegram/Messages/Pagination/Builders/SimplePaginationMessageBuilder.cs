@@ -34,7 +34,7 @@ namespace PolyChess.Core.Telegram.Messages.Pagination.Builders
             return text;
         }
 
-        private InlineKeyboardMarkup BuildPaginationKeyboard(int page, int totalPages, string type)
+        private static InlineKeyboardMarkup BuildPaginationKeyboard(int page, int totalPages, string type)
         {
             List<List<InlineKeyboardButton>> buttons = [];
 
