@@ -1,5 +1,4 @@
-﻿using PolyChess.LichessAPI.Clients;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using PolyChess.Components.Data;
 using PolyChess.Components.Data.Tables;
 using PolyChess.Components.Telegram.Buttons;
@@ -12,6 +11,7 @@ using PolyChess.Core.Telegram.Messages.Discrete;
 using PolyChess.Core.Telegram.Messages.Discrete.Messages;
 using PolyChess.Core.Telegram.Messages.Pagination;
 using PolyChess.Core.Telegram.Messages.Pagination.Builders;
+using PolyChess.LichessAPI.Clients;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 

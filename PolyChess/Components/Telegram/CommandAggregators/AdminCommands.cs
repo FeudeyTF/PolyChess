@@ -7,6 +7,7 @@ using PolyChess.Core.Telegram;
 using PolyChess.Core.Telegram.Messages;
 using PolyChess.Core.Telegram.Messages.Discrete;
 using PolyChess.Core.Telegram.Messages.Discrete.Messages;
+using PolyChess.LichessAPI.Clients;
 
 namespace PolyChess.Components.Telegram.CommandAggregators
 {
@@ -20,12 +21,15 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
         private readonly DiscreteMessagesProvider _discreteMessagesProvider;
 
-        public AdminCommands(PolyContext polyContext, ITelegramProvider telegramProvider, TournamentsComponent tournaments, IMainConfig config)
+        private readonly LichessClient _lichessClient;
+
+        public AdminCommands(PolyContext polyContext, LichessClient lichessClient, ITelegramProvider telegramProvider, TournamentsComponent tournaments, IMainConfig config)
         {
             _polyContext = polyContext;
             _tournaments = tournaments;
             _mainConfig = config;
             _discreteMessagesProvider = new(telegramProvider);
+            _lichessClient = lichessClient;
         }
 
         [TelegramCommand("addlesson", "Добавляет урок", IsAdmin = true, IsHidden = true)]
@@ -163,6 +167,64 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                 await _polyContext.SaveChangesAsync();
                 await args.ReplyAsync($"Успешно добавлено {students.Length - skippedStudents.Count} студентов! Пропущенные студенты:\n{string.Join('\n', skippedStudents.Select(s => s.student + ":" + s.error))}");
             }
+        }
+
+        [TelegramCommand("getstudents", "Присылает файл со списком всех студентов", IsAdmin = true, IsHidden = true)]
+        private async Task GetStudents(TelegramCommandExecutionContext ctx)
+        {
+            Console.WriteLine(1);
+            if (!_polyContext.Students.Any())
+            {
+                await ctx.ReplyAsync("Студенты отсутствуют!");
+                return;
+            }
+
+            List<string> csv = [string.Join(',', ["Имя", "Фамилия", "Отчество", "Курс", "Ник", "Рейтинг"])];
+            foreach (var student in _polyContext.Students)
+            {
+                try
+                {
+                    var lichessName = "Аккаунт не привязан";
+                    var lichessRating = "Отсутсвует";
+                    if (!string.IsNullOrEmpty(student.LichessId))
+                    {
+                        var lichess = await _lichessClient.GetUserAsync(student.LichessId);
+                        if (lichess != null)
+                        {
+                            lichessName = lichess.Username;
+                            if (lichess.Perfomance.TryGetValue("Rapid", out var rating))
+                                lichessRating = rating.Rating.ToString();
+                        }
+                    }
+                    var entry = string.Join(',',
+                    [
+                        student.Name,
+                        student.Surname,
+                        student.Patronymic,
+                        student.Year.ToString(),
+                        lichessName,
+                        lichessRating
+                    ]);
+                    csv.Add(entry);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
+
+            TelegramMessageBuilder message = "Таблица со всеми участниками секции в базе";
+            Directory.CreateDirectory("Temp");
+            var tempFilePath = Path.Combine("Temp", "students.csv");
+            var tempFile = File.Create(tempFilePath);
+            using (var streamWriter = new StreamWriter(tempFile))
+            {
+                foreach (var entry in csv)
+                    streamWriter.WriteLine(entry);
+                streamWriter.Close();
+            }
+            using var stream = File.Open(tempFilePath, FileMode.Open);
+            await ctx.ReplyAsync(message.WithFile(stream, "students.csv"));
         }
     }
 }

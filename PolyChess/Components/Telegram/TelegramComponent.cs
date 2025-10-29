@@ -100,10 +100,17 @@ namespace PolyChess.Components.Telegram
                 {
                     SeparatorCommandArgumentsParser parser = new(_commandSpecifier, ' ', message.Text);
                     var (name, args) = parser.Parse();
-                    await _commandManager.ExecuteAsync(
-                        name,
-                        new TelegramCommandExecutionContext(message.From, args, message, _mainConfig.TelegramAdmins, _telegramProvider, token)
-                    );
+                    try
+                    {
+                        await _commandManager.ExecuteAsync(
+                            name,
+                            new TelegramCommandExecutionContext(message.From, args, message, _mainConfig.TelegramAdmins, _telegramProvider, token)
+                        );
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.Write(e.ToString(), LogLevel.Error);
+                    }
                 }
             }
         }
@@ -113,10 +120,17 @@ namespace PolyChess.Components.Telegram
             _logger.Write($"Получен колбэк от пользователя {query.From.Username} (Id: {query.From.Id}), Data: {query.Data}", LogLevel.Info);
             if (TelegramCallbackQueryData.TryParse(query.Data, default, out var result))
             {
-                await _buttonsManager.ExecuteAsync(
-                    result.ButtonId,
-                    new TelegramButtonExecutionContext(result.ButtonId, query, result, token, _telegramProvider, [])
-                );
+                try
+                {
+                    await _buttonsManager.ExecuteAsync(
+                        result.ButtonId,
+                        new TelegramButtonExecutionContext(result.ButtonId, query, result, token, _telegramProvider, [])
+                    );
+                }
+                catch (Exception e)
+                {
+                    _logger.Write(e.ToString(), LogLevel.Error);
+                }
                 await client.AnswerCallbackQuery(query.Id, cancellationToken: token);
             }
         }

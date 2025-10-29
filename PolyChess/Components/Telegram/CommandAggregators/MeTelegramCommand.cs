@@ -1,9 +1,4 @@
-﻿using PolyChess.LichessAPI.Clients;
-using PolyChess.LichessAPI.Clients.Authorized;
-using PolyChess.LichessAPI.Types.Arena;
-using PolyChess.LichessAPI.Types.Swiss;
-using PolyChess.LichessAPI.Types.Tokens;
-using PolyChess.Components.Data;
+﻿using PolyChess.Components.Data;
 using PolyChess.Components.Telegram.Buttons;
 using PolyChess.Components.Telegram.Commands;
 using PolyChess.Components.Tournaments;
@@ -15,6 +10,11 @@ using PolyChess.Core.Telegram.Messages.Discrete;
 using PolyChess.Core.Telegram.Messages.Discrete.Messages;
 using PolyChess.Core.Telegram.Messages.Pagination;
 using PolyChess.Core.Telegram.Messages.Pagination.Builders;
+using PolyChess.LichessAPI.Clients;
+using PolyChess.LichessAPI.Clients.Authorized;
+using PolyChess.LichessAPI.Types.Arena;
+using PolyChess.LichessAPI.Types.Swiss;
+using PolyChess.LichessAPI.Types.Tokens;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 

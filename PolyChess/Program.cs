@@ -1,5 +1,4 @@
-﻿using PolyChess.LichessAPI.Clients;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using PolyChess.CLI;
 using PolyChess.CLI.Commands;
 using PolyChess.Components;
@@ -14,6 +13,7 @@ using PolyChess.Core.Commands.Parsers;
 using PolyChess.Core.Configuration;
 using PolyChess.Core.Logging.Types;
 using PolyChess.Core.Telegram.Providers;
+using PolyChess.LichessAPI.Clients;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 
@@ -58,7 +58,7 @@ namespace PolyChess
             );
 
             MeTelegramCommand telegramCommands = new(telegramProvider, lichessClient, polyContext, tournaments, _configuration, new(telegramProvider));
-            AdminCommands adminCommands = new(polyContext, telegramProvider, tournaments, _configuration);
+            AdminCommands adminCommands = new(polyContext, lichessClient, telegramProvider, tournaments, _configuration);
             StudentCommands studentCommands = new(polyContext, _configuration, telegramProvider, lichessClient);
 
             AttendanceHandler attendanceHandler = new(polyContext);
