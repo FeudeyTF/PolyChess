@@ -2,14 +2,14 @@
 {
     internal class TournamentsScore
     {
-        public int Ones { get; set; }
+        public int TournamentWins { get; set; }
 
-        public int Zeros { get; set; }
+        public int TournamentParticipants { get; set; }
 
-        public TournamentsScore(int ones, int zeros)
+        public TournamentsScore(int tournamentWins, int tournamentParticipants)
         {
-            Ones = ones;
-            Zeros = zeros;
+            TournamentWins = tournamentWins;
+            TournamentParticipants = tournamentParticipants;
         }
     }
 }
