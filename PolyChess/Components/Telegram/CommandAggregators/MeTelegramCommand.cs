@@ -54,7 +54,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
             _nextTournamentsMessage = new(nameof(_nextTournamentsMessage)[1..], 1, GetNextTournaments, nextTournamentsBuilder, telegramProvider);
         }
 
-        [TelegramCommand("me", "Выдаёт информацию о Вас")]
+        [TelegramCommand("me", "Показывает информацию о Вашем аккаунте")]
         private async Task Me(TelegramCommandExecutionContext ctx)
         {
             var student = _polyContext.Students.FirstOrDefault(s => s.TelegramId == ctx.User.Id);
