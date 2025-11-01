@@ -57,6 +57,71 @@ namespace PolyChess.Components.Telegram.CommandAggregators
             await ctx.SendMessageAsync(new TelegramMessageBuilder($"Урок с <b>{startDate:g} до {endDate:g}</b> успешно добавлен!"), ctx.Message.Chat.Id);
         }
 
+        [TelegramCommand("addattendance", "Добавляет посещаемость студентам", IsAdmin = true, IsHidden = true)]
+        private async Task AddAttendance(TelegramCommandExecutionContext ctx)
+        {
+            DiscreteMessage message = new(
+                _discreteMessagesProvider,
+                [
+                    new TelegramMessageBuilder("Введите данные в формате списка Id урока,TelegramId студента")
+                ],
+                HandleAttendancesEntered
+            );
+            await ctx.SendMessageAsync(message, ctx.Message.Chat.Id);
+
+            async Task HandleAttendancesEntered(DiscreteMessageEnteredArgs args)
+            {
+                List<string> errors = [];
+                var response = args.Responses.First().Text;
+                if (response == null)
+                {
+                    await args.ReplyAsync("Вы не ввели текст!");
+                    return;
+                }
+
+                foreach (var entry in response.Split('\n'))
+                {
+                    var data = entry.Split(',');
+                    if (data.Length != 2)
+                    {
+                        errors.Add($"Неверный формат данных: {entry}");
+                        continue;
+                    }
+
+                    if (int.TryParse(data[0], out var lessonId) && long.TryParse(data[1], out var telegramId))
+                    {
+                        var student = _polyContext.Students.FirstOrDefault(s => s.TelegramId == telegramId);
+                        var lesson = _polyContext.Lessons.FirstOrDefault(l => l.Id == lessonId);
+                        if (student == null)
+                        {
+                            errors.Add($"Студент с TelegramId {telegramId} не найден!");
+                            continue;
+                        }
+                        if (lesson == null)
+                        {
+                            errors.Add($"Урок с Id {lessonId} не найден!");
+                            continue;
+                        }
+
+                        Attendance attendance = new()
+                        {
+                            Lesson = lesson,
+                            Student = student
+                        };
+                        _polyContext.Attendances.Add(attendance);
+                    }
+                    else
+                        errors.Add($"Ошибка при разборе данных: {entry}");
+                }
+
+                await _polyContext.SaveChangesAsync();
+                if (errors.Count > 0)
+                    await args.ReplyAsync($"Ошибки при добавлении:\n{string.Join('\n', errors)}");
+                else
+                    await args.ReplyAsync($"Посещения успешно добавлены!");
+            }
+        }
+
         [TelegramCommand("updatetournaments", "Выгружает турниры с Lichess в локальное хранилище", IsAdmin = true, IsHidden = true)]
         private async Task UpdateTournaments(TelegramCommandExecutionContext ctx)
         {
@@ -107,8 +172,8 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                         continue;
                     }
 
-                    var name = studentData[0];
-                    var surname = studentData[1];
+                    var surname = studentData[0];
+                    var name = studentData[1];
                     var patronomic = studentData[2];
                     var yearStr = studentData[3];
                     var group = studentData[4];
@@ -123,7 +188,8 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                         continue;
                     }
 
-                    if (!long.TryParse(telegramIdStr, out var telegramId))
+                    long telegramId = 0;
+                    if (!string.IsNullOrEmpty(telegramIdStr) && !long.TryParse(telegramIdStr, out telegramId))
                     {
                         skippedStudents.Add((name, "TelegramId не является числом!"));
                         continue;
@@ -158,15 +224,16 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                         Surname = surname,
                         Patronymic = patronomic,
                         Year = year,
-                        TelegramId = telegramId,
-                        LichessId = lichess,
-                        LichessToken = lichessToken,
+                        Group = group,
+                        TelegramId = telegramId == 0 ? default : telegramId,
+                        LichessId = string.IsNullOrEmpty(lichess) ? null : lichess,
+                        LichessToken = string.IsNullOrEmpty(lichessToken) ? null : lichessToken,
                         Institute = institute
                     };
                     _polyContext.Students.Add(studentEntry);
                 }
                 await _polyContext.SaveChangesAsync();
-                await args.ReplyAsync($"Успешно добавлено {students.Length - skippedStudents.Count} студентов! Пропущенные студенты:\n{string.Join('\n', skippedStudents.Select(s => s.student + ":" + s.error))}");
+                await args.ReplyAsync($"Успешно добавлено {students.Length - skippedStudents.Count} студентов! Пропущенные студенты:\n{string.Join('\n', skippedStudents.Select(s => s.student + ": " + s.error))}");
             }
         }
 
