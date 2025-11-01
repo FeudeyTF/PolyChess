@@ -101,9 +101,9 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                 foreach (var student in students)
                 {
                     var studentData = student.Split(',');
-                    if (studentData.Length != 8)
+                    if (studentData.Length != 9)
                     {
-                        skippedStudents.Add((student, "Не введены все данные (для пустых оставьте пропуск)"));
+                        skippedStudents.Add((student, "Не введены все данные (для пустых оставьте пропуск). Имя,Фамилия,Отчество,Курс,Группа,Институт,Личесс,ЛичессТокен,Телеграм"));
                         continue;
                     }
 
@@ -111,10 +111,11 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                     var surname = studentData[1];
                     var patronomic = studentData[2];
                     var yearStr = studentData[3];
-                    var institute = studentData[4];
-                    var lichess = studentData[5];
-                    var lichessToken = studentData[6];
-                    var telegramIdStr = studentData[7];
+                    var group = studentData[4];
+                    var institute = studentData[5];
+                    var lichess = studentData[6];
+                    var lichessToken = studentData[7];
+                    var telegramIdStr = studentData[8];
 
                     if (!int.TryParse(yearStr, out var year))
                     {
