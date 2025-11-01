@@ -40,6 +40,7 @@ namespace PolyChess
         /// </summary>
         private static async Task Main(string[] args)
         {
+            Thread.CurrentThread.CurrentCulture = new("ru-RU");
             CancellationTokenSource tokenSource = new();
             _configuration = ConfigFile.Load<MainConfigFile>();
             _configuration.Save();
