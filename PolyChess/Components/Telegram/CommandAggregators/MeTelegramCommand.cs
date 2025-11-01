@@ -47,12 +47,11 @@ namespace PolyChess.Components.Telegram.CommandAggregators
             _mainConfig = mainConfig;
             _discreteMessagesProvider = discreteMessagesProvider;
 
-
             SimplePaginationMessageBuilder<object> myTournamentsBuilder = new(MyTournamentToString);
             SimplePaginationMessageBuilder<object> nextTournamentsBuilder = new(NextTournamentToString);
 
-            _myTournamentsMessage = new(nameof(_myTournamentsMessage), 1, GetMyTournaments, myTournamentsBuilder, telegramProvider);
-            _nextTournamentsMessage = new(nameof(_nextTournamentsMessage), 1, GetNextTournaments, nextTournamentsBuilder, telegramProvider);
+            _myTournamentsMessage = new(nameof(_myTournamentsMessage)[1..], 1, GetMyTournaments, myTournamentsBuilder, telegramProvider);
+            _nextTournamentsMessage = new(nameof(_nextTournamentsMessage)[1..], 1, GetNextTournaments, nextTournamentsBuilder, telegramProvider);
         }
 
         [TelegramCommand("me", "Выдаёт информацию о Вас")]

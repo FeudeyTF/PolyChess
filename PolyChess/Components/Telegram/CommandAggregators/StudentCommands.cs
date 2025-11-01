@@ -42,10 +42,10 @@ namespace PolyChess.Components.Telegram.CommandAggregators
             _lichess = lichess;
 
             SimplePaginationMessageBuilder<HelpEntry> helpBuilder = new(HelpEntryToString);
-            _helpMessage = new(nameof(_helpMessage), 1, GetHelpEntries, helpBuilder, provider);
+            _helpMessage = new(nameof(_helpMessage)[1..], 1, GetHelpEntries, helpBuilder, provider);
 
             SimplePaginationMessageBuilder<FaqEntry> faqBuilder = new(FaqEntryToString);
-            _faqMessage = new(nameof(_faqMessage), 5, GetFaqEntries, faqBuilder, provider);
+            _faqMessage = new(nameof(_faqMessage)[1..], 5, GetFaqEntries, faqBuilder, provider);
         }
 
 
