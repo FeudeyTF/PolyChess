@@ -1,19 +1,26 @@
 ﻿using PolyChess.Components.Data;
 using PolyChess.Components.Data.Tables;
+using PolyChess.Components.Telegram.Buttons;
 using PolyChess.Components.Telegram.Commands;
 using PolyChess.Components.Tournaments;
 using PolyChess.Configuration;
+using PolyChess.Core.Logging;
 using PolyChess.Core.Telegram;
 using PolyChess.Core.Telegram.Messages;
 using PolyChess.Core.Telegram.Messages.Discrete;
 using PolyChess.Core.Telegram.Messages.Discrete.Messages;
 using PolyChess.LichessAPI.Clients;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PolyChess.Components.Telegram.CommandAggregators
 {
-    internal class AdminCommands : TelegramCommandAggregator
+    internal class AdminPanel : TelegramCommandAggregator
     {
         private readonly PolyContext _polyContext;
+
+        private readonly LichessClient _lichessClient;
+
+        private readonly ILogger _logger;
 
         private readonly TournamentsComponent _tournaments;
 
@@ -21,44 +28,182 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
         private readonly DiscreteMessagesProvider _discreteMessagesProvider;
 
-        private readonly LichessClient _lichessClient;
-
-        public AdminCommands(PolyContext polyContext, LichessClient lichessClient, ITelegramProvider telegramProvider, TournamentsComponent tournaments, IMainConfig config)
+        public AdminPanel(ITelegramProvider telegramProvider, TournamentsComponent tournaments, IMainConfig config, PolyContext polyContext, ILogger logger, LichessClient client)
         {
             _polyContext = polyContext;
-            _tournaments = tournaments;
-            _mainConfig = config;
+            _logger = logger;
+            _lichessClient = client;
             _discreteMessagesProvider = new(telegramProvider);
-            _lichessClient = lichessClient;
+            _mainConfig = config;
+            _tournaments = tournaments;
         }
 
-        [TelegramCommand("addlesson", "Добавляет урок", IsAdmin = true, IsHidden = true)]
-        private async Task AddLesson(TelegramCommandExecutionContext ctx, DateTime startDate, DateTime endDate, float? latitude = default, float? longitude = default)
+        [TelegramCommand("panel", "Выводит панель администратора", IsHidden = true, IsAdmin = true)]
+        private async Task Panel(TelegramCommandExecutionContext ctx)
         {
-            if (startDate >= endDate)
+            TelegramMessageBuilder message = "Добро пожаловать в панель администратора.";
+
+            message.AddButton(
+                new InlineKeyboardButton("Обновить турниры").WithData(nameof(UpdateTournaments))
+            );
+
+            message.AddButton(
+                new InlineKeyboardButton("Получить список студентов").WithData(nameof(GetStudentsList))
+            );
+
+            message.AddKeyboard(
+            [
+                new InlineKeyboardButton("Добавить урок").WithData(nameof(AddLesson)),
+                new InlineKeyboardButton("Добавить посещение").WithData(nameof(AddAttendance)),
+            ]);
+
+            message.AddButton(
+                new InlineKeyboardButton("Добавить студентов").WithData(nameof(AddStudents))
+            );
+
+            await ctx.ReplyAsync(message);
+        }
+
+        [TelegramButton(nameof(GetStudentsList))]
+        private async Task GetStudentsList(TelegramButtonExecutionContext ctx)
+        {
+            if (!_polyContext.Students.Any())
             {
-                await ctx.ReplyAsync("Ошибка! Дата начала идёт после даты конца.");
+                await ctx.ReplyAsync("Студенты отсутствуют!");
                 return;
             }
 
-            latitude ??= _mainConfig.SchoolLocation.X;
-            longitude ??= _mainConfig.SchoolLocation.Y;
+            await ctx.ReplyAsync("Началась сборка таблицы, это может занять некоторое время...");
 
-            Lesson lesson = new()
+            List<string> csv = [string.Join(',', ["Имя", "Фамилия", "Отчество", "Курс", "Ник", "Рапид", "Блиц"])];
+            foreach (var student in _polyContext.Students)
             {
-                StartDate = startDate,
-                EndDate = endDate,
-                Latitude = latitude.Value,
-                Longitude = longitude.Value
-            };
+                var lichessName = "Аккаунт не привязан";
+                var rapidRating = "Отсутсвует";
+                var blitzRating = "Отсутсвует";
+                if (!string.IsNullOrEmpty(student.LichessId))
+                {
+                    var lichess = await _lichessClient.GetUserAsync(student.LichessId);
+                    if (lichess != null)
+                    {
+                        lichessName = lichess.Username;
+                        if (lichess.Perfomance.TryGetValue("rapid", out var rapid))
+                            rapidRating = rapid.Rating.ToString();
+                        if (lichess.Perfomance.TryGetValue("blitz", out var blitz))
+                            blitzRating = blitz.Rating.ToString();
+                    }
+                }
+                var entry = string.Join(',',
+                [
+                    student.Name,
+                    student.Surname,
+                    student.Patronymic,
+                    student.Year.ToString(),
+                    lichessName,
+                    rapidRating,
+                    blitzRating
+                ]);
+                csv.Add(entry);
+            }
 
-            _polyContext.Lessons.Add(lesson);
-            await _polyContext.SaveChangesAsync();
-            await ctx.SendMessageAsync(new TelegramMessageBuilder($"Урок с <b>{startDate:g} до {endDate:g}</b> успешно добавлен!"), ctx.Message.Chat.Id);
+            TelegramMessageBuilder message = "Таблица со всеми участниками секции в базе";
+            Directory.CreateDirectory("Temp");
+            var tempFilePath = Path.Combine("Temp", "students.csv");
+            var tempFile = File.Create(tempFilePath);
+            using (var streamWriter = new StreamWriter(tempFile))
+            {
+                foreach (var entry in csv)
+                    streamWriter.WriteLine(entry);
+                streamWriter.Close();
+            }
+            using var stream = File.Open(tempFilePath, FileMode.Open);
+            await ctx.ReplyAsync(message.WithFile(stream, "students.csv"));
         }
 
-        [TelegramCommand("addattendance", "Добавляет посещаемость студентам", IsAdmin = true, IsHidden = true)]
-        private async Task AddAttendance(TelegramCommandExecutionContext ctx)
+        [TelegramButton(nameof(AddLesson))]
+        private async Task AddLesson(TelegramButtonExecutionContext ctx)
+        {
+            DiscreteMessage message = new(
+                _discreteMessagesProvider,
+                [
+                    new TelegramMessageBuilder("Введите дату начала урока"),
+                    new TelegramMessageBuilder("Введите дату конца урока"),
+                    new TelegramMessageBuilder("Введите широту урока или введите -, чтобы взять стандартную"),
+                    new TelegramMessageBuilder("Введите долготу урока или введите -, чтобы взять стандартную")
+                ],
+                HandleLessonsDataEntered
+            );
+
+            if (ctx.Query.Message != null)
+                await ctx.SendMessageAsync(message, ctx.Query.Message.Chat.Id);
+
+            async Task HandleLessonsDataEntered(DiscreteMessageEnteredArgs args)
+            {
+                if (args.Responses.Length != 4)
+                    return;
+
+                if (!DateTime.TryParse(args.Responses[0].Text, out var startDate))
+                {
+                    await args.ReplyAsync("Ошибка! Неверный формат даты начала урока.");
+                    return;
+                }
+
+                if (!DateTime.TryParse(args.Responses[1].Text, out var endDate))
+                {
+                    await args.ReplyAsync("Ошибка! Неверный формат даты конца урока.");
+                    return;
+                }
+
+                float? latitude = default;
+                float? longitude = default;
+
+                var latitudeResponse = args.Responses[2].Text;
+                if (!string.IsNullOrEmpty(latitudeResponse) && latitudeResponse != "-")
+                {
+                    if (!float.TryParse(latitudeResponse, out var givenLatitude))
+                    {
+                        await args.ReplyAsync("Ошибка! Неверный формат широты.");
+                        return;
+                    }
+                    latitude = givenLatitude;
+                }
+
+                var longitudeResponse = args.Responses[3].Text;
+                if (!string.IsNullOrEmpty(longitudeResponse) && longitudeResponse != "-")
+                {
+                    if (!float.TryParse(longitudeResponse, out var givenLongitude))
+                    {
+                        await args.ReplyAsync("Ошибка! Неверный формат долготы.");
+                        return;
+                    }
+                    longitude = givenLongitude;
+                }
+
+                if (startDate >= endDate)
+                {
+                    await args.ReplyAsync("Ошибка! Дата начала идёт после даты конца.");
+                    return;
+                }
+
+                latitude ??= _mainConfig.SchoolLocation.X;
+                longitude ??= _mainConfig.SchoolLocation.Y;
+
+                Lesson lesson = new()
+                {
+                    StartDate = startDate,
+                    EndDate = endDate,
+                    Latitude = latitude.Value,
+                    Longitude = longitude.Value
+                };
+
+                _polyContext.Lessons.Add(lesson);
+                await _polyContext.SaveChangesAsync();
+                await args.ReplyAsync($"Урок с <b>{startDate:g} до {endDate:g}</b> успешно добавлен!");
+            }
+        }
+
+        [TelegramButton(nameof(AddAttendance))]
+        private async Task AddAttendance(TelegramButtonExecutionContext ctx)
         {
             DiscreteMessage message = new(
                 _discreteMessagesProvider,
@@ -67,7 +212,9 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                 ],
                 HandleAttendancesEntered
             );
-            await ctx.SendMessageAsync(message, ctx.Message.Chat.Id);
+
+            if (ctx.Query.Message != null)
+                await ctx.SendMessageAsync(message, ctx.Query.Message.Chat.Id);
 
             async Task HandleAttendancesEntered(DiscreteMessageEnteredArgs args)
             {
@@ -122,8 +269,8 @@ namespace PolyChess.Components.Telegram.CommandAggregators
             }
         }
 
-        [TelegramCommand("updatetournaments", "Выгружает турниры с Lichess в локальное хранилище", IsAdmin = true, IsHidden = true)]
-        private async Task UpdateTournaments(TelegramCommandExecutionContext ctx)
+        [TelegramButton(nameof(UpdateTournaments))]
+        private async Task UpdateTournaments(TelegramButtonExecutionContext ctx)
         {
             if (_mainConfig.TeamsWithTournaments.Count > 0)
             {
@@ -141,8 +288,8 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                 await ctx.ReplyAsync("Команда Политеха не найдена!");
         }
 
-        [TelegramCommand("addstudents", "Добавляет студентов из списка", IsAdmin = true, IsHidden = true)]
-        private async Task AddStudents(TelegramCommandExecutionContext ctx)
+        [TelegramButton(nameof(AddStudents))]
+        private async Task AddStudents(TelegramButtonExecutionContext ctx)
         {
             DiscreteMessage message = new(
                 _discreteMessagesProvider,
@@ -151,7 +298,9 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                 ],
                 HandleStudentsEntered
             );
-            await ctx.SendMessageAsync(message, ctx.Message.Chat.Id);
+
+            if (ctx.Query.Message != null)
+                await ctx.SendMessageAsync(message, ctx.Query.Message.Chat.Id);
 
             async Task HandleStudentsEntered(DiscreteMessageEnteredArgs args)
             {
@@ -235,64 +384,6 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                 await _polyContext.SaveChangesAsync();
                 await args.ReplyAsync($"Успешно добавлено {students.Length - skippedStudents.Count} студентов! Пропущенные студенты:\n{string.Join('\n', skippedStudents.Select(s => s.student + ": " + s.error))}");
             }
-        }
-
-        [TelegramCommand("getstudents", "Присылает файл со списком всех студентов", IsAdmin = true, IsHidden = true)]
-        private async Task GetStudents(TelegramCommandExecutionContext ctx)
-        {
-            Console.WriteLine(1);
-            if (!_polyContext.Students.Any())
-            {
-                await ctx.ReplyAsync("Студенты отсутствуют!");
-                return;
-            }
-
-            List<string> csv = [string.Join(',', ["Имя", "Фамилия", "Отчество", "Курс", "Ник", "Рейтинг"])];
-            foreach (var student in _polyContext.Students)
-            {
-                try
-                {
-                    var lichessName = "Аккаунт не привязан";
-                    var lichessRating = "Отсутсвует";
-                    if (!string.IsNullOrEmpty(student.LichessId))
-                    {
-                        var lichess = await _lichessClient.GetUserAsync(student.LichessId);
-                        if (lichess != null)
-                        {
-                            lichessName = lichess.Username;
-                            if (lichess.Perfomance.TryGetValue("Rapid", out var rating))
-                                lichessRating = rating.Rating.ToString();
-                        }
-                    }
-                    var entry = string.Join(',',
-                    [
-                        student.Name,
-                        student.Surname,
-                        student.Patronymic,
-                        student.Year.ToString(),
-                        lichessName,
-                        lichessRating
-                    ]);
-                    csv.Add(entry);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
-            }
-
-            TelegramMessageBuilder message = "Таблица со всеми участниками секции в базе";
-            Directory.CreateDirectory("Temp");
-            var tempFilePath = Path.Combine("Temp", "students.csv");
-            var tempFile = File.Create(tempFilePath);
-            using (var streamWriter = new StreamWriter(tempFile))
-            {
-                foreach (var entry in csv)
-                    streamWriter.WriteLine(entry);
-                streamWriter.Close();
-            }
-            using var stream = File.Open(tempFilePath, FileMode.Open);
-            await ctx.ReplyAsync(message.WithFile(stream, "students.csv"));
         }
     }
 }

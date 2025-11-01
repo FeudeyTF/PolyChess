@@ -12,6 +12,12 @@ namespace PolyChess.Components.Telegram
         public static void SetData(this InlineKeyboardButton button, string id, params (string name, object value)[] values)
             => button.CallbackData = TelegramCallbackQueryData.GetDataString(id, values);
 
+        public static InlineKeyboardButton WithData(this InlineKeyboardButton button, string id, params (string name, object value)[] values)
+        {
+            button.SetData(id, values);
+            return button;
+        }
+
         public static async Task SendMessageAsync(this ITelegramBotClient client, ITelegramMessage message, ChatId chatId, CancellationToken token)
             => await message.SendAsync(client, chatId, token);
 
