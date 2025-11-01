@@ -46,8 +46,9 @@ namespace PolyChess.Core.Telegram.Messages.Discrete.Messages
 
         public async Task SendAsync(ITelegramBotClient client, ChatId chatId, CancellationToken token)
         {
-            if (_provider.TryAddMessage(this, chatId))
-                await Queries[_progress].SendAsync(client, chatId, token);
+            if (_progress == 0 && !_provider.TryAddMessage(this, chatId))
+                return;
+            await Queries[_progress].SendAsync(client, chatId, token);
         }
 
         public Task EditAsync(ITelegramBotClient client, Message oldMessage, CancellationToken token)
