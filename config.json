@@ -1,0 +1,23 @@
+{
+  "TelegramToken": "",
+  "DatabaseConnectionString": "Data Source=data.sqlite",
+  "TelegramAdmins": [],
+  "SemesterStartDate": "0001-01-01T00:00:00",
+  "SemesterEndDate": "0001-01-01T00:00:00",
+  "ClubTeamPlayers": [],
+  "InstitutesTeams": [],
+  "Test": {
+    "RequiredTournamentsCount": 0,
+    "RequiredVisitedLessonsPercent": 0,
+    "RequiredPuzzlesSolved": 0
+  },
+  "TournamentRules": {},
+  "SchoolLocation": {
+    "X": 59.96513,
+    "Y": 30.398474
+  },
+  "QuestionChannelId": 0,
+  "CreativeTaskChannel": 0,
+  "LichessFlairs": [],
+  "TeamsWithTournaments": []
+}

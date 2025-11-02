@@ -75,7 +75,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
             await ctx.ReplyAsync("Началась сборка таблицы, это может занять некоторое время...");
 
-            List<string> csv = [string.Join(',', ["Имя", "Фамилия", "Отчество", "Курс", "Ник", "Рапид", "Блиц"])];
+            List<string> csv = [string.Join(',', ["Имя", "Фамилия", "Отчество", "Институт", "Курс", "Ник", "Рапид", "Блиц"])];
             foreach (var student in _polyContext.Students)
             {
                 var lichessName = "Аккаунт не привязан";
@@ -98,6 +98,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                     student.Name,
                     student.Surname,
                     student.Patronymic,
+		    student.Institute,
                     student.Year.ToString(),
                     lichessName,
                     rapidRating,
