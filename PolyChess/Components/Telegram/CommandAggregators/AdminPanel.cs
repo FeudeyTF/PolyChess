@@ -41,24 +41,24 @@ namespace PolyChess.Components.Telegram.CommandAggregators
         [TelegramCommand("panel", "Выводит панель администратора", IsHidden = true, IsAdmin = true)]
         private async Task Panel(TelegramCommandExecutionContext ctx)
         {
-            TelegramMessageBuilder message = "Добро пожаловать в панель администратора.";
+            TelegramMessageBuilder message = "🛠 Добро пожаловать в панель администратора.";
 
             message.AddButton(
-                new InlineKeyboardButton("Обновить турниры").WithData(nameof(UpdateTournaments))
+                new InlineKeyboardButton("🔄 Обновить турниры").WithData(nameof(UpdateTournaments))
             );
 
             message.AddButton(
-                new InlineKeyboardButton("Получить список студентов").WithData(nameof(GetStudentsList))
+                new InlineKeyboardButton("👥 Получить список студентов").WithData(nameof(GetStudentsList))
             );
 
             message.AddKeyboard(
             [
-                new InlineKeyboardButton("Добавить урок").WithData(nameof(AddLesson)),
-                new InlineKeyboardButton("Добавить посещение").WithData(nameof(AddAttendance)),
+                new InlineKeyboardButton("➕ Добавить урок").WithData(nameof(AddLesson)),
+                new InlineKeyboardButton("➕ Добавить посещение").WithData(nameof(AddAttendance)),
             ]);
 
             message.AddButton(
-                new InlineKeyboardButton("Добавить студентов").WithData(nameof(AddStudents))
+                new InlineKeyboardButton("➕ Добавить студентов").WithData(nameof(AddStudents))
             );
 
             await ctx.ReplyAsync(message);
