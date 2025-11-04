@@ -368,7 +368,8 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                 msg.Add("Ни одного занятия не посещено!");
 
             foreach (var lesson in _polyContext.Lessons)
-                msg.Add($"Занятие с {lesson.StartDate:g} до {lesson.EndDate:g}: {(attendace.Any(a => a.Lesson.Id == lesson.Id) ? "Посещено" : "Не посещено")}. Занятие {(lesson.IsRequired ? "обязательно" : "не обязательно")} для посещения");
+                if(lesson.StartDate < DateTime.Now)
+                    msg.Add($"Занятие с {lesson.StartDate:g} до {lesson.EndDate:g}: {(attendace.Any(a => a.Lesson.Id == lesson.Id) ? "Посещено" : "Не посещено")}. Занятие {(lesson.IsRequired ? "обязательно" : "не обязательно")} для посещения");
 
             await ctx.ReplyAsync(string.Join("\n", msg));
         }
