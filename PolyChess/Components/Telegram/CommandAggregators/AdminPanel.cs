@@ -75,7 +75,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
             await ctx.ReplyAsync("Началась сборка таблицы, это может занять некоторое время...");
 
-            List<string> csv = [string.Join(',', ["Имя", "Фамилия", "Отчество", "Институт", "Курс", "Ник", "Рапид", "Блиц"])];
+            List<string> csv = [string.Join(',', ["Имя", "Фамилия", "Отчество", "Институт", "Курс", "Номер зачётки", "Группа", "Ник", "Рапид", "Блиц"])];
             foreach (var student in _polyContext.Students)
             {
                 var lichessName = "Аккаунт не привязан";
@@ -98,8 +98,10 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                     student.Name,
                     student.Surname,
                     student.Patronymic,
-		    student.Institute,
+                    student.Institute,
                     student.Year.ToString(),
+                    student.RecordBookId,
+                    student.Group,
                     lichessName,
                     rapidRating,
                     blitzRating
@@ -316,9 +318,9 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                 foreach (var student in students)
                 {
                     var studentData = student.Split(',');
-                    if (studentData.Length != 9)
+                    if (studentData.Length != 10)
                     {
-                        skippedStudents.Add((student, "Не введены все данные (для пустых оставьте пропуск). Имя,Фамилия,Отчество,Курс,Группа,Институт,Личесс,ЛичессТокен,Телеграм"));
+                        skippedStudents.Add((student, "Не введены все данные (для пустых оставьте пропуск). Имя,Фамилия,Отчество,Курс,Группа,Институт,Номер зачётки,Личесс,ЛичессТокен,Телеграм"));
                         continue;
                     }
 
@@ -328,9 +330,10 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                     var yearStr = studentData[3];
                     var group = studentData[4];
                     var institute = studentData[5];
-                    var lichess = studentData[6];
-                    var lichessToken = studentData[7];
-                    var telegramIdStr = studentData[8];
+                    var recordBookId = studentData[6];
+                    var lichess = studentData[7];
+                    var lichessToken = studentData[8];
+                    var telegramIdStr = studentData[9];
 
                     if (!int.TryParse(yearStr, out var year))
                     {
@@ -375,6 +378,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                         Patronymic = patronomic,
                         Year = year,
                         Group = group,
+                        RecordBookId = string.IsNullOrEmpty(recordBookId) ? null : recordBookId,
                         TelegramId = telegramId == 0 ? default : telegramId,
                         LichessId = string.IsNullOrEmpty(lichess) ? null : lichess,
                         LichessToken = string.IsNullOrEmpty(lichessToken) ? null : lichessToken,

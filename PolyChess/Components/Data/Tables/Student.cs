@@ -21,6 +21,8 @@ namespace PolyChess.Components.Data.Tables
 
         public string Group { get; set; } = null!;
 
+        public string? RecordBookId { get; set; }
+
         public bool CreativeTaskCompleted { get; set; }
 
         public string? LichessToken { get; set; }
