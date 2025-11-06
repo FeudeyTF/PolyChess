@@ -3,7 +3,7 @@ using Telegram.Bot.Types;
 
 namespace PolyChess.Core.Telegram.Messages.Discrete.Messages
 {
-    public class DiscreteMessageEnteredArgs
+    internal class DiscreteMessageEnteredArgs
     {
         public Message[] Responses;
 
@@ -24,14 +24,13 @@ namespace PolyChess.Core.Telegram.Messages.Discrete.Messages
             Token = token;
         }
 
-        public async Task ReplyAsync(string message)
+        public async Task ReplyAsync(TelegramMessageBuilder message)
         {
-            TelegramMessageBuilder builder = message;
-            builder.ReplyParameters = new()
+            message.ReplyParameters = new()
             {
                 MessageId = Responses.Last().MessageId
             };
-            await builder.SendAsync(Client, ChatId, Token);
+            await message.SendAsync(Client, ChatId, Token);
         }
     }
 }
