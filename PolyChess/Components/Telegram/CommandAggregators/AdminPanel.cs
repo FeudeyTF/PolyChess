@@ -61,6 +61,10 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                 new InlineKeyboardButton("➕ Добавить студентов").WithData(nameof(AddStudents))
             );
 
+            message.AddButton(
+                new InlineKeyboardButton("Поиск студента").WithData(nameof(SearchStudent))
+            );
+
             await ctx.ReplyAsync(message);
         }
 
@@ -388,6 +392,57 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                 }
                 await _polyContext.SaveChangesAsync();
                 await args.ReplyAsync($"Успешно добавлено {students.Length - skippedStudents.Count} студентов! Пропущенные студенты:\n{string.Join('\n', skippedStudents.Select(s => s.student + ": " + s.error))}");
+            }
+        }
+
+        [TelegramButton(nameof(SearchStudent))]
+        private async Task SearchStudent(TelegramButtonExecutionContext ctx)
+        {
+            DiscreteMessage message = new(
+                _discreteMessagesProvider,
+                [
+                    new TelegramMessageBuilder("Введите имя студента или телеграм")
+                ],
+                HandleNameOrTelegramEntered
+            );
+
+            if (ctx.Query.Message != null)
+                await ctx.SendMessageAsync(message, ctx.Query.Message.Chat.Id);
+
+            async Task HandleNameOrTelegramEntered(DiscreteMessageEnteredArgs args)
+            {
+                var response = args.Responses.First().Text;
+                if (response == null)
+                {
+                    await args.ReplyAsync("Вы не ввели текст!");
+                    return;
+                }
+                List<Student> foundedStudents = [];
+                if (long.TryParse(response, out var telegramId))
+                {
+                    var studentByTelegram = _polyContext.Students.FirstOrDefault(s => s.TelegramId == telegramId);
+                    if (studentByTelegram != null)
+                        foundedStudents.Add(studentByTelegram);
+                }
+                else
+                {
+                    foundedStudents = _polyContext.Students
+                        .Where(s => s.Name.Contains(response, StringComparison.OrdinalIgnoreCase) ||
+                                    s.Surname.Contains(response, StringComparison.OrdinalIgnoreCase) ||
+                                    s.Patronymic.Contains(response, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                }
+
+                if (foundedStudents.Count == 0)
+                {
+                    await args.ReplyAsync("Студенты не найдены!");
+                    return;
+                }
+                TelegramMessageBuilder replyMessage = $"Найдено {foundedStudents.Count} студентов:\n";
+                foreach (var student in foundedStudents)
+                    replyMessage.Text += student.ToString();
+
+                await args.ReplyAsync(replyMessage);
             }
         }
     }
