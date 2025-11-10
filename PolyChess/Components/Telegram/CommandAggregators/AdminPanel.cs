@@ -71,9 +71,9 @@ namespace PolyChess.Components.Telegram.CommandAggregators
         [TelegramButton(nameof(GetStudentsList))]
         private async Task GetStudentsList(TelegramButtonExecutionContext ctx)
         {
-            if(!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
+            if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
                 return;
-            
+
             if (!_polyContext.Students.Any())
             {
                 await ctx.ReplyAsync("Студенты отсутствуют!");
