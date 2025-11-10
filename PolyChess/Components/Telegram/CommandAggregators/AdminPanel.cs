@@ -71,6 +71,9 @@ namespace PolyChess.Components.Telegram.CommandAggregators
         [TelegramButton(nameof(GetStudentsList))]
         private async Task GetStudentsList(TelegramButtonExecutionContext ctx)
         {
+            if(!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
+                return;
+            
             if (!_polyContext.Students.Any())
             {
                 await ctx.ReplyAsync("Студенты отсутствуют!");
@@ -130,6 +133,9 @@ namespace PolyChess.Components.Telegram.CommandAggregators
         [TelegramButton(nameof(AddLesson))]
         private async Task AddLesson(TelegramButtonExecutionContext ctx)
         {
+            if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
+                return;
+
             DiscreteMessage message = new(
                 _discreteMessagesProvider,
                 [
@@ -212,6 +218,9 @@ namespace PolyChess.Components.Telegram.CommandAggregators
         [TelegramButton(nameof(AddAttendance))]
         private async Task AddAttendance(TelegramButtonExecutionContext ctx)
         {
+            if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
+                return;
+
             DiscreteMessage message = new(
                 _discreteMessagesProvider,
                 [
@@ -279,6 +288,9 @@ namespace PolyChess.Components.Telegram.CommandAggregators
         [TelegramButton(nameof(UpdateTournaments))]
         private async Task UpdateTournaments(TelegramButtonExecutionContext ctx)
         {
+            if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
+                return;
+
             if (_mainConfig.TeamsWithTournaments.Count > 0)
             {
                 foreach (var teamId in _mainConfig.TeamsWithTournaments)
@@ -298,6 +310,9 @@ namespace PolyChess.Components.Telegram.CommandAggregators
         [TelegramButton(nameof(AddStudents))]
         private async Task AddStudents(TelegramButtonExecutionContext ctx)
         {
+            if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
+                return;
+
             DiscreteMessage message = new(
                 _discreteMessagesProvider,
                 [
@@ -398,6 +413,9 @@ namespace PolyChess.Components.Telegram.CommandAggregators
         [TelegramButton(nameof(SearchStudent))]
         private async Task SearchStudent(TelegramButtonExecutionContext ctx)
         {
+            if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
+                return;
+
             DiscreteMessage message = new(
                 _discreteMessagesProvider,
                 [
