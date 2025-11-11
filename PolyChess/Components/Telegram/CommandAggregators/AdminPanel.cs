@@ -419,7 +419,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
             DiscreteMessage message = new(
                 _discreteMessagesProvider,
                 [
-                    new TelegramMessageBuilder("Введите имя студента или телеграм")
+                    new TelegramMessageBuilder("Введите имя студента или его телеграм id")
                 ],
                 HandleNameOrTelegramEntered
             );
