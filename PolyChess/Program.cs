@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using PolyChess.CLI;
-using PolyChess.CLI.Commands;
+using PolyChess.Cli;
+using PolyChess.Cli.Commands;
 using PolyChess.Components;
 using PolyChess.Components.Data;
 using PolyChess.Components.Telegram;

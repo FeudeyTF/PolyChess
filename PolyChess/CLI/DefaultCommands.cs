@@ -1,6 +1,6 @@
-﻿using PolyChess.CLI.Commands;
+﻿using PolyChess.Cli.Commands;
 
-namespace PolyChess.CLI
+namespace PolyChess.Cli
 {
 #pragma warning disable CS1998, CA1822
     internal class DefaultCommands : CliCommandAggregator

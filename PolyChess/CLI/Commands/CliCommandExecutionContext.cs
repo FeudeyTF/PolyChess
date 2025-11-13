@@ -1,6 +1,6 @@
 ﻿using PolyChess.Core.Commands;
 
-namespace PolyChess.CLI.Commands
+namespace PolyChess.Cli.Commands
 {
     internal class CliCommandExecutionContext : ICommandExecutionContext
     {

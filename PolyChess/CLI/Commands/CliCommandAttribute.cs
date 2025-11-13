@@ -1,6 +1,6 @@
 ﻿using PolyChess.Core.Commands.Aggregators.Method;
 
-namespace PolyChess.CLI.Commands
+namespace PolyChess.Cli.Commands
 {
     [AttributeUsage(AttributeTargets.Method)]
     internal class CliCommandAttribute : Attribute, ICommandAttribute
