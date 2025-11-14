@@ -98,8 +98,8 @@ namespace PolyChess
 
             while (true)
             {
-                // Флаг, показывающий что ввод через консоль не осуществляется
-                if (args.Contains("-nc"))
+                // Флаг, показывающий что можно осуществить ввод через консоль
+                if (args.Contains("--enable-console"))
                     continue;
                 var text = Console.ReadLine();
                 if (text == null)
