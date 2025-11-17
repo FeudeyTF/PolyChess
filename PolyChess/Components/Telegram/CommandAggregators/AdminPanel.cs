@@ -450,10 +450,10 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                 await args.ReplyAsync(replyMessage);
             }
 
-            List<Student> GetStudentByParameter(string parameter)
+            List<Student> GetStudentByParameter(string value)
             {
                 List<Student> foundedStudents = [];
-                if (long.TryParse(parameter, out var telegramId))
+                if (long.TryParse(value, out var telegramId))
                 {
                     var studentByTelegram = _polyContext.Students.FirstOrDefault(s => s.TelegramId == telegramId);
                     if (studentByTelegram != null)
@@ -463,21 +463,21 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                 {
                     foreach (var student in _polyContext.Students)
                     {
-                        if (student.Name + " " + student.Surname + " " + student.Patronymic == parameter)
+                        if (student.Name + " " + student.Surname + " " + student.Patronymic == value)
                         {
                             foundedStudents.Add(student);
                             break;
                         }
 
-                        if (student.Surname + " " + student.Name == parameter)
+                        if (student.Surname + " " + student.Name == value)
                         {
                             foundedStudents.Add(student);
                             continue;
                         }
 
-                        if (student.Surname.Contains(parameter, StringComparison.CurrentCultureIgnoreCase) ||
-                           student.Name.Contains(parameter, StringComparison.CurrentCultureIgnoreCase) ||
-                           student.Patronymic.Contains(parameter, StringComparison.CurrentCultureIgnoreCase))
+                        if (student.Surname.Contains(value, StringComparison.CurrentCultureIgnoreCase) ||
+                           student.Name.Contains(value, StringComparison.CurrentCultureIgnoreCase) ||
+                           student.Patronymic.Contains(value, StringComparison.CurrentCultureIgnoreCase))
                         {
                             foundedStudents.Add(student);
                             continue;
