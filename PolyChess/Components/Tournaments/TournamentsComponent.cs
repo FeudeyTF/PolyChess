@@ -43,7 +43,7 @@ namespace PolyChess.Components.Tournaments
 
         public async Task StartAsync()
         {
-            _logger.Write($"Собираю турниры от {_mainConfig.SemesterStartDate:g}...", LogLevel.Info);
+            _logger.Info($"Собираю турниры от {_mainConfig.SemesterStartDate:g}...");
             var tournamentsPath = Path.Combine(Environment.CurrentDirectory, "Tournaments");
             if (!Directory.Exists(tournamentsPath))
                 Directory.CreateDirectory(tournamentsPath);
@@ -112,7 +112,7 @@ namespace PolyChess.Components.Tournaments
 
             TournamentsList = [.. from r in TournamentsList orderby r.Tournament.StartDate descending select r];
             SwissTournamentsList = [.. from r in SwissTournamentsList orderby r.Tournament.Started descending select r];
-            _logger.Write($"Найдено {TournamentsList.Count} турниров и {SwissTournamentsList.Count} турниров по швейцарской системе!", LogLevel.Info);
+            _logger.Info($"Найдено {TournamentsList.Count} турниров и {SwissTournamentsList.Count} турниров по швейцарской системе!");
         }
 
         public Task DisposeAsync()

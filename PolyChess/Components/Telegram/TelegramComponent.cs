@@ -46,16 +46,16 @@ namespace PolyChess.Components.Telegram
             await _telegramProvider.StartAsync();
             var user = await _telegramProvider.Client.GetMe();
             if (user == null)
-                _logger.Write("Телеграм бот не был успешно запущен!", LogLevel.Warn);
+                _logger.Warn("Телеграм бот не был успешно запущен!");
             else
-                _logger.Write($"Телеграм бот '{user.FirstName} ({user.Username})' успешно запущен!", LogLevel.Info);
+                _logger.Info($"Телеграм бот '{user.FirstName} ({user.Username})' успешно запущен!", LogLevel.Info);
 
             List<BotCommand> commands = [];
             foreach (var aggregator in _commandManager.Aggregators)
             {
                 foreach (var command in aggregator.Commands)
                 {
-                    _logger.Write($"Зарегистрирована команда: {command.Name}", LogLevel.Debug);
+                    _logger.Debug($"Зарегистрирована команда: {command.Name}");
                     if (command is TelegramCommand telegramCommand && !telegramCommand.IsHidden)
                     {
                         commands.Add(
@@ -94,7 +94,7 @@ namespace PolyChess.Components.Telegram
         {
             if (message.Text != null && message.From != null)
             {
-                _logger.Write($"Получено сообщение {message.Text} от пользователя {message.From.Username} (Id: {message.From.Id})", LogLevel.Info);
+                _logger.Info($"Получено сообщение {message.Text} от пользователя {message.From.Username} (Id: {message.From.Id})");
 
                 if (message.Text.StartsWith(_commandSpecifier))
                 {
@@ -109,7 +109,7 @@ namespace PolyChess.Components.Telegram
                     }
                     catch (Exception e)
                     {
-                        _logger.Write(e.ToString(), LogLevel.Error);
+                        _logger.Error(e);
                     }
                 }
             }
@@ -117,7 +117,7 @@ namespace PolyChess.Components.Telegram
 
         private async Task HandleTelegramCallback(ITelegramBotClient client, CallbackQuery query, CancellationToken token)
         {
-            _logger.Write($"Получен колбэк от пользователя {query.From.Username} (Id: {query.From.Id}), Data: {query.Data}", LogLevel.Info);
+            _logger.Info($"Получен колбэк от пользователя {query.From.Username} (Id: {query.From.Id}), Data: {query.Data}");
             if (TelegramCallbackQueryData.TryParse(query.Data, default, out var result))
             {
                 try
@@ -129,7 +129,7 @@ namespace PolyChess.Components.Telegram
                 }
                 catch (Exception e)
                 {
-                    _logger.Write(e.ToString(), LogLevel.Error);
+                    _logger.Error(e);
                 }
                 await client.AnswerCallbackQuery(query.Id, cancellationToken: token);
             }
@@ -137,7 +137,7 @@ namespace PolyChess.Components.Telegram
 
         private Task HandleTelegramException(ITelegramBotClient client, Exception exception, global::Telegram.Bot.Polling.HandleErrorSource source, CancellationToken token)
         {
-            _logger.Write(exception.ToString(), LogLevel.Error);
+            _logger.Error(exception);
             return Task.CompletedTask;
         }
     }

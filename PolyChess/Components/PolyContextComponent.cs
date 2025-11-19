@@ -19,20 +19,20 @@ namespace PolyChess.Components
         {
             if (await _context.Database.CanConnectAsync())
             {
-                _logger.Write("Соединение с базой данной прошло успешно!", LogLevel.Info);
+                _logger.Info("Соединение с базой данной прошло успешно!");
             }
             else
             {
-                _logger.Write("База данных не существует. Создание базы данных...", LogLevel.Info);
+                _logger.Info("База данных не существует. Создание базы данных...");
                 await _context.Database.EnsureCreatedAsync();
-                _logger.Write("База данных успешно создана.", LogLevel.Info);
+                _logger.Info("База данных успешно создана.");
             }
         }
 
         public async Task DisposeAsync()
         {
             await _context.DisposeAsync();
-            _logger.Write("Данные базы данных успешно освобождены", LogLevel.Info);
+            _logger.Info("Данные базы данных успешно освобождены");
         }
     }
 }

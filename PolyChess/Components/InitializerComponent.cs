@@ -21,7 +21,7 @@ namespace PolyChess.Components
             foreach (var component in _components)
             {
                 var name = component.GetType().Name;
-                _logger.Write($"Инициализация компонента: {name}...", LogLevel.Info);
+                _logger.Info($"Инициализация компонента: {name}...");
                 try
                 {
                     stopwatch.Start();
@@ -30,11 +30,11 @@ namespace PolyChess.Components
                 }
                 catch (Exception e)
                 {
-                    _logger.Write($"При инициализация компонента: {name} произошла ошибка: {e}!", LogLevel.Error);
+                    _logger.Error($"При инициализация компонента: {name} произошла ошибка: {e}!");
                     continue;
                 }
 
-                _logger.Write($"Компонент {name} успешно инициализирован за {stopwatch.Elapsed.TotalSeconds} с!", LogLevel.Info);
+                _logger.Info($"Компонент {name} успешно инициализирован за {stopwatch.Elapsed.TotalSeconds} с!");
                 stopwatch.Reset();
             }
         }
