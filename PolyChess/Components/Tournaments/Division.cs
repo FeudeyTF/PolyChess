@@ -6,7 +6,7 @@
 
         public int Max { get; set; } = max;
 
-        public bool InDivision(int rating)
+        public readonly bool InDivision(int rating)
             => rating >= Min && rating <= Max;
     }
 }
