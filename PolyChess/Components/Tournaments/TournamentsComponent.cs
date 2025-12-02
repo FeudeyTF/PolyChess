@@ -161,12 +161,10 @@ namespace PolyChess.Components.Tournaments
             if (entry.Sheet != null)
             {
                 int zeroNumbers = entry.Sheet.Scores.Count(c => c == '0');
-                int oneNumbers = entry.Sheet.Scores.Count(c => c == '1');
-                int twoNumbers = entry.Sheet.Scores.Count(c => c == '2');
-                int fourNumbers = entry.Sheet.Scores.Count(c => c == '4');
-                int total = zeroNumbers + oneNumbers + twoNumbers + fourNumbers;
+                var otherNumbers = entry.Sheet.Scores.Count(c => c != '0');
+                int total = zeroNumbers + otherNumbers;
 
-                if (total >= 7 && (twoNumbers + oneNumbers + fourNumbers) >= 1)
+                if (total >= 7 && otherNumbers > 0)
                 {
                     if (inDivision)
                         totalScore = 1;
