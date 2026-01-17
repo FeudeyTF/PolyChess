@@ -29,7 +29,7 @@ namespace PolyChess.Configuration
 
         public long QuestionChannelId { get; set; }
 
-        public long CreativeTaskChannel { get; set; }
+        public long CreativeTaskChannelId { get; set; }
 
         public List<string> LichessFlairs { get; set; } = [];
 

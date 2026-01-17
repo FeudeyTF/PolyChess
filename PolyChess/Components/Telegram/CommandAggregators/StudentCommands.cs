@@ -81,7 +81,6 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                         $"🕑<b>Дата отправки:</b> {question.Date:G}",
                         $"❓<b>Вопрос:</b>\n{question.Text}"
                     ];
-
                     InlineKeyboardButton button = new("Данные");
                     button.SetData("QuestionDataID", ("ID", args.User.Id), ("ChannelID", question.MessageId));
                     var message = new TelegramMessageBuilder(string.Join("\n", text))
@@ -154,7 +153,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
                             message.AddKeyboard([approveButton, declineButton]);
 
-                            await ctx.Provider.SendMessageAsync(message, _mainConfig.CreativeTaskChannel);
+                            await ctx.Provider.SendMessageAsync(message, _mainConfig.CreativeTaskChannelId);
                             await ctx.ReplyAsync("Творческое задание было успешно отправлено!");
                         }
                         else
