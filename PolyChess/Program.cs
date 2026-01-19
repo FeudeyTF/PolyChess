@@ -58,7 +58,7 @@ namespace PolyChess
                 tokenSource.Token
             );
 
-            MeTelegramCommand telegramCommands = new(telegramProvider, lichessClient, polyContext, tournaments, _configuration, new(telegramProvider));
+            MeTelegramCommand telegramCommands = new(telegramProvider, lichessClient, polyContext, tournaments, _configuration, new(telegramProvider), _logger);
             StudentCommands studentCommands = new(polyContext, _configuration, telegramProvider, lichessClient);
             AdminPanel adminPanel = new(telegramProvider, tournaments, _configuration, polyContext, _logger, lichessClient);
 
