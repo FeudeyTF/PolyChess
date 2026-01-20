@@ -70,7 +70,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 			if (string.IsNullOrEmpty(student.LichessId))
 			{
-				await ctx.ReplyAsync($"Ник на Lichess: <b>Аккаунт не привязан</b>. Привяжите аккаунт с помощью /reg");
+				await ctx.ReplyAsync($"Ник на Lichess: <b>Аккаунт не привязан</b>. Привяжите аккаунт с помощью /lichess");
 				return;
 			}
 
@@ -87,7 +87,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 			if (lichessUser == null)
 			{
-				await ctx.ReplyAsync($"Ник на Lichess: <b>Аккаунт не найден</b>. Перепривяжите аккаунт с помощью /reg");
+				await ctx.ReplyAsync($"Ник на Lichess: <b>Аккаунт не найден</b>. Перепривяжите аккаунт с помощью /lichess");
 				return;
 			}
 
