@@ -23,7 +23,9 @@
 		{
 			if (_cashedCommands.TryGetValue(name, out var command))
 			{
-				if (command == null || !(await command.IsCommandRunable(context)))
+				if (command == null)
+					return;
+				if (!await command.IsCommandRunable(context))
 					return;
 				await command.ExecuteAsync(context);
 			}
