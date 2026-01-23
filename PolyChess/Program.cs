@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Globalization;
+using Microsoft.EntityFrameworkCore;
 using PolyChess.Cli;
 using PolyChess.Cli.Commands;
 using PolyChess.Components;
@@ -11,6 +12,7 @@ using PolyChess.Configuration;
 using PolyChess.Core.Commands;
 using PolyChess.Core.Commands.Parsers;
 using PolyChess.Core.Configuration;
+using PolyChess.Core.Logging;
 using PolyChess.Core.Logging.Types;
 using PolyChess.Core.Telegram.Providers;
 using PolyChess.LichessAPI.Clients;
@@ -44,6 +46,9 @@ namespace PolyChess
 			CancellationTokenSource tokenSource = new();
 			_configuration = ConfigFile.Load<MainConfigFile>();
 			_configuration.Save();
+
+			_logger.Info("Конфигурационный файл загружен и сохранён");
+			_logger.Info($"Текущий семестр: {_configuration.SemesterStartDate:D} - {_configuration.SemesterEndDate:D}");
 
 			DbContextOptionsBuilder<PolyContext> contextBuilder = new();
 			PolyContext polyContext = new(contextBuilder.UseSqlite(_configuration.DatabaseConnectionString).Options);
