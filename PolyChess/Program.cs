@@ -42,7 +42,9 @@ namespace PolyChess
 		/// </summary>
 		private static async Task Main(string[] args)
 		{
+			_logger.Info($"Запущен бот PolyChess. Текущая дата до изменения культуры: {DateTime.Now:f}");
 			Thread.CurrentThread.CurrentCulture = new("ru-RU");
+			_logger.Info($"Текущая дата после изменения культуры: {DateTime.Now:f}");
 			CancellationTokenSource tokenSource = new();
 			_configuration = ConfigFile.Load<MainConfigFile>();
 			_configuration.Save();
