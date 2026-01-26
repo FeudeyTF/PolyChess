@@ -71,13 +71,12 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 			);
 
 			message.AddButton(
-				new InlineKeyboardButton("💾 Сохранить турнир").WithData("")
+				new InlineKeyboardButton("💾 Сохранить турнир").WithData(nameof(SaveTournament))
 			);
 
 			message.AddButton(
-				new InlineKeyboardButton("🤝 Результаты турнира").WithData("")
+				new InlineKeyboardButton("🤝 Результаты турнира").WithData(nameof(TournamentResult))
 			);
-
 
 			await ctx.ReplyAsync(message);
 		}
