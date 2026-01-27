@@ -376,13 +376,13 @@ namespace PolyChess.Components.Telegram.CommandAggregators
         private DbSet<FaqEntry> GetFaqEntries(Message message)
             => _polyContext.FaqEntries;
 
-        private string FaqEntryToString(FaqEntry entry, int index)
+        private string FaqEntryToString(FaqEntry entry, int index, ChatId chatId)
             => $"{entry.Id}) <b>{entry.Question}</b>\n - {entry.Answer}";
 
         private DbSet<HelpEntry> GetHelpEntries(Message message)
             => _polyContext.HelpEntries;
 
-        private string HelpEntryToString(HelpEntry entry, int index)
+        private string HelpEntryToString(HelpEntry entry, int index, ChatId chatId)
             => $"<b>{entry.Title}</b>\n{entry.Text}\n<i>{entry.Footer}</i>";
     }
 }

@@ -33,7 +33,7 @@ namespace PolyChess.Core.Telegram.Messages.Pagination
 
             var pageItems = GetPageValues(itemsList, 0);
 
-            await _messageBuilder.Build(pageItems, Type, 0, totalPages).SendAsync(client, chatId, token);
+            await _messageBuilder.Build(pageItems, Type, 0, totalPages, chatId).SendAsync(client, chatId, token);
 
         }
 
@@ -52,7 +52,7 @@ namespace PolyChess.Core.Telegram.Messages.Pagination
 
             var pageItems = GetPageValues(itemsList, page);
 
-            await _messageBuilder.Build(pageItems, Type, page, totalPages).EditAsync(client, oldMessage, token);
+            await _messageBuilder.Build(pageItems, Type, page, totalPages, oldMessage.Chat.Id).EditAsync(client, oldMessage, token);
         }
 
         private async Task HandleTelegramCallback(ITelegramBotClient client, CallbackQuery query, CancellationToken token)

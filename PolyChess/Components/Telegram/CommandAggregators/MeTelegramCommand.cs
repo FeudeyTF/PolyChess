@@ -347,7 +347,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 			return new List<object>([.. from r in result orderby (r is ArenaTournamentInfo t ? t.Tournament.StartDate : r is SwissTournamentInfo s ? s.Tournament.Started : DateTime.Now) select r]);
 		}
 
-		private string NextTournamentToString(object info, int index)
+		private string NextTournamentToString(object info, int index, ChatId chatId)
 		{
 			List<string> result = ["<b> - Информация о будущих турнирах!</b>"];
 			if (info is ArenaTournamentInfo arenaTournamentInfo)
@@ -393,9 +393,9 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 			return new List<object>([.. from r in result orderby (r is ArenaTournamentInfo t ? t.Tournament.StartDate : r is SwissTournamentInfo s ? s.Tournament.Started : DateTime.Now) descending select r]);
 		}
 
-		private string MyTournamentToString(object info, int index)
+		private string MyTournamentToString(object info, int index, ChatId chatId)
 		{
-			var student = _polyContext.Students.FirstOrDefault(s => s.TelegramId == 0);
+			var student = _polyContext.Students.FirstOrDefault(s => s.TelegramId == chatId.Identifier);
 			if (student != null)
 			{
 				if (!string.IsNullOrEmpty(student.LichessId))
