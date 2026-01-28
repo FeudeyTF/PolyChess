@@ -273,7 +273,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                             var student = _polyContext.Students.FirstOrDefault(s => s.TelegramId == ctx.User.Id);
                             if (student != null)
                             {
-                                student.LichessId = account.ID;
+                                student.LichessId = account.Username;
                                 await _polyContext.SaveChangesAsync();
                                 _accountVerifyCodes.Remove(ctx.User.Id);
                                 await ctx.ReplyAsync($"Ваш аккаунт теперь - <b>{account.Username}</b>");

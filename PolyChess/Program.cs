@@ -29,12 +29,14 @@ namespace PolyChess
 
 		private static readonly ConsoleLogger _logger;
 
-		private static readonly CommandManager<CliCommandExecutionContext> _consoleCommandManager;
+		private static CommandManager<CliCommandExecutionContext> _consoleCommandManager;
+
+		private static readonly LichessClient _lichessClient;
 
 		static Program()
 		{
+			_lichessClient = new();
 			_logger = new();
-			_consoleCommandManager = new([new DefaultCommands()], (ctx) => Task.CompletedTask);
 		}
 
 		/// <summary>
@@ -56,8 +58,7 @@ namespace PolyChess
 			PolyContext polyContext = new(contextBuilder.UseSqlite(_configuration.DatabaseConnectionString).Options);
 			PolyContextComponent polyContextComponent = new(polyContext, _logger);
 
-			LichessClient lichessClient = new();
-			TournamentsComponent tournaments = new(_configuration, _logger, lichessClient, polyContext);
+			TournamentsComponent tournaments = new(_configuration, _logger, _lichessClient, polyContext);
 
 			var telegramProvider = new PollingTelegramProvider(
 				new TelegramBotClient(_configuration.TelegramToken),
@@ -65,9 +66,9 @@ namespace PolyChess
 				tokenSource.Token
 			);
 
-			MeTelegramCommand telegramCommands = new(telegramProvider, lichessClient, polyContext, tournaments, _configuration, new(telegramProvider), _logger);
-			StudentCommands studentCommands = new(polyContext, _configuration, telegramProvider, lichessClient);
-			AdminPanel adminPanel = new(telegramProvider, tournaments, _configuration, polyContext, _logger, lichessClient);
+			MeTelegramCommand telegramCommands = new(telegramProvider, _lichessClient, polyContext, tournaments, _configuration, new(telegramProvider), _logger);
+			StudentCommands studentCommands = new(polyContext, _configuration, telegramProvider, _lichessClient);
+			AdminPanel adminPanel = new(telegramProvider, tournaments, _configuration, polyContext, _logger, _lichessClient);
 
 			AttendanceHandler attendanceHandler = new(polyContext);
 			QuestionHandler questionHandler = new(_configuration);
@@ -103,6 +104,7 @@ namespace PolyChess
 
 			await _initializerComponent.StartAsync();
 
+			_consoleCommandManager = new([new DefaultCommands(polyContext, _lichessClient)], (ctx) => Task.CompletedTask);
 			while (true)
 			{
 				// Флаг, показывающий что можно осуществить ввод через консоль
