@@ -78,6 +78,10 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 				new InlineKeyboardButton("🤝 Результаты турнира").WithData(nameof(TournamentResult))
 			);
 
+			message.AddButton(
+				new InlineKeyboardButton("Посмотреть посещения студента").WithData(nameof(ViewStudentAttendance))
+			);
+
 			await ctx.ReplyAsync(message);
 		}
 
@@ -769,6 +773,88 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					result.Add("Турнир не сохранён с помощью команды /saveswiss!");
 
 				return result;
+			}
+		}
+
+		[TelegramButton(nameof(ViewStudentAttendance))]
+		private async Task ViewStudentAttendance(TelegramButtonExecutionContext ctx)
+		{
+			if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
+				return;
+
+			DiscreteMessage message = new(
+				_discreteMessagesProvider,
+				[
+					new TelegramMessageBuilder("Введите имя студента  (Фамилия, Фамилия Имя, Имя, ФИО)"),
+				],
+				HandleStudentNameEntered
+			);
+
+			if (ctx.Query.Message != null)
+				await ctx.SendMessageAsync(message, ctx.Query.Message.Chat.Id);
+
+			async Task HandleStudentNameEntered(DiscreteMessageEnteredArgs args)
+			{
+				var text = args.Responses[0].Text;
+				if (text == null)
+				{
+					await args.ReplyAsync("В сообщении должно быть имя студента!");
+					return;
+				}
+
+				Student? student = default;
+				var splittedName = text.Split(' ');
+				if (splittedName.Length >= 3)
+				{
+					var surname = splittedName[0];
+					var name = splittedName[1];
+					var patronomic = splittedName[2];
+					student = _polyContext.Students.Where(s => s.Name == name && s.Surname == surname && s.Patronymic == patronomic).FirstOrDefault();
+				}
+				else if (splittedName.Length == 2)
+				{
+					var surname = splittedName[0];
+					var name = splittedName[1];
+					var students = _polyContext.Students.Where(s => s.Name == name && s.Surname == surname);
+					if (students.Count() > 1)
+					{
+						await args.ReplyAsync($"По введённой фамилии и имени были найдены студенты:\n{string.Join('\n', students.Select(s => s.Surname + " " + s.Name + " " + s.Patronymic))}");
+						return;
+					}
+					student = students.FirstOrDefault();
+				}
+				else
+				{
+					var name = splittedName[0];
+					var students = _polyContext.Students.Where(s => s.Name == name || s.Surname == name);
+					if (students.Count() > 1)
+					{
+						await args.ReplyAsync($"По введённой фамилии и имени были найдены студенты:\n{string.Join('\n', students.Select(s => s.Surname + " " + s.Name + " " + s.Patronymic))}");
+						return;
+					}
+					student = students.FirstOrDefault();
+				}
+
+				if (student == null)
+				{
+					await args.ReplyAsync("По вашему запросу не найдено ни одного студента!");
+					return;
+				}
+
+				var attendace = _polyContext.Attendances.Where(a => a.Student.TelegramId == student.TelegramId);
+				List<string> msg =
+				[
+					$"Посещаемость студента {student.Surname} {student.Name} {student.Patronymic}:"
+				];
+
+				if (!attendace.Any())
+					msg.Add("Ни одного занятия не посещено!");
+
+				foreach (var lesson in _polyContext.Lessons)
+					if (lesson.StartDate < DateTime.Now)
+						msg.Add($"Занятие с {lesson.StartDate:g} до {lesson.EndDate:g}: {(attendace.Any(a => a.Lesson.Id == lesson.Id) ? "Посещено" : "Не посещено")}. Занятие {(lesson.IsRequired ? "обязательно" : "не обязательно")} для посещения");
+
+				await ctx.ReplyAsync(string.Join("\n", msg));
 			}
 		}
 	}
