@@ -11,6 +11,7 @@ using PolyChess.Core.Telegram.Messages;
 using PolyChess.Core.Telegram.Messages.Discrete;
 using PolyChess.Core.Telegram.Messages.Discrete.Messages;
 using PolyChess.LichessAPI.Clients;
+using PolyChess.LichessAPI.Clients.Authorized;
 using PolyChess.LichessAPI.Types.Arena;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -99,7 +100,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 			await ctx.ReplyAsync("Началась сборка таблицы, это может занять некоторое время...");
 
-			List<string> csv = [string.Join(',', ["Имя", "Фамилия", "Отчество", "Институт", "Курс", "Номер зачётки", "Группа", "Ник", "Рапид", "Блиц"])];
+			List<string> csv = [string.Join(',', ["Имя", "Фамилия", "Отчество", "Институт", "Курс", "Номер зачётки", "Группа", "Ник", "Рапид", "Блиц", "Посещено занятий", "Задачи", "Турниры (0)", "Турниры (1)", "Турниры (Доп.)"])];
 			foreach (var student in _polyContext.Students)
 			{
 				var lichessName = "Аккаунт не привязан";
@@ -117,6 +118,66 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 							blitzRating = blitz.Rating.ToString();
 					}
 				}
+				var attendaces = _polyContext.Attendances.Count(a => a.Student.Id == student.Id && a.Lesson.StartDate < DateTime.Now);
+
+				var puzzles = "Нет данных";
+				if (!string.IsNullOrEmpty(student.LichessToken))
+				{
+					LichessAuthorizedClient lichesAuthUser = new(student.LichessToken);
+					var puzzleDashboard = await lichesAuthUser.GetPuzzleDashboard((int)(DateTime.Now - _mainConfig.SemesterStartDate).TotalDays);
+					if (puzzleDashboard != null)
+						puzzles = puzzleDashboard.Global.FirstWins.ToString();
+				}
+
+				var oneScoreTournaments = 0;
+				var zeroScoreTournaments = 0;
+				if (!string.IsNullOrEmpty(student.LichessId))
+				{
+					foreach (var tournament in _tournaments.TournamentsList)
+						if (tournament.Tournament.StartDate < DateTime.UtcNow)
+							foreach (var player in tournament.Rating.Players)
+								if (player.Student != null && player.Student.TelegramId == student.TelegramId && player.Score > -1)
+								{
+									if (_mainConfig.TournamentRules.TryGetValue(tournament.Tournament.ID, out var rule))
+									{
+										if (player.Score == 1)
+											oneScoreTournaments += rule.PointsForWinning;
+										else if (player.Score == 0)
+											zeroScoreTournaments += rule.PointsForBeing;
+									}
+									else
+									{
+										if (player.Score == 1)
+											oneScoreTournaments += TournamentScoreRule.DefaultWinningPoints;
+										else if (player.Score == 0)
+											zeroScoreTournaments += TournamentScoreRule.DefaultBeingPoints;
+									}
+									break;
+								}
+
+					foreach (var tournament in _tournaments.SwissTournamentsList)
+						if (tournament.Tournament.Started < DateTime.UtcNow)
+							foreach (var player in tournament.Rating.Players)
+								if (player.Student != null && player.Student.TelegramId == student.TelegramId && player.Score > -1)
+								{
+									if (_mainConfig.TournamentRules.TryGetValue(tournament.Tournament.ID, out var rule))
+									{
+										if (player.Score == 1)
+											oneScoreTournaments += rule.PointsForWinning;
+										else if (player.Score == 0)
+											zeroScoreTournaments += rule.PointsForBeing;
+									}
+									else
+									{
+										if (player.Score == 1)
+											oneScoreTournaments += TournamentScoreRule.DefaultWinningPoints;
+										else if (player.Score == 0)
+											zeroScoreTournaments += TournamentScoreRule.DefaultBeingPoints;
+									}
+									break;
+								}
+				}
+
 				var entry = string.Join(',',
 				[
 					student.Name,
@@ -128,7 +189,12 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					student.Group,
 					lichessName,
 					rapidRating,
-					blitzRating
+					blitzRating,
+					attendaces,
+					puzzles,
+					zeroScoreTournaments,
+					oneScoreTournaments,
+					student.AdditionalTournamentsScore
 				]);
 				csv.Add(entry);
 			}
