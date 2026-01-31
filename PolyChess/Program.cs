@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using PolyChess.Cli;
 using PolyChess.Cli.Commands;
 using PolyChess.Components;
@@ -53,7 +52,7 @@ namespace PolyChess
 
 			_logger.Info("Конфигурационный файл загружен и сохранён");
 			_logger.Info($"Текущий семестр: {_configuration.SemesterStartDate:D} - {_configuration.SemesterEndDate:D}");
-
+			
 			DbContextOptionsBuilder<PolyContext> contextBuilder = new();
 			PolyContext polyContext = new(contextBuilder.UseSqlite(_configuration.DatabaseConnectionString).Options);
 			PolyContextComponent polyContextComponent = new(polyContext, _logger);
