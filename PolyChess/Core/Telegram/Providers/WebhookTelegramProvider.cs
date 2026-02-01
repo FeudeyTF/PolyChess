@@ -1,12 +1,15 @@
-﻿using Telegram.Bot;
+using System.Net;
+using HttpServer;
+using Newtonsoft.Json;
+using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
+using HttpListener = HttpServer.HttpListener;
 
 namespace PolyChess.Core.Telegram.Providers
 {
-    internal class PollingTelegramProvider : ITelegramProvider
-    {
+	internal class WebhookTelegramProvider : ITelegramProvider
+	{
         public event OnUpdateDelegate OnUpdate;
 
         public event OnMessageDelegate OnMessage;
@@ -17,13 +20,13 @@ namespace PolyChess.Core.Telegram.Providers
 
         public ITelegramBotClient Client { get; }
 
-        private readonly ReceiverOptions _receiverOptions;
-
         private readonly CancellationToken _token;
 
-        private readonly IUpdateHandler _updateHandler;
+		private readonly string _webhookUrl;
 
-        public PollingTelegramProvider(ITelegramBotClient client, ReceiverOptions receiverOptions, CancellationToken token)
+		private readonly HttpListener _listener;
+
+        public WebhookTelegramProvider(ITelegramBotClient client, string webhookUrl, CancellationToken token)
         {
             OnUpdate = (client, update, token) => Task.CompletedTask;
             OnMessage = (client, message, token) => Task.CompletedTask;
@@ -31,40 +34,38 @@ namespace PolyChess.Core.Telegram.Providers
             OnException = (client, exception, source, token) => Task.CompletedTask;
             Client = client;
             _token = token;
-            _updateHandler = new DefaultUpdateHandler(HandleUpdate, HandleError);
-            _receiverOptions = receiverOptions;
+			_webhookUrl = webhookUrl;
+			_listener = HttpListener.Create(IPAddress.Parse("127.0.0.1"), 88);
         }
 
-        public Task StartAsync()
+        public async Task StartAsync()
         {
-            Client.StartReceiving(_updateHandler, _receiverOptions, _token);
-            return Task.CompletedTask;
+			_listener.RequestReceived += HandleRequestReceived;
+			_listener.Start(int.MaxValue);
+			Console.WriteLine("Web server started");
+			await Client.SetWebhook(_webhookUrl);	
         }
+
+		private void HandleRequestReceived(object? sender, RequestEventArgs args)
+		{
+			Console.WriteLine(JsonConvert.SerializeObject(args.Request));
+		}
 
         private async Task HandleUpdate(ITelegramBotClient client, Update update, CancellationToken token)
         {
-
-			Console.WriteLine($"Получено обновление: {update.Type}");
-            await OnUpdate(client, update, token);
-            if (update.Type == UpdateType.Message && update.Message != null)
-                await OnMessage(client, update.Message, token);
-            else if (update.Type == UpdateType.CallbackQuery && update.CallbackQuery != null)
-                await OnCallback(client, update.CallbackQuery, token);
         }
 
         private async Task HandleError(ITelegramBotClient client, Exception exception, HandleErrorSource source, CancellationToken token)
         {
-            await OnException(client, exception, source, token);
+
         }
 
         public async Task SendMessageAsync(ITelegramMessage message, ChatId chatId)
         {
-            await message.SendAsync(Client, chatId, _token);
         }
 
         public async Task EditMessageAsync(Message message, ITelegramMessage newMessage)
         {
-            await newMessage.EditAsync(Client, message, _token);
         }
-    }
+	}
 }
