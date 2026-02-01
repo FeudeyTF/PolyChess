@@ -1,4 +1,5 @@
-﻿using PolyChess.Cli.Commands;
+﻿using Microsoft.EntityFrameworkCore.Internal;
+using PolyChess.Cli.Commands;
 using PolyChess.Components.Data;
 using PolyChess.LichessAPI.Clients;
 
@@ -44,6 +45,16 @@ namespace PolyChess.Cli
 			await _polyContext.SaveChangesAsync();
 
 			ctx.SendMessage("Все Id успешно исправлены и обновлены");
+		}
+
+		[CliCommand("getlessons")]
+		public async Task GetLessons(CliCommandExecutionContext ctx)
+		{
+			ctx.SendMessage($"Всего занятий: {_polyContext.Lessons.Count()}");
+			foreach(var lesson in _polyContext.Lessons)
+			{
+				ctx.SendMessage($"Занятие: #{lesson.Id}: с {lesson.StartDate} до {lesson.EndDate}. Обязательное: {(lesson.IsRequired ? "да" : "нет")}. Место: {lesson.Latitude}, {lesson.Longitude}");
+			}
 		}
 	}
 #pragma warning restore CS1998, CA1822
