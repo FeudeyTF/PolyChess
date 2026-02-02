@@ -28,7 +28,7 @@ namespace PolyChess
 
 		private static readonly ConsoleLogger _logger;
 
-		private static CommandManager<CliCommandExecutionContext> _consoleCommandManager;
+		private static CommandManager<CliCommandExecutionContext>? _consoleCommandManager;
 
 		private static readonly LichessClient _lichessClient;
 
