@@ -226,7 +226,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					new TelegramMessageBuilder("Введите дату конца урока"),
 					new TelegramMessageBuilder("Введите широту урока или введите -, чтобы взять стандартную"),
 					new TelegramMessageBuilder("Введите долготу урока или введите -, чтобы взять стандартную"),
-					new TelegramMessageBuilder("Урок необязательный? (- - нет, иначе - да)")
+					new TelegramMessageBuilder("Урок обязательный? (- - да, иначе - нет)")
 				],
 				HandleLessonsDataEntered
 			);
