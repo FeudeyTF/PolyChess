@@ -225,7 +225,8 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					new TelegramMessageBuilder("Введите дату начала урока"),
 					new TelegramMessageBuilder("Введите дату конца урока"),
 					new TelegramMessageBuilder("Введите широту урока или введите -, чтобы взять стандартную"),
-					new TelegramMessageBuilder("Введите долготу урока или введите -, чтобы взять стандартную")
+					new TelegramMessageBuilder("Введите долготу урока или введите -, чтобы взять стандартную"),
+					new TelegramMessageBuilder("Урок обязательный? (- - да, иначе - нет)")
 				],
 				HandleLessonsDataEntered
 			);
@@ -235,7 +236,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 			async Task HandleLessonsDataEntered(DiscreteMessageEnteredArgs args)
 			{
-				if (args.Responses.Length != 4)
+				if (args.Responses.Length != 5)
 					return;
 
 				if (!DateTime.TryParse(args.Responses[0].Text, out var startDate))
@@ -275,6 +276,8 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					longitude = givenLongitude;
 				}
 
+				var isRequiredResponse = args.Responses[4].Text;
+
 				if (startDate >= endDate)
 				{
 					await args.ReplyAsync("Ошибка! Дата начала идёт после даты конца.");
@@ -289,7 +292,8 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					StartDate = startDate,
 					EndDate = endDate,
 					Latitude = latitude.Value,
-					Longitude = longitude.Value
+					Longitude = longitude.Value,
+					IsRequired = isRequiredResponse == "-" ? true : false
 				};
 
 				_polyContext.Lessons.Add(lesson);

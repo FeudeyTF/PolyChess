@@ -12,6 +12,6 @@
 
         public float Longitude { get; set; }
 
-        public bool IsRequired { get; set; } = true;
+        public bool IsRequired { get; set; }
     }
 }
