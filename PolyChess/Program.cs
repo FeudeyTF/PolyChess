@@ -52,11 +52,12 @@ namespace PolyChess
 
 			_logger.Info("Конфигурационный файл загружен и сохранён");
 			_logger.Info($"Текущий семестр: {_configuration.SemesterStartDate:D} - {_configuration.SemesterEndDate:D}");
-			
+
 			DbContextOptionsBuilder<PolyContext> contextBuilder = new();
 			PolyContext polyContext = new(contextBuilder.UseSqlite(_configuration.DatabaseConnectionString).Options);
 			PolyContextComponent polyContextComponent = new(polyContext, _logger);
 
+			PuzzlesComponent puzzles = new(polyContext);
 			TournamentsComponent tournaments = new(_configuration, _logger, _lichessClient, polyContext);
 
 			var telegramProvider = new PollingTelegramProvider(
@@ -67,7 +68,7 @@ namespace PolyChess
 
 			MeTelegramCommand telegramCommands = new(telegramProvider, _lichessClient, polyContext, tournaments, _configuration, new(telegramProvider), _logger);
 			StudentCommands studentCommands = new(polyContext, _configuration, telegramProvider, _lichessClient);
-			AdminPanel adminPanel = new(telegramProvider, tournaments, _configuration, polyContext, _logger, _lichessClient);
+			AdminPanel adminPanel = new(telegramProvider, tournaments, puzzles, _configuration, polyContext, _logger, _lichessClient);
 
 			AttendanceHandler attendanceHandler = new(polyContext);
 			QuestionHandler questionHandler = new(_configuration);
@@ -96,7 +97,8 @@ namespace PolyChess
 				[
 					polyContextComponent,
 					tournaments,
-					telegramComponent
+					telegramComponent,
+					puzzles
 				],
 				_logger
 			);

@@ -13,6 +13,7 @@ using PolyChess.Core.Telegram.Messages.Discrete.Messages;
 using PolyChess.LichessAPI.Clients;
 using PolyChess.LichessAPI.Clients.Authorized;
 using PolyChess.LichessAPI.Types.Arena;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PolyChess.Components.Telegram.CommandAggregators
@@ -29,11 +30,13 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 		private readonly TournamentsComponent _tournaments;
 
+		private readonly PuzzlesComponent _puzzles;
+
 		private readonly IMainConfig _mainConfig;
 
 		private readonly DiscreteMessagesProvider _discreteMessagesProvider;
 
-		public AdminPanel(ITelegramProvider telegramProvider, TournamentsComponent tournaments, IMainConfig config, PolyContext polyContext, ILogger logger, LichessClient client)
+		public AdminPanel(ITelegramProvider telegramProvider, TournamentsComponent tournaments, PuzzlesComponent puzzlesComponent, IMainConfig config, PolyContext polyContext, ILogger logger, LichessClient client)
 		{
 			_polyContext = polyContext;
 			_logger = logger;
@@ -41,6 +44,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 			_discreteMessagesProvider = new(telegramProvider);
 			_mainConfig = config;
 			_tournaments = tournaments;
+			_puzzles = puzzlesComponent;
 			TempPath = Path.Combine(Environment.CurrentDirectory, "tmp");
 		}
 
@@ -81,6 +85,20 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 			message.AddButton(
 				new InlineKeyboardButton("Посмотреть посещения студента").WithData(nameof(ViewStudentAttendance))
+			);
+
+			message.AddKeyboard([
+				new InlineKeyboardButton("Добавить задачу для урока").WithData(nameof(AddPuzzle)),
+				new InlineKeyboardButton("Поставить задачу для урока").WithData(nameof(SetPuzzle)),
+				new InlineKeyboardButton("Убрать задачу для урока").WithData(nameof(RemovePuzzle))
+			]);
+
+			message.AddButton(
+				new InlineKeyboardButton("Посмотреть существующие задания").WithData(nameof(ShowPuzzles))
+			);
+
+			message.AddButton(
+				new InlineKeyboardButton("Посмотреть ответы на текущее задание").WithData(nameof(ShowStudentsSolvedPuzzle))
 			);
 
 			await ctx.ReplyAsync(message);
@@ -403,7 +421,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 			DiscreteMessage message = new(
 				_discreteMessagesProvider,
 				[
-					new TelegramMessageBuilder("Введите данные студентов в формате Имя,Фамилия,Отчество,Курс,Институт,Lichess,LichessToken,TelegramId")
+					new TelegramMessageBuilder("Введите данные студентов в формате Имя,Фамилия,Отчество,Курс,Группа,Институт,Номер зачётки,Личесс,ЛичессТокен,Телеграм")
 				],
 				HandleStudentsEntered
 			);
@@ -447,8 +465,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 						continue;
 					}
 
-					long telegramId = 0;
-					if (!string.IsNullOrEmpty(telegramIdStr) && !long.TryParse(telegramIdStr, out telegramId))
+					if (!long.TryParse(telegramIdStr, out var telegramId))
 					{
 						skippedStudents.Add((name, "TelegramId не является числом!"));
 						continue;
@@ -492,6 +509,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					};
 					_polyContext.Students.Add(studentEntry);
 				}
+
 				await _polyContext.SaveChangesAsync();
 				await args.ReplyAsync($"Успешно добавлено {students.Length - skippedStudents.Count} студентов! Пропущенные студенты:\n{string.Join('\n', skippedStudents.Select(s => s.student + ": " + s.error))}");
 			}
@@ -926,6 +944,224 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 				await ctx.ReplyAsync(string.Join("\n", msg));
 			}
+		}
+
+		[TelegramButton(nameof(AddPuzzle))]
+		private async Task AddPuzzle(TelegramButtonExecutionContext ctx)
+		{
+			if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
+				return;
+			List<TelegramMessageBuilder> messages = [];
+			DiscreteMessage message = new(
+				_discreteMessagesProvider,
+				[
+					new TelegramMessageBuilder("Введите название задания"),
+					new TelegramMessageBuilder("Введите вопрос к заданию"),
+					new TelegramMessageBuilder("Пришлите картинку, которая будет отображена в задании"),
+					new TelegramMessageBuilder("Введите возможные ответы на задачу. Разделить ответы нужно через ;"),
+					new TelegramMessageBuilder("Введите правильный ответ на задачу")
+				],
+				HandlePuzzleInfoEntered
+			);
+
+			if (ctx.Query.Message != null)
+				await ctx.SendMessageAsync(message, ctx.Query.Message.Chat.Id);
+
+			async Task HandlePuzzleInfoEntered(DiscreteMessageEnteredArgs args)
+			{
+				var name = args.Responses[0].Text;
+				var question = args.Responses[1].Text;
+				var fileId = args.Responses[2].Document?.FileId;
+				var answersString = args.Responses[3].Text;
+				var correctAnswer = args.Responses[4].Text;
+
+				if (string.IsNullOrEmpty(name))
+				{
+					await args.ReplyAsync("Вы не ввели имя задания!");
+					return;
+				}
+
+				if (string.IsNullOrEmpty(question))
+				{
+					await args.ReplyAsync("Вы не ввели вопрос задания!");
+					return;
+				}
+
+				if (string.IsNullOrEmpty(answersString))
+				{
+					await args.ReplyAsync("Вы не ввели возможные варианты ответа для задания!");
+					return;
+				}
+
+				if (string.IsNullOrEmpty(correctAnswer))
+				{
+					await args.ReplyAsync("Вы не ввели правильный ответ на задание!");
+					return;
+				}
+
+				var answers = answersString.Split(';').Where(s => !string.IsNullOrEmpty(s.Trim()));
+				if (!answers.Contains(correctAnswer))
+				{
+					await args.ReplyAsync($"Правильный ответ '{correctAnswer}' не находится в списке с ответами '{string.Join(", ", answers)}'!");
+					return;
+				}
+
+				Puzzle puzzle = new()
+				{
+					Name = name,
+					Question = question,
+					ImageFilePath = fileId,
+					Answers = [.. answers],
+					CorrectAnswer = correctAnswer
+				};
+
+				_puzzles.AddPuzzle(puzzle);
+				await args.ReplyAsync($"Задание {name} было успешно добавлено! Вопрос: {question}, Ответы: {string.Join(", ", answers)}, Правильный ответ: {correctAnswer}");
+			}
+		}
+
+		[TelegramButton(nameof(SetPuzzle))]
+		private async Task SetPuzzle(TelegramButtonExecutionContext ctx)
+		{
+			if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
+				return;
+			List<TelegramMessageBuilder> messages = [];
+			DiscreteMessage message = new(
+				_discreteMessagesProvider,
+				[
+					new TelegramMessageBuilder("Введите название задания")
+				],
+				HandlePuzzleInfoEntered
+			);
+
+			if (ctx.Query.Message != null)
+				await ctx.SendMessageAsync(message, ctx.Query.Message.Chat.Id);
+
+			async Task HandlePuzzleInfoEntered(DiscreteMessageEnteredArgs args)
+			{
+				var name = args.Responses[0].Text;
+				if (name == null)
+				{
+					await args.ReplyAsync("Вы не указали имя задания!");
+					return;
+				}
+
+				var puzzle = _puzzles.SetCurrentPuzzle(name);
+				if (puzzle == null)
+				{
+					await args.ReplyAsync($"Пазл с именем '{name}' не был найден!");
+					return;
+				}
+
+				await args.ReplyAsync($"Задание '{puzzle.Name}' был успешно установлено, как текущее задание");
+				var now = DateTime.Now;
+				var lesson = _polyContext.Lessons.FirstOrDefault(l => l.StartDate <= now && l.EndDate >= now);
+				if (lesson == null)
+				{
+					await args.ReplyAsync("Задание не было отправлено студентам, так как сейчас не проходит занятие!");
+					return;
+				}
+
+				var students = _polyContext.Attendances.Where(a => a.Lesson.Id == lesson.Id).Select(a => a.Student);
+
+				List<string> msg = [
+					"Появилось задание на текущий урок!",
+					"",
+					$"<b>{puzzle.Question}</b>"
+				];
+
+				TelegramMessageBuilder message = string.Join("\n", msg);
+				if (puzzle.ImageFilePath != null)
+					message.AddMedia(new InputMediaPhoto(new InputFileId(puzzle.ImageFilePath)));
+
+				for (int i = 0; i < puzzle.Answers.Length; i++)
+				{
+					var answer = puzzle.Answers[i];
+					InlineKeyboardButton button = new($"{i + 1}) {answer}");
+					button.SetData(nameof(AnswerButtonCallback), ("Index", i));
+					message.AddButton(button);
+				}
+
+				foreach (var student in students)
+					await message.SendAsync(args.Client, args.ChatId, args.Token);
+
+				await args.ReplyAsync($"Задание было отправлено всем студентам, которые отмечены на текущем уроке: {string.Join(", ", students.Select(s => s.Name + " " + s.Surname + " " + s.Patronymic))}.");
+			}
+		}
+
+		[TelegramButton(nameof(AnswerButtonCallback))]
+		private async Task AnswerButtonCallback(TelegramButtonExecutionContext ctx)
+		{
+			int index = ctx.GetNumber("Index");
+			if (_puzzles.CurrentPuzzle == null)
+			{
+				await ctx.ReplyAsync("Ошибка: в данный момент нет задания");
+				return;
+			}
+
+			if (index >= _puzzles.CurrentPuzzle.Answers.Length)
+			{
+				await ctx.ReplyAsync("Ошибка: такого ответа не существует");
+				return;
+			}
+
+			var student = _polyContext.Students.FirstOrDefault(s => s.TelegramId == ctx.Query.From.Id);
+			if (student == null)
+			{
+				await ctx.ReplyAsync("Вы не студент СПбПУ!");
+				return;
+			}
+
+			if (_puzzles.StudentAnswers.ContainsKey(student.Id))
+			{
+				await ctx.ReplyAsync("Вы уже ответили на задание!");
+				return;
+			}
+
+			var answer = _puzzles.CurrentPuzzle.Answers[index];
+
+			_puzzles.StudentAnswers[student.Id] = answer == _puzzles.CurrentPuzzle.CorrectAnswer;
+			await ctx.ReplyAsync($"Вы успешно ответили на задание '{_puzzles.CurrentPuzzle.Name}'!");
+		}
+
+		[TelegramButton(nameof(ShowPuzzles))]
+		private async Task ShowPuzzles(TelegramButtonExecutionContext ctx)
+		{
+			if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
+				return;
+
+			if (_puzzles.CurrentPuzzle != null)
+				await ctx.ReplyAsync($"Текущая задача: {_puzzles.CurrentPuzzle.Name}");
+			await ctx.ReplyAsync($"Существующие задачи: {string.Join(", ", _polyContext.Puzzles.Select(p => p.Name))}.");
+		}
+
+		[TelegramButton(nameof(RemovePuzzle))]
+		private async Task RemovePuzzle(TelegramButtonExecutionContext ctx)
+		{
+			if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
+				return;
+
+			_puzzles.StopCurrentPuzzle();
+			await ctx.ReplyAsync("Текущая задача убрана!");
+		}
+
+		[TelegramButton(nameof(ShowStudentsSolvedPuzzle))]
+		private async Task ShowStudentsSolvedPuzzle(TelegramButtonExecutionContext ctx)
+		{
+			List<string> studentCorrect = [];
+			List<string> studentIncorrect = [];
+			foreach(var student in _polyContext.Students)
+			{
+				if(_puzzles.StudentAnswers.TryGetValue(student.Id, out var studentSolvedPuzzle))
+				{
+					if(studentSolvedPuzzle)
+						studentCorrect.Add(student.Surname + " " + student.Name + " " + student.Patronymic);
+					else
+						studentIncorrect.Add(student.Surname + " " + student.Name + " " + student.Patronymic);
+				}
+			}
+			await ctx.ReplyAsync($"Студенты, правильно ответившие на задание: {string.Join(", ", studentCorrect)}");
+			await ctx.ReplyAsync($"Студенты, неправильно ответившие на задание: {string.Join(", ", studentIncorrect)}");
 		}
 	}
 }
