@@ -66,7 +66,7 @@ namespace PolyChess.Components.Telegram.Handlers
 
                 if (distance > 0.3)
                 {
-                    await client.SendMessageAsync("Вы не на уроке!", message.Chat.Id, token);
+                    await client.SendMessageAsync($"Вы не на уроке! Если это ошибка - обязательно сообщите преподавателю на занятии. Я определил расстояние до Вас, как {distance * 1000} метров.", message.Chat.Id, token);
                     return true;
                 }
 
