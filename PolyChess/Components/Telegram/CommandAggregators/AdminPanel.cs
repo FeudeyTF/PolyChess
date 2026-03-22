@@ -329,7 +329,8 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 			DiscreteMessage message = new(
 				_discreteMessagesProvider,
 				[
-					new TelegramMessageBuilder("Введите данные в формате списка Id урока,TelegramId студента")
+					new TelegramMessageBuilder("Введите дату урока (не обязательно точно)"),
+					new TelegramMessageBuilder("Введите имя студента (ФИО, Фамилия Имя, Имя)")
 				],
 				HandleAttendancesEntered
 			);
@@ -339,54 +340,49 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 			async Task HandleAttendancesEntered(DiscreteMessageEnteredArgs args)
 			{
-				List<string> errors = [];
-				var response = args.Responses.First().Text;
-				if (response == null)
+				var studentName = args.Responses[0].Text;
+				if (studentName == null)
 				{
-					await args.ReplyAsync("Вы не ввели текст!");
+					await args.ReplyAsync("Вы не ввели имя студента!");
 					return;
 				}
 
-				foreach (var entry in response.Split('\n'))
+				var students = GetStudentsByIdentifier(studentName);
+				if (students.Count() > 1)
 				{
-					var data = entry.Split(',');
-					if (data.Length != 2)
-					{
-						errors.Add($"Неверный формат данных: {entry}");
-						continue;
-					}
-
-					if (int.TryParse(data[0], out var lessonId) && long.TryParse(data[1], out var telegramId))
-					{
-						var student = _polyContext.Students.FirstOrDefault(s => s.TelegramId == telegramId);
-						var lesson = _polyContext.Lessons.FirstOrDefault(l => l.Id == lessonId);
-						if (student == null)
-						{
-							errors.Add($"Студент с TelegramId {telegramId} не найден!");
-							continue;
-						}
-						if (lesson == null)
-						{
-							errors.Add($"Урок с Id {lessonId} не найден!");
-							continue;
-						}
-
-						Attendance attendance = new()
-						{
-							Lesson = lesson,
-							Student = student
-						};
-						_polyContext.Attendances.Add(attendance);
-					}
-					else
-						errors.Add($"Ошибка при разборе данных: {entry}");
+					await args.ReplyAsync($"По введённой фамилии и имени были найдены студенты:\n{string.Join('\n', students.Select(s => s.Surname + " " + s.Name + " " + s.Patronymic))}");
+					return;
 				}
 
+				if (students.Count == 0)
+				{
+					await args.ReplyAsync("По вашему запросу не найдено ни одного студента!");
+					return;
+				}
+
+				if (!DateTime.TryParse(args.Responses[0].Text, out var lessonDate))
+				{
+					await args.ReplyAsync("Вы неправильно ввели дату урока!");
+					return;
+				}
+
+				var lesson = _polyContext.Lessons.FirstOrDefault(l => l.StartDate < lessonDate && lessonDate < l.EndDate);
+				var student = students.First();
+
+				if (lesson == null)
+				{
+					await args.ReplyAsync($"Урок в '{lessonDate}' не проводился!");
+					return;
+				}
+
+				_polyContext.Attendances.Add(new Attendance()
+				{
+					Lesson = lesson,
+					Student = student
+				});
+
 				await _polyContext.SaveChangesAsync();
-				if (errors.Count > 0)
-					await args.ReplyAsync($"Ошибки при добавлении:\n{string.Join('\n', errors)}");
-				else
-					await args.ReplyAsync($"Посещения успешно добавлены!");
+				await args.ReplyAsync($"Студент '{student.Surname} {student.Name} {student.Patronymic}' был успешно отмечен на уроке с {lesson.StartDate} до {lesson.EndDate}");
 			}
 		}
 
@@ -890,44 +886,20 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					return;
 				}
 
-				Student? student = default;
-				var splittedName = text.Split(' ');
-				if (splittedName.Length >= 3)
+				var students = GetStudentsByIdentifier(text);
+				if (students.Count() > 1)
 				{
-					var surname = splittedName[0];
-					var name = splittedName[1];
-					var patronomic = splittedName[2];
-					student = _polyContext.Students.Where(s => s.Name == name && s.Surname == surname && s.Patronymic == patronomic).FirstOrDefault();
-				}
-				else if (splittedName.Length == 2)
-				{
-					var surname = splittedName[0];
-					var name = splittedName[1];
-					var students = _polyContext.Students.Where(s => s.Name == name && s.Surname == surname);
-					if (students.Count() > 1)
-					{
-						await args.ReplyAsync($"По введённой фамилии и имени были найдены студенты:\n{string.Join('\n', students.Select(s => s.Surname + " " + s.Name + " " + s.Patronymic))}");
-						return;
-					}
-					student = students.FirstOrDefault();
-				}
-				else
-				{
-					var name = splittedName[0];
-					var students = _polyContext.Students.Where(s => s.Name == name || s.Surname == name);
-					if (students.Count() > 1)
-					{
-						await args.ReplyAsync($"По введённой фамилии и имени были найдены студенты:\n{string.Join('\n', students.Select(s => s.Surname + " " + s.Name + " " + s.Patronymic))}");
-						return;
-					}
-					student = students.FirstOrDefault();
+					await args.ReplyAsync($"По введённой фамилии и имени были найдены студенты:\n{string.Join('\n', students.Select(s => s.Surname + " " + s.Name + " " + s.Patronymic))}");
+					return;
 				}
 
-				if (student == null)
+				if (students.Count == 0)
 				{
 					await args.ReplyAsync("По вашему запросу не найдено ни одного студента!");
 					return;
 				}
+
+				var student = students.First();
 
 				var attendace = _polyContext.Attendances.Where(a => a.Student.TelegramId == student.TelegramId);
 				List<string> msg =
@@ -944,6 +916,32 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 				await ctx.ReplyAsync(string.Join("\n", msg));
 			}
+		}
+
+		private List<Student> GetStudentsByIdentifier(string text)
+		{
+			List<Student> students = default;
+			var splittedName = text.Split(' ');
+			if (splittedName.Length >= 3)
+			{
+				var surname = splittedName[0];
+				var name = splittedName[1];
+				var patronomic = splittedName[2];
+				students.Add(_polyContext.Students.Where(s => s.Name == name && s.Surname == surname && s.Patronymic == patronomic).FirstOrDefault());
+			}
+			else if (splittedName.Length == 2)
+			{
+				var surname = splittedName[0];
+				var name = splittedName[1];
+				students.AddRange(_polyContext.Students.Where(s => s.Name == name && s.Surname == surname));
+			}
+			else
+			{
+				var name = splittedName[0];
+				students.AddRange(_polyContext.Students.Where(s => s.Name == name || s.Surname == name));
+			}
+
+			return students;
 		}
 
 		[TelegramButton(nameof(AddPuzzle))]
@@ -1150,11 +1148,11 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 		{
 			List<string> studentCorrect = [];
 			List<string> studentIncorrect = [];
-			foreach(var student in _polyContext.Students)
+			foreach (var student in _polyContext.Students)
 			{
-				if(_puzzles.StudentAnswers.TryGetValue(student.Id, out var studentSolvedPuzzle))
+				if (_puzzles.StudentAnswers.TryGetValue(student.Id, out var studentSolvedPuzzle))
 				{
-					if(studentSolvedPuzzle)
+					if (studentSolvedPuzzle)
 						studentCorrect.Add(student.Surname + " " + student.Name + " " + student.Patronymic);
 					else
 						studentIncorrect.Add(student.Surname + " " + student.Name + " " + student.Patronymic);
