@@ -920,14 +920,14 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 		private List<Student> GetStudentsByIdentifier(string text)
 		{
-			List<Student> students = default;
+			List<Student> students = [];
 			var splittedName = text.Split(' ');
 			if (splittedName.Length >= 3)
 			{
 				var surname = splittedName[0];
 				var name = splittedName[1];
 				var patronomic = splittedName[2];
-				students.Add(_polyContext.Students.Where(s => s.Name == name && s.Surname == surname && s.Patronymic == patronomic).FirstOrDefault());
+				students.AddRange(_polyContext.Students.Where(s => s.Name == name && s.Surname == surname && s.Patronymic == patronomic));
 			}
 			else if (splittedName.Length == 2)
 			{
