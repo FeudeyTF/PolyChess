@@ -340,7 +340,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 			async Task HandleAttendancesEntered(DiscreteMessageEnteredArgs args)
 			{
-				var studentName = args.Responses[0].Text;
+				var studentName = args.Responses[1].Text;
 				if (studentName == null)
 				{
 					await args.ReplyAsync("Вы не ввели имя студента!");
@@ -372,6 +372,12 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 				if (lesson == null)
 				{
 					await args.ReplyAsync($"Урок в '{lessonDate}' не проводился!");
+					return;
+				}
+
+				if(_polyContext.Attendances.Any(a => a.Lesson.Id == lesson.Id && a.Student.Id == student.Id))
+				{
+					await args.ReplyAsync($"Студент '{student.Name} {student.Surname} {student.Patronymic}' уже отмечен на урока с '{lesson.StartDate}' до '{lesson.EndDate}'");
 					return;
 				}
 
