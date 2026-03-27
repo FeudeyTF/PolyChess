@@ -188,7 +188,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                     var student = _polyContext.Students.FirstOrDefault(s => s.TelegramId == telegramId);
                     if (student != null)
                     {
-                        TelegramMessageBuilder builder = new("[ОНТКЛОНЕНО]\n" + (ctx.Query.Message.Text ?? ctx.Query.Message.Caption));
+                        TelegramMessageBuilder builder = new("[ОТКЛОНЕНО]\n" + (ctx.Query.Message.Text ?? ctx.Query.Message.Caption));
                         if (ctx.Query.Message.Document != null)
                             builder.WithFile(ctx.Query.Message.Document.FileId);
 
