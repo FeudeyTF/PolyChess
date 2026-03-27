@@ -212,10 +212,10 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					List<string> text = ["📌<b>Ваш прогресс по выполнению регламента зачёта:</b>"];
 					if (_polyContext.Lessons.Any())
 					{
-						var lessons = _polyContext.Attendances.Where(a => a.Student == student);
-						var lessonsCount = _polyContext.Lessons.Count(l => l.StartDate < DateTime.Now);
+						var lessons = _polyContext.Attendances.Where(a => a.Student == student & a.Lesson.IsRequired);
+						var lessonsCount = _polyContext.Lessons.Count(l => l.StartDate < DateTime.Now & l.IsRequired);
 						float attendancePercent = (float)lessons.Count() / lessonsCount;
-						text.Add($"📚<b>Посещение занятий:</b> {lessons.Count()}/{lessonsCount} ({(int)(attendancePercent * 100)}%)");
+						text.Add($"📚<b>Посещение обязательных занятий:</b> {lessons.Count()}/{lessonsCount} ({(int)(attendancePercent * 100)}%)");
 						totalScore += attendancePercent;
 					}
 
