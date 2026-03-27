@@ -369,6 +369,10 @@ namespace PolyChess.Components.Telegram.CommandAggregators
             foreach (var lesson in _polyContext.Lessons)
                 if (lesson.StartDate < DateTime.Now)
                     msg.Add($"Занятие с {lesson.StartDate:g} до {lesson.EndDate:g}: {(attendace.Any(a => a.Lesson.Id == lesson.Id) ? "Посещено" : "Не посещено")}. Занятие {(lesson.IsRequired ? "обязательно" : "не обязательно")} для посещения");
+            
+            var lessonsCount = _polyContext.Lessons.Count(l => l.StartDate < DateTime.Now);
+            float attendancePercent = (float)attendace.Count() / lessonsCount;
+            msg.Add($"<b>Посещение занятий:</b> {attendace.Count()}/{lessonsCount} ({(int)(attendancePercent * 100)}%)");
 
             await ctx.ReplyAsync(string.Join("\n", msg));
         }
