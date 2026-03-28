@@ -2,54 +2,67 @@
 
 namespace PolyChess.Configuration
 {
-    internal interface IMainConfig
-    {
-        public string TelegramToken { get; set; }
+	internal interface IMainConfig
+	{
+		public TelegramSettings Telegram { get; set; }
 
-        public string DatabaseConnectionString { get; set; }
+		public string DatabaseConnectionString { get; set; }
 
-        public List<long> TelegramAdmins { get; set; }
+		public List<long> TelegramAdmins { get; set; }
 
-        public DateTime SemesterStartDate { get; set; }
+		public DateTime SemesterStartDate { get; set; }
 
-        public long QuestionChannelId { get; set; }
+		public long QuestionChannelId { get; set; }
 
-        public long CreativeTaskChannelId { get; set; }
+		public long CreativeTaskChannelId { get; set; }
 
-        public DateTime SemesterEndDate { get; set; }
+		public DateTime SemesterEndDate { get; set; }
 
-        public Vector2 SchoolLocation { get; set; }
+		public Vector2 SchoolLocation { get; set; }
 
-        public List<string> ClubTeamPlayers { get; set; }
+		public List<string> ClubTeamPlayers { get; set; }
 
-        public List<string> InstitutesTeams { get; set; }
+		public List<string> InstitutesTeams { get; set; }
 
-        public List<string> LichessFlairs { get; set; }
+		public List<string> LichessFlairs { get; set; }
 
-        public TestSettings Test { get; set; }
+		public TestSettings Test { get; set; }
 
-        public Dictionary<string, TournamentScoreRule> TournamentRules { get; set; }
+		public Dictionary<string, TournamentScoreRule> TournamentRules { get; set; }
 
-        public List<string> TeamsWithTournaments { get; set; }
-    }
+		public List<string> TeamsWithTournaments { get; set; }
+	}
 
-    internal class TestSettings
-    {
-        public int RequiredTournamentsCount { get; set; }
+	internal class TelegramSettings
+	{
+		public bool UseWebhookProvider { get; set; }
 
-        public int RequiredVisitedLessonsPercent { get; set; }
+		public string TelegramToken { get; set; } = string.Empty;
 
-        public int RequiredPuzzlesSolved { get; set; }
-    }
+		public string TelegramWebhookUrl { get; set; } = string.Empty;
 
-    internal class TournamentScoreRule
-    {
-        public const int DefaultWinningPoints = 1;
+		public string TelegramSecret { get; set; } = string.Empty;
 
-        public const int DefaultBeingPoints = 1;
+		public string SslCertificatePath { get; set; } = string.Empty;
+	}
 
-        public int PointsForWinning { get; set; } = DefaultWinningPoints;
+	internal class TestSettings
+	{
+		public int RequiredTournamentsCount { get; set; }
 
-        public int PointsForBeing { get; set; } = DefaultBeingPoints;
-    }
+		public int RequiredVisitedLessonsPercent { get; set; }
+
+		public int RequiredPuzzlesSolved { get; set; }
+	}
+
+	internal class TournamentScoreRule
+	{
+		public const int DefaultWinningPoints = 1;
+
+		public const int DefaultBeingPoints = 1;
+
+		public int PointsForWinning { get; set; } = DefaultWinningPoints;
+
+		public int PointsForBeing { get; set; } = DefaultBeingPoints;
+	}
 }

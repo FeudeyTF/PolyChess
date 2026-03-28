@@ -13,10 +13,10 @@ using PolyChess.Core.Commands.Parsers;
 using PolyChess.Core.Configuration;
 using PolyChess.Core.Logging;
 using PolyChess.Core.Logging.Types;
+using PolyChess.Core.Telegram;
 using PolyChess.Core.Telegram.Providers;
 using PolyChess.LichessAPI.Clients;
 using Telegram.Bot;
-using Telegram.Bot.Polling;
 
 namespace PolyChess
 {
@@ -60,11 +60,27 @@ namespace PolyChess
 			PuzzlesComponent puzzles = new(polyContext);
 			TournamentsComponent tournaments = new(_configuration, _logger, _lichessClient, polyContext);
 
-			var telegramProvider = new PollingTelegramProvider(
-				new TelegramBotClient(_configuration.TelegramToken),
-				new ReceiverOptions(),
-				tokenSource.Token
-			);
+			TelegramBotClient telegramClient = new(_configuration.Telegram.TelegramToken);
+			ITelegramProvider telegramProvider;
+
+			if (_configuration.Telegram.UseWebhookProvider)
+			{
+				telegramProvider = new WebhookTelegramProvider(
+					telegramClient,
+					_configuration.Telegram.TelegramWebhookUrl,
+					_configuration.Telegram.TelegramSecret,
+					_configuration.Telegram.SslCertificatePath,
+					tokenSource.Token
+				);
+			}
+			else
+			{
+				telegramProvider = new PollingTelegramProvider(
+					telegramClient,
+					new(),
+					tokenSource.Token
+				);
+			}
 
 			MeTelegramCommand telegramCommands = new(telegramProvider, _lichessClient, polyContext, tournaments, _configuration, new(telegramProvider), _logger);
 			StudentCommands studentCommands = new(polyContext, _configuration, telegramProvider, _lichessClient);
