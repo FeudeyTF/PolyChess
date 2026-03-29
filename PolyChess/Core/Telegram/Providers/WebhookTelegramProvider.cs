@@ -28,7 +28,7 @@ namespace PolyChess.Core.Telegram.Providers
 
 		private readonly CancellationToken _token;
 
-		public WebhookTelegramProvider(ITelegramBotClient client, string webhookUrl, string telegramSecret, string certificatePath, CancellationToken token)
+		public WebhookTelegramProvider(ITelegramBotClient client, string webhookUrl, string telegramSecret, string certificatePath, CancellationToken token, WebApplication app)
 		{
 			OnUpdate = (client, update, token) => Task.CompletedTask;
 			OnMessage = (client, message, token) => Task.CompletedTask;
@@ -41,35 +41,15 @@ namespace PolyChess.Core.Telegram.Providers
 				throw new Exception("Telegram secret is empty or null!");
 			_webhookUrl = webhookUrl;
 			_token = token;
-			_app = BuildApplication();
+			_app = app;
 		}
 
 		public async Task StartAsync()
 		{
-			Thread thread = new(async () =>
-				await _app.RunAsync()
-			);
-			thread.Start();
-		}
-
-		private WebApplication BuildApplication()
-		{
-			var builder = WebApplication.CreateBuilder();
-
-			builder.Logging.ClearProviders();
-
-			builder.Services.AddHttpClient("tgwebhook").AddTypedClient(httpClient => Client);
-			builder.Services.AddAuthorization();
-
-			var app = builder.Build();
-			app.UseHttpsRedirection();
-			app.UseAuthorization();
-
-			app.MapGet($"/bot/{_telegramSecret}/setWebhook", SetWebhook);
-			app.MapGet($"/bot/{_telegramSecret}/getWebhook", GetWebhook);
-			app.MapGet($"/bot/{_telegramSecret}/delWebhook", DeleteWebhook);
-			app.MapPost("/bot", HandleUpdate);
-			return app;
+			_app.MapGet($"/bot/{_telegramSecret}/setWebhook", SetWebhook);
+			_app.MapGet($"/bot/{_telegramSecret}/getWebhook", GetWebhook);
+			_app.MapGet($"/bot/{_telegramSecret}/delWebhook", DeleteWebhook);
+			_app.MapPost("/bot", HandleUpdate);
 		}
 
 		private async Task<string> SetWebhook(ITelegramBotClient client)

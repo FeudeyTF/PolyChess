@@ -60,17 +60,29 @@ namespace PolyChess
 			PuzzlesComponent puzzles = new(polyContext);
 			TournamentsComponent tournaments = new(_configuration, _logger, _lichessClient, polyContext);
 
-			TelegramBotClient telegramClient = new(_configuration.Telegram.TelegramToken);
+			ITelegramBotClient telegramClient = new TelegramBotClient(_configuration.Telegram.TelegramToken);
 			ITelegramProvider telegramProvider;
 
+			WebApplication? app = default;
 			if (_configuration.Telegram.UseWebhookProvider)
 			{
+				var builder = WebApplication.CreateBuilder();
+				builder.Logging.ClearProviders();
+
+				builder.Services.AddHttpClient("tgwebhook").AddTypedClient(httpClient => telegramClient);
+				builder.Services.AddAuthorization();
+
+				app = builder.Build();
+				app.UseHttpsRedirection();
+				app.UseAuthorization();
+
 				telegramProvider = new WebhookTelegramProvider(
 					telegramClient,
 					_configuration.Telegram.TelegramWebhookUrl,
 					_configuration.Telegram.TelegramSecret,
 					_configuration.Telegram.SslCertificatePath,
-					tokenSource.Token
+					tokenSource.Token,
+					app
 				);
 			}
 			else
@@ -120,6 +132,14 @@ namespace PolyChess
 			);
 
 			await _initializerComponent.StartAsync();
+
+			if (app != null)
+			{
+				Thread thread = new(async () =>
+					await app.RunAsync()
+				);
+				thread.Start();
+			}
 
 			_consoleCommandManager = new([new DefaultCommands(polyContext, _lichessClient)], (ctx) => Task.CompletedTask);
 			while (true)
