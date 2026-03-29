@@ -22,13 +22,13 @@ namespace PolyChess.Core.Telegram.Providers
 
 		private readonly WebApplication _app;
 
-		private readonly string _certificatePath;
+		private readonly string? _certificatePath;
 
 		private readonly string _telegramSecret;
 
 		private readonly CancellationToken _token;
 
-		public WebhookTelegramProvider(ITelegramBotClient client, string webhookUrl, string telegramSecret, string certificatePath, CancellationToken token, WebApplication app)
+		public WebhookTelegramProvider(ITelegramBotClient client, string webhookUrl, string telegramSecret, string? certificatePath, CancellationToken token, WebApplication app)
 		{
 			OnUpdate = (client, update, token) => Task.CompletedTask;
 			OnMessage = (client, message, token) => Task.CompletedTask;
@@ -54,14 +54,17 @@ namespace PolyChess.Core.Telegram.Providers
 
 		private async Task<string> SetWebhook(ITelegramBotClient client)
 		{
-			await client.SetWebhook(_webhookUrl, new InputFileStream(File.OpenRead(_certificatePath), _certificatePath), secretToken: _telegramSecret, cancellationToken: _token);
-			return $"Webhook set to {_webhookUrl}";
+			InputFileStream? certificate = default;
+			if(!string.IsNullOrEmpty(_certificatePath))
+				certificate = new InputFileStream(File.OpenRead(_certificatePath), _certificatePath);
+			await client.SetWebhook(_webhookUrl + "/bot", certificate: certificate, secretToken: _telegramSecret, cancellationToken: _token);
+			return $"Webhook set to {_webhookUrl}/bot";
 		}
 
 		private async Task<string> DeleteWebhook(ITelegramBotClient client)
 		{
 			await client.DeleteWebhook(cancellationToken: _token);
-			return $"Webhook {_webhookUrl} deleted";
+			return $"Webhook {_webhookUrl}/bot deleted";
 		}
 
 		private async Task<string> GetWebhook(ITelegramBotClient client)

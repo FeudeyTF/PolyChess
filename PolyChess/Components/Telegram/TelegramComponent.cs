@@ -27,7 +27,9 @@ namespace PolyChess.Components.Telegram
 
 		private readonly IEnumerable<ITelegramUpdateHandler> _handlers;
 
-		public TelegramComponent(ILogger logger, ITelegramProvider provider, IMainConfig config, List<ICommandAggregator<TelegramCommandExecutionContext>> commandAggregators, List<ICommandAggregator<TelegramButtonExecutionContext>> buttonAggregators, IEnumerable<ITelegramUpdateHandler> handlers)
+		private readonly PolyChessWebApp? _webApp;
+
+		public TelegramComponent(ILogger logger, ITelegramProvider provider, IMainConfig config, List<ICommandAggregator<TelegramCommandExecutionContext>> commandAggregators, List<ICommandAggregator<TelegramButtonExecutionContext>> buttonAggregators, IEnumerable<ITelegramUpdateHandler> handlers, WebApplication? app)
 		{
 			_commandManager = new(commandAggregators, HandleCommandNotFound);
 			_buttonsManager = new(buttonAggregators, HandleButtonNotFound);
@@ -39,10 +41,13 @@ namespace PolyChess.Components.Telegram
 			_telegramProvider.OnMessage += HandleTelegramMessage;
 			_telegramProvider.OnCallback += HandleTelegramCallback;
 			_telegramProvider.OnException += HandleTelegramException;
+			if(app != null)
+				_webApp = new(app, _mainConfig);
 		}
 
 		public async Task StartAsync()
 		{
+			_webApp?.Start();
 			await _telegramProvider.StartAsync();
 			var user = await _telegramProvider.Client.GetMe();
 			if (user == null)

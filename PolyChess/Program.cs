@@ -67,15 +67,16 @@ namespace PolyChess
 			if (_configuration.Telegram.UseWebhookProvider)
 			{
 				var builder = WebApplication.CreateBuilder();
-				builder.Logging.ClearProviders();
+				//	builder.Logging.ClearProviders();
 
 				builder.Services.AddHttpClient("tgwebhook").AddTypedClient(httpClient => telegramClient);
 				builder.Services.AddAuthorization();
+				builder.Services.AddRazorPages();
 
 				app = builder.Build();
 				app.UseHttpsRedirection();
 				app.UseAuthorization();
-
+			
 				telegramProvider = new WebhookTelegramProvider(
 					telegramClient,
 					_configuration.Telegram.TelegramWebhookUrl,
@@ -118,7 +119,8 @@ namespace PolyChess
 				[
 					attendanceHandler,
 					questionHandler
-				]
+				],
+				app
 			);
 
 			_initializerComponent = new(
