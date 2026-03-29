@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using PolyChess.Components.Data;
+using PolyChess.Components.Tournaments;
 using PolyChess.Configuration;
+using PolyChess.LichessAPI.Types.Swiss;
 using System.Collections.Specialized;
 using System.Security.Cryptography;
 using System.Text;
@@ -11,40 +13,28 @@ using System.Web;
 
 namespace PolyChess.Pages
 {
-	internal class StudentProfile
+	internal class TournamentDisplayInfo
 	{
-		public string FullName { get; set; } = string.Empty;
+		public string Id { get; set; } = string.Empty;
 
-		public string Institute { get; set; } = string.Empty;
+		public string Name { get; set; } = string.Empty;
 
-		public int Year { get; set; }
+		public DateTime Date { get; set; }
 
-		public string Group { get; set; } = string.Empty;
+		public string Type { get; set; } = string.Empty;
 
-		public string? RecordBookId { get; set; }
+		public int PlayersCount { get; set; }
 
-		public string? LichessId { get; set; }
+		public int? StudentScore { get; set; }
 
-		public bool CreativeTaskCompleted { get; set; }
+		public int? StudentRank { get; set; }
 
-		public int TournamentScore { get; set; }
+		public bool Participated { get; set; }
 	}
 
-	internal class IndexModel : PageModel
+	internal class TournamentsModel : PageModel
 	{
-		public StudentProfile? CurrentStudent { get; private set; }
-
-		public int TotalLessons { get; private set; }
-
-		public int AttendedLessons { get; private set; }
-
-		public int RequiredLessons { get; private set; }
-
-		public int RequiredTournaments { get; private set; }
-
-		public int SolvedPuzzles { get; private set; }
-
-		public int RequiredPuzzles { get; private set; }
+		public List<TournamentDisplayInfo> Tournaments { get; private set; } = [];
 
 		public bool IsAuthenticated { get; private set; }
 
@@ -52,14 +42,19 @@ namespace PolyChess.Pages
 
 		public string? InitData { get; private set; }
 
+		public string? StudentLichessId { get; private set; }
+
 		private readonly PolyContext _context;
 
 		private readonly IMainConfig _config;
 
-		public IndexModel(PolyContext context, IMainConfig config)
+		private readonly TournamentsComponent _tournaments;
+
+		public TournamentsModel(PolyContext context, IMainConfig config, TournamentsComponent tournaments)
 		{
 			_context = context;
 			_config = config;
+			_tournaments = tournaments;
 		}
 
 		public async Task<IActionResult> OnGetAsync()
@@ -99,35 +94,66 @@ namespace PolyChess.Pages
 				return Page();
 			}
 
-			CurrentStudent = new StudentProfile
+			StudentLichessId = student.LichessId?.ToLower();
+
+			foreach (var tournamentInfo in _tournaments.TournamentsList.Where(t => t.Tournament.IsFinished))
 			{
-				FullName = $"{student.Surname} {student.Name} {student.Patronymic}",
-				Institute = student.Institute,
-				Year = (int)student.Year,
-				Group = student.Group,
-				RecordBookId = student.RecordBookId,
-				LichessId = student.LichessId,
-				CreativeTaskCompleted = student.CreativeTaskCompleted,
-				TournamentScore = student.AdditionalTournamentsScore
-			};
+				var tournament = tournamentInfo.Tournament;
+				var displayInfo = new TournamentDisplayInfo
+				{
+					Id = tournament.ID,
+					Name = tournament.FullName,
+					Date = tournament.StartDate,
+					Type = "Arena",
+					PlayersCount = tournament.PlayersNumber
+				};
 
-			TotalLessons = await _context.Lessons
-				.CountAsync(l => l.StartDate < DateTime.Now);
+				if (!string.IsNullOrEmpty(StudentLichessId))
+				{
+					var playerEntry = tournamentInfo.Rating.Players
+						.FirstOrDefault(p => p.Student?.LichessId?.ToLower() == StudentLichessId);
 
-			RequiredLessons = await _context.Lessons
-				.CountAsync(l => l.IsRequired && l.StartDate < DateTime.Now);
+					if (playerEntry != null)
+					{
+						displayInfo.Participated = true;
+						displayInfo.StudentScore = playerEntry.Score;
+						var standing = tournament.Standing.Players
+							.FirstOrDefault(p => p.Name.Equals(StudentLichessId, StringComparison.OrdinalIgnoreCase));
+						displayInfo.StudentRank = standing?.Rank;
+					}
+				}
 
-			AttendedLessons = await _context.Attendances
-				.CountAsync(a => a.Student.Id == student.Id && a.Lesson.StartDate < DateTime.Now);
+				Tournaments.Add(displayInfo);
+			}
 
-			RequiredTournaments = _config.Test.RequiredTournamentsCount;
-			RequiredPuzzles = _config.Test.RequiredPuzzlesSolved;
+			foreach (var tournamentInfo in _tournaments.SwissTournamentsList.Where(t => t.Tournament.Status == "finished"))
+			{
+				var tournament = tournamentInfo.Tournament;
+				var displayInfo = new TournamentDisplayInfo
+				{
+					Id = tournament.ID,
+					Name = tournament.Name,
+					Date = tournament.Started,
+					Type = "Swiss",
+					PlayersCount = tournament.PlayersNumber
+				};
 
-			SolvedPuzzles = await _context.Attendances
-				.Where(a => a.Student.Id == student.Id)
-				.Select(a => a.Lesson)
-				.Distinct()
-				.CountAsync(l => l.StartDate < DateTime.Now) > 0 ? 0 : 0;
+				if (!string.IsNullOrEmpty(StudentLichessId))
+				{
+					var playerEntry = tournamentInfo.Rating.Players
+						.FirstOrDefault(p => p.Student?.LichessId?.ToLower() == StudentLichessId);
+
+					if (playerEntry != null)
+					{
+						displayInfo.Participated = true;
+						displayInfo.StudentScore = playerEntry.Score;
+					}
+				}
+
+				Tournaments.Add(displayInfo);
+			}
+
+			Tournaments = [.. Tournaments.OrderByDescending(t => t.Date)];
 
 			return Page();
 		}
@@ -135,7 +161,6 @@ namespace PolyChess.Pages
 		private bool ValidateTelegramWebAppData(NameValueCollection initData)
 		{
 			var hash = initData["hash"];
-
 			if (string.IsNullOrEmpty(hash))
 				return false;
 
@@ -158,7 +183,6 @@ namespace PolyChess.Pages
 		private long ExtractUserId(NameValueCollection initData)
 		{
 			var userJson = initData["user"];
-
 			if (string.IsNullOrEmpty(userJson))
 				return 0;
 

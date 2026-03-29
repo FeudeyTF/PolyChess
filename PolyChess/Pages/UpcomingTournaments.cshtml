@@ -1,0 +1,121 @@
+@page
+@using PolyChess.Pages
+@model UpcomingTournamentsModel
+@{
+    ViewData["Title"] = "Предстоящие турниры";
+    Layout = "_Layout";
+}
+
+@if (!Model.IsAuthenticated)
+{
+    <div class="tg-error">
+        <strong>Доступ запрещён</strong><br>
+        @Model.ErrorMessage
+    </div>
+}
+else
+{
+    <div class="tg-page-title"><i class="fa-solid fa-calendar"></i> Предстоящие турниры</div>
+
+    @if (Model.Tournaments.Count == 0)
+    {
+        <div class="tg-empty">
+            <div class="tg-empty-icon"><i class="fa-solid fa-inbox"></i></div>
+            <div class="tg-empty-text">Нет запланированных турниров</div>
+        </div>
+    }
+    else
+    {
+        var soonTournaments = Model.Tournaments.Where(t => t.IsStartingSoon).ToList();
+        var laterTournaments = Model.Tournaments.Where(t => !t.IsStartingSoon).ToList();
+
+        if (soonTournaments.Any())
+        {
+            <div class="tg-section">
+                <div class="tg-section-header"><i class="fa-solid fa-fire"></i> Скоро начнутся</div>
+                <div class="tg-section-content">
+                    @foreach (var tournament in soonTournaments)
+                    {
+                        var tournamentUrl = tournament.Type == "Arena" 
+                            ? $"https://lichess.org/tournament/{tournament.Id}" 
+                            : $"https://lichess.org/swiss/{tournament.Id}";
+                        
+                        <a href="@tournamentUrl" target="_blank" class="tournament-card upcoming-card tg-cell-clickable">
+                            <div class="tournament-name">
+                                @tournament.Name
+                                <span class="tournament-type @tournament.Type.ToLower()">@tournament.Type</span>
+                            </div>
+                            <div class="upcoming-time">
+                                <i class="fa-solid fa-clock"></i> Начало: @tournament.StartDate.ToString("HH:mm")
+                                @{
+                                    var timeLeft = tournament.StartDate - DateTime.Now;
+                                    if (timeLeft.TotalMinutes < 60)
+                                    {
+                                        <span>(через @((int)timeLeft.TotalMinutes) мин.)</span>
+                                    }
+                                    else
+                                    {
+                                        <span>(через @((int)timeLeft.TotalHours) ч. @(timeLeft.Minutes) мин.)</span>
+                                    }
+                                }
+                            </div>
+                            <div class="tournament-stats">
+                                <div class="tournament-stat">
+                                    <i class="fa-solid fa-stopwatch"></i> @tournament.TimeControl
+                                </div>
+                                @if (tournament.Duration > 0)
+                                {
+                                    <div class="tournament-stat">
+                                        <i class="fa-solid fa-hourglass-half"></i> @tournament.Duration мин.
+                                    </div>
+                                }
+                            </div>
+                            <div class="tournament-link">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Открыть на Lichess
+                            </div>
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+
+        if (laterTournaments.Any())
+        {
+            <div class="tg-section">
+                <div class="tg-section-header"><i class="fa-solid fa-list"></i> Запланированные турниры (@laterTournaments.Count)</div>
+                <div class="tg-section-content">
+                    @foreach (var tournament in laterTournaments)
+                    {
+                        var tournamentUrl = tournament.Type == "Arena" 
+                            ? $"https://lichess.org/tournament/{tournament.Id}" 
+                            : $"https://lichess.org/swiss/{tournament.Id}";
+                        
+                        <a href="@tournamentUrl" target="_blank" class="tournament-card tg-cell-clickable">
+                            <div class="tournament-name">
+                                @tournament.Name
+                                <span class="tournament-type @tournament.Type.ToLower()">@tournament.Type</span>
+                            </div>
+                            <div class="tournament-date">
+                                <i class="fa-regular fa-calendar"></i> @tournament.StartDate.ToString("dd MMMM yyyy, HH:mm")
+                            </div>
+                            <div class="tournament-stats">
+                                <div class="tournament-stat">
+                                    <i class="fa-solid fa-stopwatch"></i> @tournament.TimeControl
+                                </div>
+                                @if (tournament.Duration > 0)
+                                {
+                                    <div class="tournament-stat">
+                                        <i class="fa-solid fa-hourglass-half"></i> @tournament.Duration мин.
+                                    </div>
+                                }
+                            </div>
+                            <div class="tournament-link">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Открыть на Lichess
+                            </div>
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+    }
+}

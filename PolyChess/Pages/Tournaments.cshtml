@@ -1,0 +1,129 @@
+@page
+@using PolyChess.Pages
+@model TournamentsModel
+@{
+    ViewData["Title"] = "Прошедшие турниры";
+    Layout = "_Layout";
+}
+
+@if (!Model.IsAuthenticated)
+{
+    <div class="tg-error">
+        <strong>Доступ запрещён</strong><br>
+        @Model.ErrorMessage
+    </div>
+}
+else if (string.IsNullOrEmpty(Model.StudentLichessId))
+{
+    <div class="tg-error">
+        <strong>Lichess не привязан</strong><br>
+        Привяжите аккаунт Lichess для просмотра турниров
+    </div>
+}
+else
+{
+    <div class="tg-page-title"><i class="fa-solid fa-trophy"></i> Прошедшие турниры</div>
+
+    @if (Model.Tournaments.Count == 0)
+    {
+        <div class="tg-empty">
+            <div class="tg-empty-icon"><i class="fa-solid fa-inbox"></i></div>
+            <div class="tg-empty-text">Турниры не найдены</div>
+        </div>
+    }
+    else
+    {
+        var participatedTournaments = Model.Tournaments.Where(t => t.Participated).ToList();
+        var otherTournaments = Model.Tournaments.Where(t => !t.Participated).ToList();
+
+        if (participatedTournaments.Any())
+        {
+            <div class="tg-section">
+                <div class="tg-section-header"><i class="fa-solid fa-check-circle"></i> Ваши турниры (@participatedTournaments.Count)</div>
+                <div class="tg-section-content">
+                    @foreach (var tournament in participatedTournaments)
+                    {
+                        var tournamentUrl = tournament.Type == "Arena" 
+                            ? $"https://lichess.org/tournament/{tournament.Id}" 
+                            : $"https://lichess.org/swiss/{tournament.Id}";
+                        
+                        <a href="@tournamentUrl" target="_blank" class="tournament-card tg-cell-clickable">
+                            <div class="tournament-name">
+                                @tournament.Name
+                                <span class="tournament-type @tournament.Type.ToLower()">@tournament.Type</span>
+                            </div>
+                            <div class="tournament-date">
+                                <i class="fa-regular fa-calendar"></i> @tournament.Date.ToString("dd MMMM yyyy, HH:mm")
+                            </div>
+                            <div class="tournament-stats">
+                                <div class="tournament-stat">
+                                    <i class="fa-solid fa-users"></i> @tournament.PlayersCount
+                                </div>
+                                @if (tournament.StudentRank.HasValue)
+                                {
+                                    <div class="tournament-stat">
+                                        <i class="fa-solid fa-medal"></i> @tournament.StudentRank место
+                                    </div>
+                                }
+                                <div class="tournament-stat">
+                                    Баллы:
+                                    @{
+                                        var scoreClass = tournament.StudentScore switch
+                                        {
+                                            > 0 => "",
+                                            0 => "zero",
+                                            < 0 => "negative",
+                                            _ => "zero"
+                                        };
+                                    }
+                                    <span class="tournament-score @scoreClass">
+                                        @(tournament.StudentScore?.ToString() ?? "0")
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="tournament-link">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Открыть на Lichess
+                            </div>
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+
+        if (otherTournaments.Any())
+        {
+            <div class="tg-section">
+                <div class="tg-section-header"><i class="fa-solid fa-list"></i> Другие турниры (@otherTournaments.Count)</div>
+                <div class="tg-section-content">
+                    @foreach (var tournament in otherTournaments)
+                    {
+                        var tournamentUrl = tournament.Type == "Arena" 
+                            ? $"https://lichess.org/tournament/{tournament.Id}" 
+                            : $"https://lichess.org/swiss/{tournament.Id}";
+                        
+                        <a href="@tournamentUrl" target="_blank" class="tournament-card tg-cell-clickable">
+                            <div class="tournament-name">
+                                @tournament.Name
+                                <span class="tournament-type @tournament.Type.ToLower()">@tournament.Type</span>
+                            </div>
+                            <div class="tournament-date">
+                                <i class="fa-regular fa-calendar"></i> @tournament.Date.ToString("dd MMMM yyyy, HH:mm")
+                            </div>
+                            <div class="tournament-stats">
+                                <div class="tournament-stat">
+                                    <i class="fa-solid fa-users"></i> @tournament.PlayersCount
+                                </div>
+                                <div class="tournament-stat">
+                                    <i class="fa-solid fa-xmark"></i> Не участвовали
+                                </div>
+                            </div>
+                            <div class="tournament-link">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Открыть на Lichess
+                            </div>
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+    }
+}

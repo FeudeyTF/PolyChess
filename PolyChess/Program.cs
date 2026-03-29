@@ -74,6 +74,7 @@ namespace PolyChess
 				builder.Services.AddRazorPages();
 				
 				builder.Services.AddSingleton<IMainConfig>(_configuration);
+				builder.Services.AddSingleton(tournaments);
 				builder.Services.AddScoped(sp => 
 				{
 					var optionsBuilder = new DbContextOptionsBuilder<PolyContext>();
