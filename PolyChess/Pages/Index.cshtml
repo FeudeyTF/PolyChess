@@ -2,9 +2,373 @@
 @using PolyChess.Pages
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Профиль студента";
 }
 
-<div class="text-center">
-<p>Hello</p>
-</div>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>@ViewData["Title"]</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 16px;
+            padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
+        }
+
+        .header {
+            background: var(--tg-theme-secondary-bg-color, #f4f4f5);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .student-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--tg-theme-text-color, #000000);
+            margin-bottom: 8px;
+        }
+
+        .student-info {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #999999);
+            line-height: 1.6;
+        }
+
+        .student-info-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .student-info-row span {
+            margin-right: 8px;
+        }
+
+        .section {
+            background: var(--tg-theme-secondary-bg-color, #f4f4f5);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--tg-theme-text-color, #000000);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            background: var(--tg-theme-button-color, #3390ec);
+            border-radius: 2px;
+            margin-right: 8px;
+        }
+
+        .progress-item {
+            margin-bottom: 16px;
+        }
+
+        .progress-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .progress-text {
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .progress-value {
+            color: var(--tg-theme-hint-color, #999999);
+            font-weight: 500;
+        }
+
+        .progress-bar-container {
+            background: var(--tg-theme-bg-color, #ffffff);
+            border-radius: 8px;
+            height: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            background: var(--tg-theme-button-color, #3390ec);
+            height: 100%;
+            border-radius: 8px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar.completed {
+            background: #4CAF50;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        .badge-success {
+            background: rgba(76, 175, 80, 0.15);
+            color: #4CAF50;
+        }
+
+        .badge-warning {
+            background: rgba(255, 152, 0, 0.15);
+            color: #FF9800;
+        }
+
+        .badge-info {
+            background: rgba(51, 144, 236, 0.15);
+            color: var(--tg-theme-button-color, #3390ec);
+        }
+
+        .error-message {
+            background: rgba(244, 67, 54, 0.1);
+            color: #F44336;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .lichess-link {
+            display: inline-flex;
+            align-items: center;
+            color: var(--tg-theme-link-color, #3390ec);
+            text-decoration: none;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .lichess-link:hover {
+            text-decoration: underline;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .stat-card {
+            background: var(--tg-theme-bg-color, #ffffff);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--tg-theme-button-color, #3390ec);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .emoji {
+            margin-right: 4px;
+        }
+
+        @@media (prefers-color-scheme: dark) {
+            .progress-bar-container {
+                background: rgba(255, 255, 255, 0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        @if (!Model.IsAuthenticated)
+        {
+            <div class="error-message">
+                <strong>Доступ запрещён</strong><br>
+                @Model.ErrorMessage
+            </div>
+        }
+        else if (Model.CurrentStudent == null)
+        {
+            <div class="error-message">
+                <strong>Профиль не найден</strong><br>
+                @Model.ErrorMessage
+            </div>
+        }
+        else
+        {
+            <div class="header">
+                <div class="student-name">
+                    @Model.CurrentStudent.FullName
+                </div>
+                <div class="student-info">
+                    <div class="student-info-row">
+                        <span>🎓</span> @Model.CurrentStudent.Institute, @Model.CurrentStudent.Year курс
+                    </div>
+                    <div class="student-info-row">
+                        <span>👥</span> Группа @Model.CurrentStudent.Group
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.CurrentStudent.LichessId))
+                    {
+                        <a href="https://lichess.org/@@@Model.CurrentStudent.LichessId" target="_blank" class="lichess-link">
+                            <span class="emoji">♟️</span> Профиль на Lichess
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">📊 Прогресс по зачёту</div>
+                
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span class="progress-text"><span class="emoji">📅</span> Посещаемость занятий</span>
+                        <span class="progress-value">@Model.AttendedLessons / @Model.TotalLessons</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        @{
+                            var attendancePercent = Model.TotalLessons > 0 
+                                ? (int)((double)Model.AttendedLessons / Model.TotalLessons * 100) 
+                                : 0;
+                            var attendanceClass = attendancePercent >= 75 ? "completed" : "";
+                        }
+                        <div class="progress-bar @attendanceClass" style="width: @attendancePercent%"></div>
+                    </div>
+                    @if (attendancePercent >= 75)
+                    {
+                        <span class="badge badge-success">✓ Выполнено (@attendancePercent%)</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-warning">Требуется посещение (@attendancePercent%)</span>
+                    }
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span class="progress-text"><span class="emoji">🏆</span> Турниры</span>
+                        <span class="progress-value">@Model.CurrentStudent.TournamentScore баллов</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        @{
+                            var tournamentPercent = Model.RequiredTournaments > 0 
+                                ? Math.Min(100, (int)((double)Model.CurrentStudent.TournamentScore / Model.RequiredTournaments * 100))
+                                : 0;
+                            var tournamentClass = Model.CurrentStudent.TournamentScore >= Model.RequiredTournaments ? "completed" : "";
+                        }
+                        <div class="progress-bar @tournamentClass" style="width: @tournamentPercent%"></div>
+                    </div>
+                    @if (Model.CurrentStudent.TournamentScore >= Model.RequiredTournaments)
+                    {
+                        <span class="badge badge-success">✓ Требование выполнено</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-info">Требуется: @Model.RequiredTournaments баллов</span>
+                    }
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span class="progress-text"><span class="emoji">💡</span> Творческое задание</span>
+                        <span class="progress-value">
+                            @(Model.CurrentStudent.CreativeTaskCompleted ? "Выполнено" : "Не выполнено")
+                        </span>
+                    </div>
+                    @if (Model.CurrentStudent.CreativeTaskCompleted)
+                    {
+                        <span class="badge badge-success">✓ Завершено</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-warning">Требуется выполнение</span>
+                    }
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">📈 Статистика</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">@Model.AttendedLessons</div>
+                        <div class="stat-label">Посещено занятий</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">@Model.CurrentStudent.TournamentScore</div>
+                        <div class="stat-label">Турнирные баллы</div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        
+        document.body.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff');
+        document.body.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#000000');
+        document.body.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color || '#999999');
+        document.body.style.setProperty('--tg-theme-link-color', tg.themeParams.link_color || '#3390ec');
+        document.body.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#3390ec');
+        document.body.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#ffffff');
+        document.body.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color || '#f4f4f5');
+
+        tg.onEvent('themeChanged', function() {
+            document.body.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color);
+            document.body.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color);
+            document.body.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color);
+            document.body.style.setProperty('--tg-theme-link-color', tg.themeParams.link_color);
+            document.body.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color);
+            document.body.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color);
+            document.body.style.setProperty('--tg-theme-secondary-bg-color', tg.themeParams.secondary_bg_color);
+        });
+
+        if (window.location.search.indexOf('initData') === -1 && tg.initData) {
+            const url = new URL(window.location);
+            url.searchParams.set('initData', tg.initData);
+            window.location.href = url.toString();
+        }
+    </script>
+</body>
+</html>

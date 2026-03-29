@@ -42,7 +42,7 @@ namespace PolyChess.Components.Telegram
 			_telegramProvider.OnCallback += HandleTelegramCallback;
 			_telegramProvider.OnException += HandleTelegramException;
 			if(app != null)
-				_webApp = new(app, _mainConfig);
+				_webApp = new(app);
 		}
 
 		public async Task StartAsync()

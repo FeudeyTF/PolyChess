@@ -72,6 +72,14 @@ namespace PolyChess
 				builder.Services.AddHttpClient("tgwebhook").AddTypedClient(httpClient => telegramClient);
 				builder.Services.AddAuthorization();
 				builder.Services.AddRazorPages();
+				
+				builder.Services.AddSingleton<IMainConfig>(_configuration);
+				builder.Services.AddScoped(sp => 
+				{
+					var optionsBuilder = new DbContextOptionsBuilder<PolyContext>();
+					optionsBuilder.UseSqlite(_configuration.DatabaseConnectionString);
+					return new PolyContext(optionsBuilder.Options);
+				});
 
 				app = builder.Build();
 				app.UseHttpsRedirection();
