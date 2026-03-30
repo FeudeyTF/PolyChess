@@ -4,11 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PolyChess.Components.Data;
 using PolyChess.Components.Tournaments;
 using PolyChess.Configuration;
-using System.Collections.Specialized;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using System.Web;
+using PolyChess.Pages.Services;
 
 namespace PolyChess.Pages
 {
@@ -26,7 +22,11 @@ namespace PolyChess.Pages
 
 		public string TimeControl { get; set; } = string.Empty;
 
+		public int RoundsCount { get; set; }
+
 		public bool IsStartingSoon => StartDate > DateTime.Now && StartDate <= DateTime.Now.AddHours(2);
+
+		public bool IsStartingToday => StartDate.Date == DateTime.Today;
 	}
 
 	internal class UpcomingTournamentsModel : PageModel
@@ -41,15 +41,15 @@ namespace PolyChess.Pages
 
 		private readonly PolyContext _context;
 
-		private readonly IMainConfig _config;
-
 		private readonly TournamentsComponent _tournaments;
+
+		private readonly TelegramWebAppValidator _validator;
 
 		public UpcomingTournamentsModel(PolyContext context, IMainConfig config, TournamentsComponent tournaments)
 		{
 			_context = context;
-			_config = config;
 			_tournaments = tournaments;
+			_validator = new TelegramWebAppValidator(config);
 		}
 
 		public async Task<IActionResult> OnGetAsync()
@@ -57,31 +57,17 @@ namespace PolyChess.Pages
 			var initDataString = Request.Query["initData"].ToString();
 			InitData = initDataString;
 
-			if (string.IsNullOrEmpty(initDataString))
-			{
-				ErrorMessage = "Эта страница доступна только через Telegram";
-				IsAuthenticated = false;
-				return Page();
-			}
+			var validationResult = _validator.Validate(initDataString);
 
-			var initData = HttpUtility.ParseQueryString(initDataString);
-			if (!ValidateTelegramWebAppData(initData))
+			if (!validationResult.IsValid)
 			{
-				ErrorMessage = "Неверная подпись данных";
-				IsAuthenticated = false;
-				return Page();
-			}
-
-			var userId = ExtractUserId(initData);
-			if (userId == 0)
-			{
-				ErrorMessage = "Не удалось определить пользователя";
+				ErrorMessage = validationResult.ErrorMessage;
 				IsAuthenticated = false;
 				return Page();
 			}
 
 			IsAuthenticated = true;
-			var student = await _context.Students.FirstOrDefaultAsync(s => s.TelegramId == userId);
+			var student = await _context.Students.FirstOrDefaultAsync(s => s.TelegramId == validationResult.UserId);
 
 			if (student == null)
 			{
@@ -113,48 +99,14 @@ namespace PolyChess.Pages
 					StartDate = tournament.Started,
 					Type = "Swiss",
 					Duration = 0,
-					TimeControl = $"{tournament.Clock.Limit / 60}+{tournament.Clock.Increment}"
+					TimeControl = $"{tournament.Clock.Limit / 60}+{tournament.Clock.Increment}",
+					RoundsCount = tournament.RoundsNumber
 				});
 			}
 
 			Tournaments = [.. Tournaments.OrderBy(t => t.StartDate)];
 
 			return Page();
-		}
-
-		private bool ValidateTelegramWebAppData(NameValueCollection initData)
-		{
-			var hash = initData["hash"];
-			if (string.IsNullOrEmpty(hash))
-				return false;
-
-			initData.Remove("hash");
-
-			var dataCheckString = string.Join("\n",
-				initData.AllKeys.OrderBy(k => k).Select(k => $"{k}={initData[k]}")
-			);
-
-			var secretKey = HMACSHA256.HashData(Encoding.UTF8.GetBytes("WebAppData"),
-				Encoding.UTF8.GetBytes(_config.Telegram.TelegramToken));
-
-			var computedHash = HMACSHA256.HashData(secretKey,
-				Encoding.UTF8.GetBytes(dataCheckString));
-
-			var hashString = Convert.ToHexString(computedHash).ToLower();
-			return hashString == hash;
-		}
-
-		private long ExtractUserId(NameValueCollection initData)
-		{
-			var userJson = initData["user"];
-			if (string.IsNullOrEmpty(userJson))
-				return 0;
-
-			var userObj = JsonDocument.Parse(userJson);
-			if (userObj.RootElement.TryGetProperty("id", out var idProp))
-				return idProp.GetInt64();
-
-			return 0;
 		}
 	}
 }

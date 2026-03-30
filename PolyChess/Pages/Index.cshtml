@@ -1,181 +1,489 @@
 @page
-@using PolyChess.Pages
-@model IndexModel
+@model PolyChess.Pages.IndexModel
 @{
-    ViewData["Title"] = "Профиль студента";
-    Layout = "_Layout";
-}
-
-@if (!Model.IsAuthenticated)
-{
-    <div class="tg-error">
-        <strong>Доступ запрещён</strong><br>
-        @Model.ErrorMessage
-    </div>
-}
-else if (Model.CurrentStudent == null)
-{
-    <div class="tg-error">
-        <strong>Профиль не найден</strong><br>
-        @Model.ErrorMessage
-    </div>
-}
-else
-{
-    <div class="tg-header">
-        <div class="tg-header-title">@Model.CurrentStudent.FullName</div>
-        <div class="tg-header-subtitle">
-            <i class="fa-solid fa-graduation-cap"></i> @Model.CurrentStudent.Institute, @Model.CurrentStudent.Year курс<br>
-            <i class="fa-solid fa-users"></i> Группа @Model.CurrentStudent.Group
-        </div>
-        @if (!string.IsNullOrEmpty(Model.CurrentStudent.LichessId))
+    ViewData["Title"] = "Профиль";
+    ViewData["InitData"] = Model.InitData;
+    
+    string GetInitials(string fullName)
+    {
+        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2)
+            return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+        if (parts.Length == 1)
+            return parts[0][..Math.Min(2, parts[0].Length)].ToUpper();
+        return "??";
+    }
+    
+    int GetAttendancePercent()
+    {
+        if (Model.TotalLessons == 0) return 0;
+        return (int)Math.Round((double)Model.AttendedLessons / Model.TotalLessons * 100);
+    }
+    
+    int GetOverallProgress()
+    {
+        int completed = 0;
+        
+        if (Model.TotalLessons > 0 && Model.RequiredLessons > 0)
+            completed += (int)(25.0 * Model.AttendedLessons / Model.TotalLessons / Model.RequiredLessons);
+        
+        if (Model.RequiredTournaments > 0 && Model.CurrentStudent != null)
+            completed += Math.Min(25, (int)(25.0 * Model.CurrentStudent.TournamentScore / Model.RequiredTournaments));
+        
+        if (Model.RequiredPuzzles > 0 && Model.Puzzles.IsLoaded)
+            completed += Math.Min(25, (int)(25.0 * Model.Puzzles.FirstWins / Model.RequiredPuzzles));
+        
+        if (Model.CurrentStudent?.CreativeTaskCompleted == true)
+            completed += 25;
+        
+        return completed;
+    }
+    
+    string GetProgressClass(int percent)
+    {
+        if (percent < 0)
+			return "blue";
+        if (percent >= 75)
+			return "green";
+        if (percent >= 40)
+			return "yellow";
+        return "red";
+    }
+    
+    bool IsTestPassed()
+    {
+        if (Model.CurrentStudent == null)
+			return false;
+        
+        var attendanceOk = Model.TotalLessons == 0 || 
+            (Model.AttendedLessons * 100 / Model.TotalLessons) >= Model.RequiredLessons;
+        var tournamentsOk = Model.CurrentStudent.TournamentScore >= Model.RequiredTournaments;
+        var puzzlesOk = !Model.Puzzles.IsLoaded || Model.Puzzles.FirstWins >= Model.RequiredPuzzles;
+        var creativeOk = Model.CurrentStudent.CreativeTaskCompleted;
+        
+        return attendanceOk && tournamentsOk && puzzlesOk && creativeOk;
+    }
+    
+    string GetYearSuffix(int year)
+    {
+        return year switch
         {
-            <a href="https://lichess.org/@Model.CurrentStudent.LichessId" target="_blank" class="tg-header-link">
-                <i class="fa-solid fa-chess-knight"></i> Профиль на Lichess
-            </a>
-        }
-    </div>
+            1 => "курс",
+            2 or 3 or 4 => "курс",
+            _ => "курс"
+        };
+    }
+}
 
-    <div class="tg-section">
-        <div class="tg-section-header"><i class="fa-solid fa-chart-line"></i> Прогресс по зачёту</div>
-        <div class="tg-section-content">
-            <!-- Посещаемость -->
-            <div class="tg-progress">
-                <div class="tg-progress-header">
-                    <span class="tg-progress-title"><i class="fa-solid fa-calendar-check"></i> Посещаемость занятий</span>
-                    <span class="tg-progress-value">@Model.AttendedLessons / @Model.TotalLessons</span>
+<div class="container">
+    @if (!Model.IsAuthenticated)
+    {
+        <div class="section">
+            <div class="error-state">
+                <div class="error-state-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="error-state-title">Доступ ограничен</div>
+                <div class="error-state-text">@Model.ErrorMessage</div>
+            </div>
+        </div>
+    }
+    else if (Model.CurrentStudent == null)
+    {
+        <div class="section">
+            <div class="error-state">
+                <div class="error-state-icon">
+                    <i class="fas fa-user-slash"></i>
+                </div>
+                <div class="error-state-title">Студент не найден</div>
+                <div class="error-state-text">@Model.ErrorMessage</div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="profile-header">
+            <div class="profile-avatar">
+                @GetInitials(Model.CurrentStudent.FullName)
+            </div>
+            <div class="profile-name">@Model.CurrentStudent.FullName</div>
+            <div class="profile-subtitle">@Model.CurrentStudent.Group · @Model.CurrentStudent.Year @GetYearSuffix(Model.CurrentStudent.Year)</div>
+            @if (IsTestPassed())
+            {
+                <div class="profile-badge">
+                    <i class="fas fa-check-circle"></i>
+                    Зачёт получен
+                </div>
+            }
+            else
+            {
+                <div class="profile-badge">
+                    <i class="fas fa-clock"></i>
+                    Зачёт не получен
+                </div>
+            }
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="navigateTo('/')">
+                <i class="fas fa-user"></i> Профиль
+            </button>
+            <button class="nav-tab" onclick="navigateTo('/Tournaments')">
+                <i class="fas fa-trophy"></i> История
+            </button>
+            <button class="nav-tab" onclick="navigateTo('/UpcomingTournaments')">
+                <i class="fas fa-calendar"></i> Турниры
+            </button>
+        </div>
+
+        <div class="section-title" style="padding-top: 5px">Прогресс к зачёту</div>
+        <div class="section">
+            <div class="progress-container" style="padding-top: 8px;">
+                <div class="progress-header">
+                    <span class="progress-label">Общий прогресс</span>
+                    <span class="progress-value">@GetOverallProgress()%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill @GetProgressClass(GetOverallProgress())" style="width: @GetOverallProgress()%"></div>
                 </div>
                 @{
-                    var attendancePercent = Model.TotalLessons > 0
-                        ? (int)((double)Model.AttendedLessons / Model.TotalLessons * 100)
-                        : 0;
-                    var attendanceClass = attendancePercent >= 75 ? "completed" : "";
+                    var checkpoints = new[] { "Занятия", "Турниры", "Задачи", "Творческое" };
+                    var checkpointStates = new[] {
+                        GetAttendancePercent() >= Model.RequiredLessons,
+                        Model.CurrentStudent.TournamentScore >= Model.RequiredTournaments,
+                        Model.Puzzles.IsLoaded && Model.Puzzles.FirstWins >= Model.RequiredPuzzles,
+                        Model.CurrentStudent.CreativeTaskCompleted
+                    };
                 }
-                <div class="tg-progress-bar">
-                    <div class="tg-progress-fill @attendanceClass" style="width: @attendancePercent%"></div>
+                <div class="checkpoints">
+                    @for (int i = 0; i < checkpoints.Length; i++)
+                    {
+                        <div class="checkpoint">
+                            <div class="checkpoint-dot @(checkpointStates[i] ? "completed" : "")"></div>
+                            <span class="checkpoint-label">@checkpoints[i]</span>
+                        </div>
+                    }
                 </div>
-                @if (attendancePercent >= 75)
-                {
-                    <span class="tg-badge tg-badge-success"><i class="fa-solid fa-check"></i> Выполнено (@attendancePercent%)</span>
-                }
-                else
-                {
-                    <span class="tg-badge tg-badge-warning">Требуется посещение (@attendancePercent%)</span>
-                }
             </div>
+        </div>
 
-            <!-- Турниры -->
-            <div class="tg-progress">
-                <div class="tg-progress-header">
-                    <span class="tg-progress-title"><i class="fa-solid fa-trophy"></i> Турниры</span>
-                    <span class="tg-progress-value">@Model.CurrentStudent.TournamentScore баллов</span>
+        <div class="section">
+            <div class="row">
+                <div class="row-icon @(Model.CurrentStudent.CreativeTaskCompleted ? "green" : "orange")">
+                    <i class="fas fa-lightbulb"></i>
                 </div>
-                @{
-                    var tournamentPercent = Model.RequiredTournaments > 0
-                        ? Math.Min(100, (int)((double)Model.CurrentStudent.TournamentScore / Model.RequiredTournaments * 100))
-                        : 0;
-                    var tournamentClass = Model.CurrentStudent.TournamentScore >= Model.RequiredTournaments ? "completed" : "";
-                }
-                <div class="tg-progress-bar">
-                    <div class="tg-progress-fill @tournamentClass" style="width: @tournamentPercent%"></div>
-                </div>
-                @if (Model.CurrentStudent.TournamentScore >= Model.RequiredTournaments)
-                {
-                    <span class="tg-badge tg-badge-success"><i class="fa-solid fa-check"></i> Требование выполнено</span>
-                }
-                else
-                {
-                    <span class="tg-badge tg-badge-info">Требуется: @Model.RequiredTournaments баллов</span>
-                }
-            </div>
-
-            <!-- Пазлы -->
-            <div class="tg-progress">
-                <div class="tg-progress-header">
-                    <span class="tg-progress-title"><i class="fa-solid fa-puzzle-piece"></i> Решённые пазлы</span>
-                    <span class="tg-progress-value">@Model.SolvedPuzzles / @Model.RequiredPuzzles</span>
-                </div>
-                @{
-                    var puzzlePercent = Model.RequiredPuzzles > 0
-                        ? Math.Min(100, (int)((double)Model.SolvedPuzzles / Model.RequiredPuzzles * 100))
-                        : 0;
-                    var puzzleClass = Model.SolvedPuzzles >= Model.RequiredPuzzles ? "completed" : "";
-                }
-                <div class="tg-progress-bar">
-                    <div class="tg-progress-fill @puzzleClass" style="width: @puzzlePercent%"></div>
-                </div>
-                @if (Model.SolvedPuzzles >= Model.RequiredPuzzles)
-                {
-                    <span class="tg-badge tg-badge-success"><i class="fa-solid fa-check"></i> Требование выполнено</span>
-                }
-                else
-                {
-                    <span class="tg-badge tg-badge-info">Требуется: @Model.RequiredPuzzles пазлов</span>
-                }
-            </div>
-
-            <!-- Творческое задание -->
-            <div class="tg-progress">
-                <div class="tg-progress-header">
-                    <span class="tg-progress-title"><i class="fa-solid fa-lightbulb"></i> Творческое задание</span>
-                    <span class="tg-progress-value">@(Model.CurrentStudent.CreativeTaskCompleted ? "Выполнено" : "Не выполнено")</span>
+                <div class="row-content">
+                    <div class="row-title">Творческое задание</div>
                 </div>
                 @if (Model.CurrentStudent.CreativeTaskCompleted)
                 {
-                    <span class="tg-badge tg-badge-success"><i class="fa-solid fa-check"></i> Завершено</span>
+                    <span class="status-badge success">
+                        <i class="fas fa-check"></i> Выполнено
+                    </span>
                 }
                 else
                 {
-                    <span class="tg-badge tg-badge-warning">Требуется выполнение</span>
+                    <span class="status-badge warning">
+                        <i class="fas fa-hourglass-half"></i> Не выполнено
+                    </span>
                 }
             </div>
         </div>
-    </div>
 
-    <div class="tg-section">
-        <div class="tg-section-header"><i class="fa-solid fa-chart-bar"></i> Статистика</div>
-        <div class="tg-stats-grid">
-            <div class="tg-stat-card">
-                <div class="tg-stat-value">@Model.AttendedLessons</div>
-                <div class="tg-stat-label">Посещено занятий</div>
+        <div class="section">
+            <div class="progress-container" style="padding-top: 8px;">
+                <div class="progress-header">
+                    <span class="progress-label">Посещаемость занятий</span>
+                    <span class="progress-value">@Model.AttendedLessons / @Model.TotalLessons</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill @GetProgressClass(GetAttendancePercent())" style="width: @GetAttendancePercent()%"></div>
+                </div>
             </div>
-            <div class="tg-stat-card">
-                <div class="tg-stat-value">@Model.CurrentStudent.TournamentScore</div>
-                <div class="tg-stat-label">Турнирные баллы</div>
-            </div>
-            <div class="tg-stat-card">
-                <div class="tg-stat-value">@Model.SolvedPuzzles</div>
-                <div class="tg-stat-label">Решено пазлов</div>
-            </div>
-            <div class="tg-stat-card">
-                <div class="tg-stat-value">@(Model.CurrentStudent.CreativeTaskCompleted ? Html.Raw("<i class=\"fa-solid fa-check\"></i>") : Html.Raw("—"))</div>
-                <div class="tg-stat-label">Творческое задание</div>
+            <div class="row row-clickable" onclick="showModal('modal-attendance')">
+                <div class="row-icon blue">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="row-content">
+                    <div class="row-title">Посещено занятий</div>
+                    <div class="row-subtitle">Минимум @Model.RequiredLessons% для зачёта</div>
+                </div>
+                <span class="row-value @(GetAttendancePercent() >= Model.RequiredLessons ? "text-success" : "")">@GetAttendancePercent()%</span>
+                <i class="fas fa-chevron-right row-chevron"></i>
             </div>
         </div>
-    </div>
 
-    <div class="tg-section">
-        <div class="tg-section-header"><i class="fa-solid fa-trophy"></i> Турниры</div>
-        <div class="tg-section-content">
+        <div class="section">
             @{
-                var initDataParam = !string.IsNullOrEmpty(Model.InitData) ? $"?initData={Uri.EscapeDataString(Model.InitData)}" : "";
+                var tournamentPercent = Model.RequiredTournaments > 0 
+                    ? Math.Min(100, (int)(100.0 * Model.CurrentStudent.TournamentScore / Model.RequiredTournaments))
+                    : 0;
             }
-            <a href="/Tournaments@(initDataParam)" class="tg-cell tg-cell-clickable">
-                <div class="tg-cell-icon"><i class="fa-solid fa-list"></i></div>
-                <div class="tg-cell-content">
-                    <div class="tg-cell-title">Прошедшие турниры</div>
-                    <div class="tg-cell-subtitle">История участия в турнирах</div>
+            <div class="progress-container" style="padding-top: 8px;">
+                <div class="progress-header">
+                    <span class="progress-label">Турнирные баллы</span>
+                    <span class="progress-value">@Model.CurrentStudent.TournamentScore / @Model.RequiredTournaments</span>
                 </div>
-                <div class="tg-cell-chevron"></div>
-            </a>
-            <a href="/UpcomingTournaments@(initDataParam)" class="tg-cell tg-cell-clickable">
-                <div class="tg-cell-icon"><i class="fa-solid fa-calendar"></i></div>
-                <div class="tg-cell-content">
-                    <div class="tg-cell-title">Предстоящие турниры</div>
-                    <div class="tg-cell-subtitle">Расписание будущих турниров</div>
+                <div class="progress-bar">
+                    <div class="progress-fill @GetProgressClass(tournamentPercent)" style="width: @tournamentPercent%"></div>
                 </div>
-                <div class="tg-cell-chevron"></div>
-            </a>
+            </div>
+            <div class="row">
+                <div class="row-icon poly">
+                    <i class="fas fa-chess-knight"></i>
+                </div>
+                <div class="row-content">
+                    <div class="row-title">Участие в турнирах</div>
+                    <div class="row-subtitle">Всего: @Model.CurrentStudent.ParticipatedTournamentsCount турниров</div>
+                </div>
+                <span class="row-value @(Model.CurrentStudent.TournamentScore >= Model.RequiredTournaments ? "text-success" : "")">
+                    @Model.CurrentStudent.TournamentScore баллов
+                </span>
+            </div>
+            <div class="row row-clickable" onclick="navigateTo('/Tournaments')">
+                <div class="row-icon orange">
+                    <i class="fas fa-history"></i>
+                </div>
+                <div class="row-content">
+                    <div class="row-title">История турниров</div>
+                    <div class="row-subtitle">Просмотр результатов и деталей</div>
+                </div>
+                <i class="fas fa-chevron-right row-chevron"></i>
+            </div>
+            <div class="row row-clickable" onclick="navigateTo('/UpcomingTournaments')">
+                <div class="row-icon green">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="row-content">
+                    <div class="row-title">Предстоящие турниры</div>
+                    <div class="row-subtitle">Расписание и регистрация</div>
+                </div>
+                <i class="fas fa-chevron-right row-chevron"></i>
+            </div>
         </div>
-    </div>
-}
+
+        <div class="section-title">Шахматные задачи</div>
+        <div class="section">
+            @if (Model.Puzzles.IsLoaded)
+            {
+                var puzzlePercent = Model.RequiredPuzzles > 0 
+                    ? Math.Min(100, (int)(100.0 * Model.Puzzles.FirstWins / Model.RequiredPuzzles))
+                    : 0;
+                <div class="progress-container" style="padding-top: 8px;">
+                    <div class="progress-header">
+                        <span class="progress-label">Решено задач</span>
+                        <span class="progress-value">@Model.Puzzles.FirstWins / @Model.RequiredPuzzles</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill @GetProgressClass(puzzlePercent)" style="width: @puzzlePercent%"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="row-icon green">
+                        <i class="fas fa-puzzle-piece"></i>
+                    </div>
+                    <div class="row-content">
+                        <div class="row-title">Решено с первой попытки</div>
+                    </div>
+                    <span class="row-value">@Model.Puzzles.FirstWins</span>
+                </div>
+                <div class="row">
+                    <div class="row-icon blue">
+                        <i class="fas fa-redo"></i>
+                    </div>
+                    <div class="row-content">
+                        <div class="row-title">Решено при повторе</div>
+                    </div>
+                    <span class="row-value">@Model.Puzzles.ReplayWins</span>
+                </div>
+                @if (Model.Puzzles.PuzzleRating > 0)
+                {
+                    <div class="row">
+                        <div class="row-icon orange">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="row-content">
+                            <div class="row-title">Средний рейтинг задач</div>
+                        </div>
+                        <span class="row-value">@Model.Puzzles.PuzzleRating</span>
+                    </div>
+                }
+                @if (Model.Puzzles.Performance > 0)
+                {
+                    <div class="row">
+                        <div class="row-icon poly">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="row-content">
+                            <div class="row-title">Перформанс</div>
+                        </div>
+                        <span class="row-value">@Model.Puzzles.Performance</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.CurrentStudent.LichessId))
+                {
+                    <div class="row row-clickable" onclick="openLichessLink('https://lichess.org/@@/@Model.CurrentStudent.LichessId/perf/puzzle')">
+                        <div class="row-icon" style="background: rgba(212, 168, 75, 0.15); color: var(--poly-gold);">
+                            <i class="fas fa-external-link-alt"></i>
+                        </div>
+                        <div class="row-content">
+                            <div class="row-title">Статистика на Lichess</div>
+                            <div class="row-subtitle">Подробная история решений</div>
+                        </div>
+                        <i class="fas fa-chevron-right row-chevron"></i>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="row">
+                    <div class="row-icon" style="background: rgba(231, 76, 60, 0.12); color: var(--error);">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="row-content">
+                        <div class="row-title">Не удалось загрузить данные</div>
+                        <div class="row-subtitle">@Model.Puzzles.ErrorMessage</div>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.CurrentStudent.LichessId))
+                {
+                    <div class="row row-clickable" onclick="openLichessLink('https://lichess.org/training')">
+                        <div class="row-icon poly">
+                            <i class="fas fa-puzzle-piece"></i>
+                        </div>
+                        <div class="row-content">
+                            <div class="row-title">Решать задачи на Lichess</div>
+                            <div class="row-subtitle">Перейти к тренировке</div>
+                        </div>
+                        <i class="fas fa-external-link-alt row-chevron"></i>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="section-title">Информация</div>
+        <div class="section">
+            <div class="row">
+                <div class="row-icon poly">
+                    <i class="fas fa-university"></i>
+                </div>
+                <div class="row-content">
+                    <div class="row-title">Институт</div>
+                </div>
+                <span class="row-value">@Model.CurrentStudent.Institute</span>
+            </div>
+            <div class="row">
+                <div class="row-icon blue">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="row-content">
+                    <div class="row-title">Группа</div>
+                </div>
+                <span class="row-value">@Model.CurrentStudent.Group</span>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.CurrentStudent.RecordBookId))
+            {
+                <div class="row">
+                    <div class="row-icon green">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <div class="row-content">
+                        <div class="row-title">Номер зачётки</div>
+                    </div>
+                    <span class="row-value">@Model.CurrentStudent.RecordBookId</span>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.CurrentStudent.LichessId))
+            {
+                <div class="row row-clickable" onclick="openLichessLink('https://lichess.org/@@/@Model.CurrentStudent.LichessId')">
+                    <div class="row-icon orange">
+                        <i class="fas fa-chess-knight"></i>
+                    </div>
+                    <div class="row-content">
+                        <div class="row-title">Lichess</div>
+                        <div class="row-subtitle">@@@Model.CurrentStudent.LichessId</div>
+                    </div>
+                    <i class="fas fa-external-link-alt row-chevron"></i>
+                </div>
+            }
+           else
+            {
+                <div class="row">
+                    <div class="row-icon" style="background: rgba(231, 76, 60, 0.12); color: var(--error);">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="row-content">
+                        <div class="row-title">Lichess не привязан</div>
+                        <div class="row-subtitle">Свяжитесь с преподавателем</div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="px-16 py-8">
+            <div class="university-badge">
+                <i class="fas fa-graduation-cap"></i>
+                Шахматный клуб СПбПУ
+            </div>
+        </div>
+
+        <div id="modal-attendance" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="modal-title">История занятий</span>
+                    <button class="modal-close" onclick="hideModal('modal-attendance')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="row-icon blue">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div class="row-content">
+                            <div class="row-title">Общая посещаемость</div>
+                            <div class="row-subtitle">@Model.AttendedLessons из @Model.TotalLessons занятий</div>
+                        </div>
+                        <span class="row-value font-semibold @(GetAttendancePercent() >= Model.RequiredLessons ? "text-success" : "")">@GetAttendancePercent()%</span>
+                    </div>
+
+                    <div class="divider mt-16 mb-16"></div>
+
+                    @if (Model.LessonsList.Count == 0)
+                    {
+                        <div class="text-center text-hint py-8">
+                            <i class="fas fa-calendar-times"></i>
+                            Занятия ещё не проводились
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="section-title" style="padding-left: 0;">Все занятия</div>
+                        @foreach (var lesson in Model.LessonsList)
+                        {
+                            <div class="row">
+                                <div class="row-icon @(lesson.IsAttended ? "green" : "")" style="@(!lesson.IsAttended ? "background: rgba(231, 76, 60, 0.12); color: var(--error);" : "")">
+                                    <i class="fas @(lesson.IsAttended ? "fa-check" : "fa-times")"></i>
+                                </div>
+                                <div class="row-content">
+                                    <div class="row-title">
+                                        @lesson.Date.ToString("d MMMM", new System.Globalization.CultureInfo("ru-RU"))
+                                        @if (lesson.IsRequired)
+                                        {
+                                            <span style="font-size: 10px; font-weight: 500; padding: 2px 6px; background: rgba(212, 168, 75, 0.15); color: var(--poly-gold); border-radius: 4px; margin-left: 8px;">Обязательное</span>
+                                        }
+                                    </div>
+                                    <div class="row-subtitle">@lesson.Date.ToString("dddd, HH:mm", new System.Globalization.CultureInfo("ru-RU"))</div>
+                                </div>
+                                <span class="row-value @(lesson.IsAttended ? "text-success" : "")" style="@(!lesson.IsAttended ? "color: var(--error);" : "")">
+                                    @(lesson.IsAttended ? "Был" : "Пропуск")
+                                </span>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+

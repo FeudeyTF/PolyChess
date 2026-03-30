@@ -1,129 +1,331 @@
 @page
-@using PolyChess.Pages
-@model TournamentsModel
+@model PolyChess.Pages.TournamentsModel
 @{
-    ViewData["Title"] = "Прошедшие турниры";
-    Layout = "_Layout";
-}
-
-@if (!Model.IsAuthenticated)
-{
-    <div class="tg-error">
-        <strong>Доступ запрещён</strong><br>
-        @Model.ErrorMessage
-    </div>
-}
-else if (string.IsNullOrEmpty(Model.StudentLichessId))
-{
-    <div class="tg-error">
-        <strong>Lichess не привязан</strong><br>
-        Привяжите аккаунт Lichess для просмотра турниров
-    </div>
-}
-else
-{
-    <div class="tg-page-title"><i class="fa-solid fa-trophy"></i> Прошедшие турниры</div>
-
-    @if (Model.Tournaments.Count == 0)
+    ViewData["Title"] = "История турниров";
+    ViewData["InitData"] = Model.InitData;
+    
+    string GetPlaceClass(int? rank)
     {
-        <div class="tg-empty">
-            <div class="tg-empty-icon"><i class="fa-solid fa-inbox"></i></div>
-            <div class="tg-empty-text">Турниры не найдены</div>
+        return rank switch
+        {
+            1 => "gold",
+            2 => "silver",
+            3 => "bronze",
+            _ => "default"
+        };
+    }
+    
+    string FormatDate(DateTime date)
+    {
+        return date.ToString("d MMMM yyyy", new System.Globalization.CultureInfo("ru-RU"));
+    }
+    
+    string GetPercentile(int? rank, int total)
+    {
+        if (!rank.HasValue || total == 0) return "";
+        var percentile = (int)Math.Round(100.0 * (total - rank.Value + 1) / total);
+        return $"Топ {100 - percentile}%";
+    }
+}
+
+<div class="container">
+    @if (!Model.IsAuthenticated)
+    {
+        <div class="section">
+            <div class="error-state">
+                <div class="error-state-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="error-state-title">Доступ ограничен</div>
+                <div class="error-state-text">@Model.ErrorMessage</div>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="section">
+            <div class="error-state">
+                <div class="error-state-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="error-state-title">Ошибка</div>
+                <div class="error-state-text">@Model.ErrorMessage</div>
+            </div>
         </div>
     }
     else
     {
-        var participatedTournaments = Model.Tournaments.Where(t => t.Participated).ToList();
-        var otherTournaments = Model.Tournaments.Where(t => !t.Participated).ToList();
+        <div class="nav-tabs">
+            <button class="nav-tab" onclick="navigateTo('/')">
+                <i class="fas fa-user"></i> Профиль
+            </button>
+            <button class="nav-tab active" onclick="navigateTo('/Tournaments')">
+                <i class="fas fa-trophy"></i> История
+            </button>
+            <button class="nav-tab" onclick="navigateTo('/UpcomingTournaments')">
+                <i class="fas fa-calendar"></i> Турниры
+            </button>
+        </div>
 
-        if (participatedTournaments.Any())
+        @if (Model.TotalClubPoints > 0)
         {
-            <div class="tg-section">
-                <div class="tg-section-header"><i class="fa-solid fa-check-circle"></i> Ваши турниры (@participatedTournaments.Count)</div>
-                <div class="tg-section-content">
-                    @foreach (var tournament in participatedTournaments)
-                    {
-                        var tournamentUrl = tournament.Type == "Arena" 
-                            ? $"https://lichess.org/tournament/{tournament.Id}" 
-                            : $"https://lichess.org/swiss/{tournament.Id}";
-                        
-                        <a href="@tournamentUrl" target="_blank" class="tournament-card tg-cell-clickable">
-                            <div class="tournament-name">
-                                @tournament.Name
-                                <span class="tournament-type @tournament.Type.ToLower()">@tournament.Type</span>
-                            </div>
-                            <div class="tournament-date">
-                                <i class="fa-regular fa-calendar"></i> @tournament.Date.ToString("dd MMMM yyyy, HH:mm")
-                            </div>
-                            <div class="tournament-stats">
-                                <div class="tournament-stat">
-                                    <i class="fa-solid fa-users"></i> @tournament.PlayersCount
+            <div class="section">
+                <div class="row">
+                    <div class="row-icon poly">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="row-content">
+                        <div class="row-title">Всего баллов за турниры</div>
+                        <div class="row-subtitle">@Model.Tournaments.Count(t => t.Participated) турниров с участием</div>
+                    </div>
+                    <span class="row-value font-semibold" style="color: var(--poly-gold);">@Model.TotalClubPoints</span>
+                </div>
+            </div>
+        }
+
+        @if (Model.Tournaments.Count == 0)
+        {
+            <div class="section">
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="empty-state-title">Нет прошедших турниров</div>
+                    <div class="empty-state-text">Турниры за текущий семестр появятся здесь после их завершения</div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="section-title">Прошедшие турниры (@Model.Tournaments.Count)</div>
+            <div class="section" style="padding: 0;">
+                @foreach (var tournament in Model.Tournaments)
+                {
+                    <div class="tournament-card" onclick="showModal('modal-@tournament.Id')">
+                        <div class="tournament-header">
+                            <div class="tournament-name">@tournament.Name</div>
+                            <span class="tournament-type">@tournament.Type</span>
+                        </div>
+                        <div class="tournament-meta">
+                            <span class="tournament-meta-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                @FormatDate(tournament.Date)
+                            </span>
+                            <span class="tournament-meta-item">
+                                <i class="fas fa-users"></i>
+                                @tournament.PlayersCount участников
+                            </span>
+                        </div>
+                        @if (tournament.Participated)
+                        {
+                            <div class="tournament-result">
+                                <div class="result-place @GetPlaceClass(tournament.StudentRank)">
+                                    @(tournament.StudentRank?.ToString() ?? "—")
                                 </div>
-                                @if (tournament.StudentRank.HasValue)
+                                <div class="result-stats">
+                                    @if (tournament.StudentScore.HasValue)
+                                    {
+                                        <div class="result-stat">
+                                            <span class="text-hint">Очки:</span>
+                                            <span class="result-stat-value">@tournament.StudentScore</span>
+                                        </div>
+                                    }
+                                    @if (tournament.ClubPoints > 0)
+                                    {
+                                        <div class="result-stat">
+                                            <span class="text-hint">Баллы:</span>
+                                            <span class="result-stat-value" style="color: var(--poly-gold);">+@tournament.ClubPoints</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="tournament-result">
+                                <span class="status-badge pending">
+                                    <i class="fas fa-minus"></i> Не участвовал
+                                </span>
+                            </div>
+                        }
+                    </div>
+
+                    <div id="modal-@tournament.Id" class="modal-overlay">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <span class="modal-title">Детали турнира</span>
+                                <button class="modal-close" onclick="hideModal('modal-@tournament.Id')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="row-icon poly">
+                                        <i class="fas fa-chess"></i>
+                                    </div>
+                                    <div class="row-content">
+                                        <div class="row-title">@tournament.Name</div>
+                                        <div class="row-subtitle">@tournament.Type турнир</div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="row-icon blue">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                    <div class="row-content">
+                                        <div class="row-title">Дата проведения</div>
+                                    </div>
+                                    <span class="row-value">@FormatDate(tournament.Date)</span>
+                                </div>
+                                <div class="row">
+                                    <div class="row-icon green">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="row-content">
+                                        <div class="row-title">Участников</div>
+                                    </div>
+                                    <span class="row-value">@tournament.PlayersCount</span>
+                                </div>
+
+                                <div class="divider mt-16 mb-16"></div>
+
+                                @if (tournament.Participated)
                                 {
-                                    <div class="tournament-stat">
-                                        <i class="fa-solid fa-medal"></i> @tournament.StudentRank место
+                                    <div class="section-title" style="padding-left: 0;">Ваш результат</div>
+                                    
+                                    <div class="row">
+                                        <div class="row-icon @(GetPlaceClass(tournament.StudentRank) == "default" ? "poly" : GetPlaceClass(tournament.StudentRank))">
+                                            <i class="fas fa-medal"></i>
+                                        </div>
+                                        <div class="row-content">
+                                            <div class="row-title">Занятое место</div>
+                                            @if (tournament.StudentRank.HasValue)
+                                            {
+                                                <div class="row-subtitle">@GetPercentile(tournament.StudentRank, tournament.PlayersCount)</div>
+                                            }
+                                        </div>
+                                        <span class="row-value font-semibold">
+                                            @if (tournament.StudentRank.HasValue)
+                                            {
+                                                @tournament.StudentRank<text> / @tournament.PlayersCount</text>
+                                            }
+                                            else
+                                            {
+                                                <text>—</text>
+                                            }
+                                        </span>
+                                    </div>
+                                    
+                                    @if (tournament.StudentScore.HasValue)
+                                    {
+                                        <div class="row">
+                                            <div class="row-icon orange">
+                                                <i class="fas fa-star"></i>
+                                            </div>
+                                            <div class="row-content">
+                                                <div class="row-title">Набрано очков</div>
+                                            </div>
+                                            <span class="row-value font-semibold">@tournament.StudentScore</span>
+                                        </div>
+                                    }
+                                    
+                                    @if (tournament.StudentPerformance.HasValue && tournament.StudentPerformance > 0)
+                                    {
+                                        <div class="row">
+                                            <div class="row-icon blue">
+                                                <i class="fas fa-chart-line"></i>
+                                            </div>
+                                            <div class="row-content">
+                                                <div class="row-title">Перформанс</div>
+                                                <div class="row-subtitle">Показатель силы игры</div>
+                                            </div>
+                                            <span class="row-value font-semibold">@tournament.StudentPerformance</span>
+                                        </div>
+                                    }
+                                    
+                                    @if (tournament.StudentRating.HasValue && tournament.StudentRating > 0)
+                                    {
+                                        <div class="row">
+                                            <div class="row-icon green">
+                                                <i class="fas fa-chess-king"></i>
+                                            </div>
+                                            <div class="row-content">
+                                                <div class="row-title">Рейтинг на момент турнира</div>
+                                            </div>
+                                            <span class="row-value">@tournament.StudentRating</span>
+                                        </div>
+                                    }
+                                    
+                                    @if (tournament.GamesPlayed.HasValue && tournament.GamesPlayed > 0)
+                                    {
+                                        <div class="row">
+                                            <div class="row-icon poly">
+                                                <i class="fas fa-chess-board"></i>
+                                            </div>
+                                            <div class="row-content">
+                                                <div class="row-title">Сыграно партий</div>
+                                            </div>
+                                            <span class="row-value">@tournament.GamesPlayed</span>
+                                        </div>
+                                    }
+                                    
+                                    @if (tournament.ClubPoints > 0)
+                                    {
+                                        <div class="row">
+                                            <div class="row-icon" style="background: rgba(212, 168, 75, 0.15); color: var(--poly-gold);">
+                                                <i class="fas fa-award"></i>
+                                            </div>
+                                            <div class="row-content">
+                                                <div class="row-title">Баллы</div>
+                                                <div class="row-subtitle">Начислено</div>
+                                            </div>
+                                            <span class="row-value font-semibold" style="color: var(--poly-gold);">+@tournament.ClubPoints</span>
+                                        </div>
+                                    }
+                                    else if (tournament.ClubPoints == 0)
+                                    {
+                                        <div class="row">
+                                            <div class="row-icon" style="background: rgba(153, 153, 153, 0.15); color: var(--tg-theme-hint-color);">
+                                                <i class="fas fa-info-circle"></i>
+                                            </div>
+                                            <div class="row-content">
+                                                <div class="row-title">Баллы не начислены</div>
+                                                <div class="row-subtitle">Не выполнены условия начисления</div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="text-center text-hint py-8">
+                                        <i class="fas fa-info-circle"></i>
+                                        Вы не участвовали в этом турнире
                                     </div>
                                 }
-                                <div class="tournament-stat">
-                                    Баллы:
+
+                                <div class="mt-16">
                                     @{
-                                        var scoreClass = tournament.StudentScore switch
-                                        {
-                                            > 0 => "",
-                                            0 => "zero",
-                                            < 0 => "negative",
-                                            _ => "zero"
-                                        };
+                                        var lichessUrl = tournament.Type == "Swiss" 
+                                            ? $"https://lichess.org/swiss/{tournament.Id}" 
+                                            : $"https://lichess.org/tournament/{tournament.Id}";
                                     }
-                                    <span class="tournament-score @scoreClass">
-                                        @(tournament.StudentScore?.ToString() ?? "0")
-                                    </span>
+                                    <button class="btn btn-primary btn-block" onclick="openLichessLink('@lichessUrl')">
+                                        <i class="fas fa-external-link-alt"></i>
+                                        Открыть на Lichess
+                                    </button>
                                 </div>
                             </div>
-                            <div class="tournament-link">
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Открыть на Lichess
-                            </div>
-                        </a>
-                    }
-                </div>
+                        </div>
+                    </div>
+                }
             </div>
         }
 
-        if (otherTournaments.Any())
-        {
-            <div class="tg-section">
-                <div class="tg-section-header"><i class="fa-solid fa-list"></i> Другие турниры (@otherTournaments.Count)</div>
-                <div class="tg-section-content">
-                    @foreach (var tournament in otherTournaments)
-                    {
-                        var tournamentUrl = tournament.Type == "Arena" 
-                            ? $"https://lichess.org/tournament/{tournament.Id}" 
-                            : $"https://lichess.org/swiss/{tournament.Id}";
-                        
-                        <a href="@tournamentUrl" target="_blank" class="tournament-card tg-cell-clickable">
-                            <div class="tournament-name">
-                                @tournament.Name
-                                <span class="tournament-type @tournament.Type.ToLower()">@tournament.Type</span>
-                            </div>
-                            <div class="tournament-date">
-                                <i class="fa-regular fa-calendar"></i> @tournament.Date.ToString("dd MMMM yyyy, HH:mm")
-                            </div>
-                            <div class="tournament-stats">
-                                <div class="tournament-stat">
-                                    <i class="fa-solid fa-users"></i> @tournament.PlayersCount
-                                </div>
-                                <div class="tournament-stat">
-                                    <i class="fa-solid fa-xmark"></i> Не участвовали
-                                </div>
-                            </div>
-                            <div class="tournament-link">
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Открыть на Lichess
-                            </div>
-                        </a>
-                    }
-                </div>
+        <div class="px-16 py-8">
+            <div class="university-badge">
+                <i class="fas fa-graduation-cap"></i>
+                Шахматный клуб СПбПУ
             </div>
-        }
+        </div>
     }
-}
+</div>

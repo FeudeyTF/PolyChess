@@ -4,12 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using PolyChess.Components.Data;
 using PolyChess.Components.Tournaments;
 using PolyChess.Configuration;
+using PolyChess.LichessAPI.Types.Arena;
 using PolyChess.LichessAPI.Types.Swiss;
-using System.Collections.Specialized;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using System.Web;
+using PolyChess.Pages.Services;
 
 namespace PolyChess.Pages
 {
@@ -29,7 +26,15 @@ namespace PolyChess.Pages
 
 		public int? StudentRank { get; set; }
 
+		public int? StudentPerformance { get; set; }
+
+		public int? StudentRating { get; set; }
+
+		public int? GamesPlayed { get; set; }
+
 		public bool Participated { get; set; }
+
+		public int ClubPoints { get; set; }
 	}
 
 	internal class TournamentsModel : PageModel
@@ -44,17 +49,22 @@ namespace PolyChess.Pages
 
 		public string? StudentLichessId { get; private set; }
 
+		public int TotalClubPoints { get; private set; }
+
 		private readonly PolyContext _context;
 
-		private readonly IMainConfig _config;
-
 		private readonly TournamentsComponent _tournaments;
+
+		private readonly TelegramWebAppValidator _validator;
+
+		private readonly IMainConfig _config;
 
 		public TournamentsModel(PolyContext context, IMainConfig config, TournamentsComponent tournaments)
 		{
 			_context = context;
 			_config = config;
 			_tournaments = tournaments;
+			_validator = new TelegramWebAppValidator(config);
 		}
 
 		public async Task<IActionResult> OnGetAsync()
@@ -62,31 +72,17 @@ namespace PolyChess.Pages
 			var initDataString = Request.Query["initData"].ToString();
 			InitData = initDataString;
 
-			if (string.IsNullOrEmpty(initDataString))
-			{
-				ErrorMessage = "Эта страница доступна только через Telegram";
-				IsAuthenticated = false;
-				return Page();
-			}
+			var validationResult = _validator.Validate(initDataString);
 
-			var initData = HttpUtility.ParseQueryString(initDataString);
-			if (!ValidateTelegramWebAppData(initData))
+			if (!validationResult.IsValid)
 			{
-				ErrorMessage = "Неверная подпись данных";
-				IsAuthenticated = false;
-				return Page();
-			}
-
-			var userId = ExtractUserId(initData);
-			if (userId == 0)
-			{
-				ErrorMessage = "Не удалось определить пользователя";
+				ErrorMessage = validationResult.ErrorMessage;
 				IsAuthenticated = false;
 				return Page();
 			}
 
 			IsAuthenticated = true;
-			var student = await _context.Students.FirstOrDefaultAsync(s => s.TelegramId == userId);
+			var student = await _context.Students.FirstOrDefaultAsync(s => s.TelegramId == validationResult.UserId);
 
 			if (student == null)
 			{
@@ -116,10 +112,40 @@ namespace PolyChess.Pages
 					if (playerEntry != null)
 					{
 						displayInfo.Participated = true;
-						displayInfo.StudentScore = playerEntry.Score;
-						var standing = tournament.Standing.Players
-							.FirstOrDefault(p => p.Name.Equals(StudentLichessId, StringComparison.OrdinalIgnoreCase));
-						displayInfo.StudentRank = standing?.Rank;
+						if (_config.TournamentRules.TryGetValue(tournamentInfo.Tournament.ID, out var rule))
+						{
+							if (playerEntry.Score == 1)
+								displayInfo.ClubPoints += rule.PointsForWinning;
+							else if (playerEntry.Score == 0)
+								displayInfo.ClubPoints += rule.PointsForBeing;
+						}
+						else
+						{
+							if (playerEntry.Score == 1)
+								displayInfo.ClubPoints += TournamentScoreRule.DefaultWinningPoints;
+							else if (playerEntry.Score == 0)
+								displayInfo.ClubPoints += TournamentScoreRule.DefaultBeingPoints;
+						}
+
+						if (playerEntry.TournamentEntry is SheetEntry arenaEntry)
+						{
+							displayInfo.StudentScore = arenaEntry.Score;
+							displayInfo.StudentPerformance = arenaEntry.Performance;
+							displayInfo.StudentRating = arenaEntry.Rating;
+							displayInfo.StudentRank = arenaEntry.Rank;
+
+							if (arenaEntry.Sheet != null)
+							{
+								displayInfo.GamesPlayed = arenaEntry.Sheet.Scores.Length;
+							}
+						}
+
+						if (!displayInfo.StudentRank.HasValue)
+						{
+							var standing = tournament.Standing.Players
+								.FirstOrDefault(p => p.Name.Equals(StudentLichessId, StringComparison.OrdinalIgnoreCase));
+							displayInfo.StudentRank = standing?.Rank;
+						}
 					}
 				}
 
@@ -146,7 +172,29 @@ namespace PolyChess.Pages
 					if (playerEntry != null)
 					{
 						displayInfo.Participated = true;
-						displayInfo.StudentScore = playerEntry.Score;
+						if (_config.TournamentRules.TryGetValue(tournamentInfo.Tournament.ID, out var rule))
+						{
+							if (playerEntry.Score == 1)
+								displayInfo.ClubPoints += rule.PointsForWinning;
+							else if (playerEntry.Score == 0)
+								displayInfo.ClubPoints += rule.PointsForBeing;
+						}
+						else
+						{
+							if (playerEntry.Score == 1)
+								displayInfo.ClubPoints += TournamentScoreRule.DefaultWinningPoints;
+							else if (playerEntry.Score == 0)
+								displayInfo.ClubPoints += TournamentScoreRule.DefaultBeingPoints;
+						}
+
+						if (playerEntry.TournamentEntry is SwissSheetEntry swissEntry)
+						{
+							displayInfo.StudentScore = (int)swissEntry.Points;
+							displayInfo.StudentPerformance = swissEntry.Performance;
+							displayInfo.StudentRating = swissEntry.Rating;
+							displayInfo.StudentRank = swissEntry.Rank;
+							displayInfo.GamesPlayed = tournament.RoundsNumber;
+						}
 					}
 				}
 
@@ -154,43 +202,9 @@ namespace PolyChess.Pages
 			}
 
 			Tournaments = [.. Tournaments.OrderByDescending(t => t.Date)];
+			TotalClubPoints = Tournaments.Where(t => t.Participated).Sum(t => t.ClubPoints);
 
 			return Page();
-		}
-
-		private bool ValidateTelegramWebAppData(NameValueCollection initData)
-		{
-			var hash = initData["hash"];
-			if (string.IsNullOrEmpty(hash))
-				return false;
-
-			initData.Remove("hash");
-
-			var dataCheckString = string.Join("\n",
-				initData.AllKeys.OrderBy(k => k).Select(k => $"{k}={initData[k]}")
-			);
-
-			var secretKey = HMACSHA256.HashData(Encoding.UTF8.GetBytes("WebAppData"),
-				Encoding.UTF8.GetBytes(_config.Telegram.TelegramToken));
-
-			var computedHash = HMACSHA256.HashData(secretKey,
-				Encoding.UTF8.GetBytes(dataCheckString));
-
-			var hashString = Convert.ToHexString(computedHash).ToLower();
-			return hashString == hash;
-		}
-
-		private long ExtractUserId(NameValueCollection initData)
-		{
-			var userJson = initData["user"];
-			if (string.IsNullOrEmpty(userJson))
-				return 0;
-
-			var userObj = JsonDocument.Parse(userJson);
-			if (userObj.RootElement.TryGetProperty("id", out var idProp))
-				return idProp.GetInt64();
-
-			return 0;
 		}
 	}
 }

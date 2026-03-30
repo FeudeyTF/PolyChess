@@ -2,12 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using PolyChess.Components.Data;
+using PolyChess.Components.Tournaments;
 using PolyChess.Configuration;
-using System.Collections.Specialized;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using System.Web;
+using PolyChess.LichessAPI.Clients.Authorized;
+using PolyChess.Pages.Services;
 
 namespace PolyChess.Pages
 {
@@ -28,11 +26,47 @@ namespace PolyChess.Pages
 		public bool CreativeTaskCompleted { get; set; }
 
 		public int TournamentScore { get; set; }
+
+		public int ParticipatedTournamentsCount { get; set; }
+
+		public bool HasLichessToken { get; set; }
+	}
+
+	internal class LessonInfo
+	{
+		public int Id { get; set; }
+
+		public DateTime Date { get; set; }
+
+		public bool IsRequired { get; set; }
+
+		public bool IsAttended { get; set; }
+	}
+
+	internal class PuzzlesInfo
+	{
+		public bool IsLoaded { get; set; }
+
+		public string? ErrorMessage { get; set; }
+
+		public int FirstWins { get; set; }
+
+		public int ReplayWins { get; set; }
+
+		public int PuzzleRating { get; set; }
+
+		public int Performance { get; set; }
+
+		public int DaysPeriod { get; set; }
 	}
 
 	internal class IndexModel : PageModel
 	{
 		public StudentProfile? CurrentStudent { get; private set; }
+
+		public PuzzlesInfo Puzzles { get; private set; } = new();
+
+		public List<LessonInfo> LessonsList { get; private set; } = [];
 
 		public int TotalLessons { get; private set; }
 
@@ -41,8 +75,6 @@ namespace PolyChess.Pages
 		public int RequiredLessons { get; private set; }
 
 		public int RequiredTournaments { get; private set; }
-
-		public int SolvedPuzzles { get; private set; }
 
 		public int RequiredPuzzles { get; private set; }
 
@@ -56,10 +88,16 @@ namespace PolyChess.Pages
 
 		private readonly IMainConfig _config;
 
-		public IndexModel(PolyContext context, IMainConfig config)
+		private readonly TournamentsComponent _tournaments;
+
+		private readonly TelegramWebAppValidator _validator;
+
+		public IndexModel(PolyContext context, IMainConfig config, TournamentsComponent tournaments)
 		{
 			_context = context;
 			_config = config;
+			_tournaments = tournaments;
+			_validator = new TelegramWebAppValidator(config);
 		}
 
 		public async Task<IActionResult> OnGetAsync()
@@ -67,31 +105,17 @@ namespace PolyChess.Pages
 			var initDataString = Request.Query["initData"].ToString();
 			InitData = initDataString;
 
-			if (string.IsNullOrEmpty(initDataString))
-			{
-				ErrorMessage = "Эта страница доступна только через Telegram";
-				IsAuthenticated = false;
-				return Page();
-			}
+			var validationResult = _validator.Validate(initDataString);
 
-			var initData = HttpUtility.ParseQueryString(initDataString);
-			if (!ValidateTelegramWebAppData(initData))
+			if (!validationResult.IsValid)
 			{
-				ErrorMessage = "Неверная подпись данных";
-				IsAuthenticated = false;
-				return Page();
-			}
-
-			var userId = ExtractUserId(initData);
-			if (userId == 0)
-			{
-				ErrorMessage = "Не удалось определить пользователя";
+				ErrorMessage = validationResult.ErrorMessage;
 				IsAuthenticated = false;
 				return Page();
 			}
 
 			IsAuthenticated = true;
-			var student = await _context.Students.FirstOrDefaultAsync(s => s.TelegramId == userId);
+			var student = await _context.Students.FirstOrDefaultAsync(s => s.TelegramId == validationResult.UserId);
 
 			if (student == null)
 			{
@@ -99,74 +123,129 @@ namespace PolyChess.Pages
 				return Page();
 			}
 
+			var participatedTournaments = 0;
+
+			var lichessId = student.LichessId?.ToLower();
+
+			if (!string.IsNullOrEmpty(lichessId))
+			{
+				participatedTournaments += _tournaments.TournamentsList
+					.Count(t => t.Rating.Players.Any(p =>
+						p.Student?.LichessId?.ToLower() == lichessId && p.Score >= 0));
+
+				participatedTournaments += _tournaments.SwissTournamentsList
+					.Count(t => t.Rating.Players.Any(p =>
+						p.Student?.LichessId?.ToLower() == lichessId && p.Score >= 0));
+			}
+
 			CurrentStudent = new StudentProfile
 			{
-				FullName = $"{student.Surname} {student.Name} {student.Patronymic}",
+				FullName = $"{student.Surname} {student.Name} {student.Patronymic}".Trim(),
 				Institute = student.Institute,
 				Year = (int)student.Year,
 				Group = student.Group,
 				RecordBookId = student.RecordBookId,
 				LichessId = student.LichessId,
 				CreativeTaskCompleted = student.CreativeTaskCompleted,
-				TournamentScore = student.AdditionalTournamentsScore
+				TournamentScore = participatedTournaments + student.AdditionalTournamentsScore,
+				ParticipatedTournamentsCount = participatedTournaments,
+				HasLichessToken = !string.IsNullOrEmpty(student.LichessToken)
 			};
 
 			TotalLessons = await _context.Lessons
 				.CountAsync(l => l.StartDate < DateTime.Now);
 
-			RequiredLessons = await _context.Lessons
-				.CountAsync(l => l.IsRequired && l.StartDate < DateTime.Now);
+			RequiredLessons = _config.Test.RequiredVisitedLessonsPercent;
 
 			AttendedLessons = await _context.Attendances
 				.CountAsync(a => a.Student.Id == student.Id && a.Lesson.StartDate < DateTime.Now);
 
+			var attendedLessonIds = await _context.Attendances
+				.Where(a => a.Student.Id == student.Id)
+				.Select(a => a.Lesson.Id)
+				.ToListAsync();
+
+			LessonsList = await _context.Lessons
+				.Where(l => l.StartDate < DateTime.Now)
+				.OrderByDescending(l => l.StartDate)
+				.Select(l => new LessonInfo
+				{
+					Id = l.Id,
+					Date = l.StartDate,
+					IsRequired = l.IsRequired,
+					IsAttended = attendedLessonIds.Contains(l.Id)
+				})
+				.ToListAsync();
+
 			RequiredTournaments = _config.Test.RequiredTournamentsCount;
 			RequiredPuzzles = _config.Test.RequiredPuzzlesSolved;
 
-			SolvedPuzzles = await _context.Attendances
-				.Where(a => a.Student.Id == student.Id)
-				.Select(a => a.Lesson)
-				.Distinct()
-				.CountAsync(l => l.StartDate < DateTime.Now) > 0 ? 0 : 0;
+			Puzzles = await LoadPuzzlesDataAsync(student.LichessId, student.LichessToken);
 
 			return Page();
 		}
 
-		private bool ValidateTelegramWebAppData(NameValueCollection initData)
+		private async Task<PuzzlesInfo> LoadPuzzlesDataAsync(string? lichessId, string? lichessToken)
 		{
-			var hash = initData["hash"];
+			PuzzlesInfo info = new() { DaysPeriod = (int)(DateTime.Now - _config.SemesterStartDate).TotalDays };
 
-			if (string.IsNullOrEmpty(hash))
-				return false;
+			if (string.IsNullOrEmpty(lichessId))
+			{
+				info.ErrorMessage = "Аккаунт Lichess не привязан к профилю";
+				return info;
+			}
 
-			initData.Remove("hash");
+			if (string.IsNullOrEmpty(lichessToken))
+			{
+				info.ErrorMessage = "Токен Lichess не настроен. Обратитесь к преподавателю для привязки";
+				return info;
+			}
 
-			var dataCheckString = string.Join("\n",
-				initData.AllKeys.OrderBy(k => k).Select(k => $"{k}={initData[k]}")
-			);
+			try
+			{
+				LichessAuthorizedClient client = new(lichessToken);
 
-			var secretKey = HMACSHA256.HashData(Encoding.UTF8.GetBytes("WebAppData"),
-				Encoding.UTF8.GetBytes(_config.Telegram.TelegramToken));
+				var dashboard = await client.GetPuzzleDashboard(info.DaysPeriod);
 
-			var computedHash = HMACSHA256.HashData(secretKey,
-				Encoding.UTF8.GetBytes(dataCheckString));
+				if (dashboard == null)
+				{
+					info.ErrorMessage = "Не удалось загрузить данные. Возможно, токен недействителен";
+					return info;
+				}
 
-			var hashString = Convert.ToHexString(computedHash).ToLower();
-			return hashString == hash;
-		}
+				info.IsLoaded = true;
+				info.FirstWins = dashboard.Global.FirstWins;
+				info.ReplayWins = dashboard.Global.ReplayWins;
+				info.PuzzleRating = dashboard.Global.PuzzleRatingAvg;
+				info.Performance = dashboard.Global.Performance;
 
-		private long ExtractUserId(NameValueCollection initData)
-		{
-			var userJson = initData["user"];
-
-			if (string.IsNullOrEmpty(userJson))
-				return 0;
-
-			var userObj = JsonDocument.Parse(userJson);
-			if (userObj.RootElement.TryGetProperty("id", out var idProp))
-				return idProp.GetInt64();
-
-			return 0;
+				return info;
+			}
+			catch (HttpRequestException ex)
+			{
+				if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+				{
+					info.ErrorMessage = "Токен Lichess недействителен или отозван";
+				}
+				else if (ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
+				{
+					info.ErrorMessage = "Доступ запрещён. Проверьте права токена";
+				}
+				else if (ex.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+				{
+					info.ErrorMessage = "Превышен лимит запросов к Lichess. Попробуйте позже";
+				}
+				else
+				{
+					info.ErrorMessage = "Ошибка соединения с Lichess. Попробуйте позже";
+				}
+				return info;
+			}
+			catch (Exception)
+			{
+				info.ErrorMessage = "Произошла ошибка при загрузке данных";
+				return info;
+			}
 		}
 	}
 }

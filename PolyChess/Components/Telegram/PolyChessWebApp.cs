@@ -1,9 +1,4 @@
-using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
-using PolyChess.Configuration;
-using Telegram.Bot;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.ReplyMarkups;
+using Microsoft.AspNetCore.StaticFiles;
 
 namespace PolyChess.Components.Telegram
 {
@@ -18,9 +13,13 @@ namespace PolyChess.Components.Telegram
 
 		public void Start()
 		{
-			_app.UseStaticFiles();
-			_app.UseRouting();
+			FileExtensionContentTypeProvider provider = new()
+			{
+				Mappings = { [".tgs"] = "application/x-tgsticker" }
+			};
+			_app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = provider });
 
+			_app.UseRouting();
 			_app.MapRazorPages();
 		}
 	}

@@ -1,26 +1,48 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>@ViewData["Title"] - PolyChess</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>@ViewData["Title"] — Шахматный клуб СПбПУ</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         :root {
             --tg-theme-bg-color: #ffffff;
             --tg-theme-text-color: #000000;
             --tg-theme-hint-color: #999999;
-            --tg-theme-link-color: #3390ec;
-            --tg-theme-button-color: #3390ec;
+            --tg-theme-link-color: #2481cc;
+            --tg-theme-button-color: #2481cc;
             --tg-theme-button-text-color: #ffffff;
-            --tg-theme-secondary-bg-color: #f4f4f5;
-            --tg-theme-header-bg-color: #ffffff;
-            --tg-theme-accent-text-color: #3390ec;
-            --tg-theme-section-bg-color: #ffffff;
-            --tg-theme-section-header-text-color: #3390ec;
-            --tg-theme-subtitle-text-color: #999999;
-            --tg-theme-destructive-text-color: #e53935;
+            --tg-theme-secondary-bg-color: #f1f1f1;
+            
+            --poly-accent: #00629b;
+            --poly-accent-light: #3a8ec4;
+            --poly-accent-dark: #004c7a;
+            --poly-gold: #d4a84b;
+            --poly-silver: #a8a8a8;
+            --poly-bronze: #cd7f32;
+            
+            --card-bg: var(--tg-theme-bg-color);
+            --card-border: rgba(0, 0, 0, 0.08);
+            --divider: rgba(0, 0, 0, 0.06);
+            --success: #31b545;
+            --warning: #f5a623;
+            --error: #e74c3c;
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        @@media (prefers-color-scheme: dark) {
+            :root {
+                --card-border: rgba(255, 255, 255, 0.1);
+                --divider: rgba(255, 255, 255, 0.08);
+            }
         }
 
         * {
@@ -30,609 +52,657 @@
         }
 
         html, body {
-            height: 100%;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--tg-theme-bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-size: 15px;
+            line-height: 1.4;
+            background-color: var(--tg-theme-secondary-bg-color);
             color: var(--tg-theme-text-color);
-            padding: 0;
-            margin: 0;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             overflow-x: hidden;
-            line-height: 1.5;
         }
 
-        .tg-container {
+        .container {
             max-width: 100%;
-            padding: 0;
-            padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
+            padding: 0 0 env(safe-area-inset-bottom, 16px) 0;
         }
 
-        /* Telegram UI Section styles */
-        .tg-section {
-            background: var(--tg-theme-section-bg-color, var(--tg-theme-secondary-bg-color));
-            margin-bottom: 16px;
+        .section {
+            background: var(--tg-theme-bg-color);
+            margin: 8px 0;
+            padding: 16px;
         }
 
-        .tg-section-header {
+        .section:first-child {
+            margin-top: 0;
+        }
+
+        .section-title {
             font-size: 13px;
-            font-weight: 400;
-            color: var(--tg-theme-section-header-text-color, var(--tg-theme-hint-color));
+            font-weight: 500;
+            color: var(--tg-theme-hint-color);
             text-transform: uppercase;
-            padding: 8px 16px;
-            padding-top: 24px;
-            letter-spacing: 0.02em;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            padding: 0 16px;
         }
 
-        .tg-section-content {
-            background: var(--tg-theme-section-bg-color, var(--tg-theme-secondary-bg-color));
+        .card {
+            background: var(--tg-theme-bg-color);
+            border-radius: var(--radius-md);
+            overflow: hidden;
         }
 
-        /* Cell/List item styles */
-        .tg-cell {
+        .card-header {
+            padding: 12px 16px;
+            border-bottom: 0.5px solid var(--divider);
+        }
+
+        .card-body {
+            padding: 12px 16px;
+        }
+
+        .row {
             display: flex;
             align-items: center;
             padding: 12px 16px;
-            background: var(--tg-theme-section-bg-color, var(--tg-theme-secondary-bg-color));
-            position: relative;
-            min-height: 48px;
+            min-height: 44px;
+            gap: 12px;
         }
 
-        .tg-cell::after {
-            content: '';
-            position: absolute;
-            left: 16px;
-            right: 0;
-            bottom: 0;
-            height: 0.5px;
-            background: var(--tg-theme-hint-color);
-            opacity: 0.2;
+        .row + .row {
+            border-top: 0.5px solid var(--divider);
         }
 
-        .tg-cell:last-child::after {
-            display: none;
-        }
-
-        .tg-cell-clickable {
-            cursor: pointer;
-            transition: background-color 0.15s ease;
-            text-decoration: none;
-        }
-
-        .tg-cell-clickable:active {
-            background: var(--tg-theme-bg-color);
-        }
-
-        .tg-cell-icon {
+        .row-icon {
             width: 28px;
             height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 12px;
-            font-size: 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            flex-shrink: 0;
         }
 
-        .tg-cell-content {
+        .row-icon.blue { background: rgba(36, 129, 204, 0.12); color: var(--tg-theme-link-color); }
+        .row-icon.green { background: rgba(49, 181, 69, 0.12); color: var(--success); }
+        .row-icon.orange { background: rgba(245, 166, 35, 0.12); color: var(--warning); }
+        .row-icon.poly { background: rgba(0, 98, 155, 0.12); color: var(--poly-accent); }
+
+        .row-content {
             flex: 1;
             min-width: 0;
         }
 
-        .tg-cell-title {
-            font-size: 17px;
+        .row-title {
+            font-size: 15px;
             font-weight: 400;
-            color: var(--tg-theme-text-color);
-            line-height: 1.3;
         }
 
-        .tg-cell-subtitle {
-            font-size: 14px;
-            color: var(--tg-theme-subtitle-text-color, var(--tg-theme-hint-color));
-            margin-top: 2px;
-            line-height: 1.3;
-        }
-
-        .tg-cell-value {
-            font-size: 17px;
+        .row-subtitle {
+            font-size: 13px;
             color: var(--tg-theme-hint-color);
-            margin-left: 8px;
+            margin-top: 2px;
+        }
+
+        .row-value {
+            font-size: 15px;
+            color: var(--tg-theme-hint-color);
             flex-shrink: 0;
         }
 
-        .tg-cell-chevron {
-            width: 20px;
-            height: 20px;
-            margin-left: 4px;
+        .row-chevron {
             color: var(--tg-theme-hint-color);
-            opacity: 0.6;
+            opacity: 0.5;
+            font-size: 12px;
+            flex-shrink: 0;
         }
 
-        .tg-cell-chevron::after {
-            content: '›';
-            font-size: 22px;
-            font-weight: 300;
+        .row-clickable {
+            cursor: pointer;
+            transition: background-color 0.15s;
         }
 
-        /* Header / Profile card */
-        .tg-header {
-            background: var(--tg-theme-section-bg-color, var(--tg-theme-secondary-bg-color));
-            padding: 20px 16px;
-            text-align: center;
-            margin-bottom: 16px;
+        .row-clickable:active {
+            background-color: var(--tg-theme-secondary-bg-color);
         }
 
-        .tg-header-title {
-            font-size: 22px;
-            font-weight: 600;
-            color: var(--tg-theme-text-color);
-            margin-bottom: 4px;
+        .progress-container {
+            padding: 16px;
         }
 
-        .tg-header-subtitle {
-            font-size: 15px;
-            color: var(--tg-theme-hint-color);
-        }
-
-        .tg-header-link {
-            display: inline-flex;
-            align-items: center;
-            color: var(--tg-theme-link-color);
-            text-decoration: none;
-            font-size: 14px;
-            margin-top: 8px;
-        }
-
-        /* Progress bar */
-        .tg-progress {
-            padding: 12px 16px;
-        }
-
-        .tg-progress-header {
+        .progress-header {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 8px;
-            font-size: 15px;
         }
 
-        .tg-progress-title {
-            color: var(--tg-theme-text-color);
-        }
-
-        .tg-progress-value {
-            color: var(--tg-theme-hint-color);
+        .progress-label {
+            font-size: 14px;
             font-weight: 500;
         }
 
-        .tg-progress-bar {
-            background: var(--tg-theme-bg-color);
+        .progress-value {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--tg-theme-secondary-bg-color);
             border-radius: 4px;
-            height: 6px;
             overflow: hidden;
         }
 
-        .tg-progress-fill {
-            background: var(--tg-theme-button-color);
+        .progress-fill {
             height: 100%;
             border-radius: 4px;
-            transition: width 0.3s ease;
+            transition: width 0.5s ease-out;
         }
 
-        .tg-progress-fill.completed {
-            background: #34C759;
-        }
+        .progress-fill.blue { background: var(--tg-theme-link-color); }
+        .progress-fill.green { background: var(--success); }
+        .progress-fill.yellow { background: #f0ad4e; }
+        .progress-fill.red { background: var(--error); }
+        .progress-fill.poly { background: var(--poly-accent); }
+        .progress-fill.gold { background: var(--poly-gold); }
 
-        /* Badge/Chip */
-        .tg-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 10px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 500;
-            margin-top: 6px;
-        }
-
-        .tg-badge-success {
-            background: rgba(52, 199, 89, 0.12);
-            color: #34C759;
-        }
-
-        .tg-badge-warning {
-            background: rgba(255, 149, 0, 0.12);
-            color: #FF9500;
-        }
-
-        .tg-badge-info {
-            background: rgba(51, 144, 236, 0.12);
-            color: var(--tg-theme-button-color);
-        }
-
-        .tg-badge-error {
-            background: rgba(255, 59, 48, 0.12);
-            color: #FF3B30;
-        }
-
-        /* Stats grid */
-        .tg-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1px;
-            background: var(--tg-theme-hint-color);
-            background: rgba(0,0,0,0.05);
-        }
-
-        .tg-stat-card {
-            background: var(--tg-theme-section-bg-color, var(--tg-theme-secondary-bg-color));
-            padding: 16px;
-            text-align: center;
-        }
-
-        .tg-stat-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--tg-theme-button-color);
-            margin-bottom: 4px;
-        }
-
-        .tg-stat-label {
-            font-size: 13px;
-            color: var(--tg-theme-hint-color);
-        }
-
-        /* Link */
-        .tg-link {
-            color: var(--tg-theme-link-color);
-            text-decoration: none;
-        }
-
-        .tg-link:active {
-            opacity: 0.7;
-        }
-
-        /* Error message */
-        .tg-error {
-            background: rgba(255, 59, 48, 0.08);
-            color: var(--tg-theme-destructive-text-color, #FF3B30);
-            padding: 16px;
-            text-align: center;
-            font-size: 15px;
-            margin: 16px;
-            border-radius: 12px;
-        }
-
-        /* Page title */
-        .tg-page-title {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--tg-theme-text-color);
-            padding: 16px;
-            padding-bottom: 8px;
-        }
-
-        /* Tournament card specific */
-        .tournament-card {
-            padding: 12px 16px;
-            background: var(--tg-theme-section-bg-color, var(--tg-theme-secondary-bg-color));
+        .checkpoints {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
             position: relative;
         }
 
-        .tournament-card::after {
-            content: '';
-            position: absolute;
-            left: 16px;
-            right: 0;
-            bottom: 0;
-            height: 0.5px;
-            background: var(--tg-theme-hint-color);
-            opacity: 0.2;
+        .checkpoint {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
         }
 
-        .tournament-card:last-child::after {
-            display: none;
+        .checkpoint-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--tg-theme-secondary-bg-color);
+            border: 2px solid var(--tg-theme-hint-color);
+        }
+
+        .checkpoint-dot.completed {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .checkpoint-dot.current {
+            background: var(--tg-theme-button-color);
+            border-color: var(--tg-theme-button-color);
+            box-shadow: 0 0 0 3px rgba(36, 129, 204, 0.2);
+        }
+
+        .checkpoint-label {
+            font-size: 11px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.success {
+            background: rgba(49, 181, 69, 0.12);
+            color: var(--success);
+        }
+
+        .status-badge.warning {
+            background: rgba(245, 166, 35, 0.12);
+            color: var(--warning);
+        }
+
+        .status-badge.pending {
+            background: rgba(36, 129, 204, 0.12);
+            color: var(--tg-theme-link-color);
+        }
+
+        .tournament-card {
+            padding: 16px;
+            border-bottom: 0.5px solid var(--divider);
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+
+        .tournament-card:last-child {
+            border-bottom: none;
+        }
+
+        .tournament-card:active {
+            background-color: var(--tg-theme-secondary-bg-color);
+        }
+
+        .tournament-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
         }
 
         .tournament-name {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 500;
-            color: var(--tg-theme-text-color);
-            margin-bottom: 4px;
+            flex: 1;
+            padding-right: 12px;
         }
 
-        .tournament-date {
-            font-size: 14px;
+        .tournament-type {
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: var(--tg-theme-secondary-bg-color);
             color: var(--tg-theme-hint-color);
-            margin-bottom: 6px;
+            flex-shrink: 0;
         }
 
-        .tournament-stats {
+        .tournament-meta {
             display: flex;
-            gap: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
             font-size: 13px;
             color: var(--tg-theme-hint-color);
         }
 
-        .tournament-stat {
+        .tournament-meta-item {
             display: flex;
             align-items: center;
             gap: 4px;
         }
 
-        .tournament-score {
+        .tournament-result {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 0.5px solid var(--divider);
+        }
+
+        .result-place {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .result-place.gold { background: linear-gradient(135deg, var(--poly-gold), #e8c06a); color: #fff; }
+        .result-place.silver { background: linear-gradient(135deg, var(--poly-silver), #c8c8c8); color: #fff; }
+        .result-place.bronze { background: linear-gradient(135deg, var(--poly-bronze), #e09550); color: #fff; }
+        .result-place.default { background: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); }
+
+        .result-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+        }
+
+        .result-stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .result-stat-value {
+            font-weight: 600;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: var(--tg-theme-bg-color);
+            padding: 8px;
+            gap: 8px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--tg-theme-hint-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-tab.active {
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+        }
+
+        .profile-header {
+            padding: 24px 16px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--poly-accent) 0%, var(--poly-accent-dark) 100%);
+            color: #fff;
+        }
+
+        .profile-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 28px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .profile-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .profile-subtitle {
+            font-size: 14px;
+            opacity: 0.85;
+        }
+
+        .profile-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            font-size: 13px;
+            backdrop-filter: blur(10px);
+        }
+
+        .empty-state {
+            padding: 48px 24px;
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            color: var(--tg-theme-hint-color);
+            opacity: 0.5;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-title {
+            font-size: 17px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .error-state {
+            padding: 48px 24px;
+            text-align: center;
+        }
+
+        .error-state-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(231, 76, 60, 0.12);
+            color: var(--error);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 28px;
+        }
+
+        .error-state-title {
+            font-size: 17px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .error-state-text {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+            max-width: 280px;
+            margin: 0 auto;
+        }
+
+        .loading-state {
+            padding: 48px 24px;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--tg-theme-secondary-bg-color);
+            border-top-color: var(--tg-theme-button-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 24px;
-            height: 24px;
-            padding: 0 8px;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.15s;
+            text-decoration: none;
+        }
+
+        .btn:active {
+            opacity: 0.7;
+        }
+
+        .btn-primary {
             background: var(--tg-theme-button-color);
             color: var(--tg-theme-button-text-color);
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 600;
         }
 
-        .tournament-score.zero {
-            background: var(--tg-theme-hint-color);
-            opacity: 0.5;
+        .btn-secondary {
+            background: var(--tg-theme-secondary-bg-color);
+            color: var(--tg-theme-text-color);
         }
 
-        .tournament-score.negative {
-            background: var(--tg-theme-destructive-text-color, #FF3B30);
-        }
-
-        /* Tournament type badge */
-        .tournament-type {
-            display: inline-block;
-            font-size: 11px;
-            font-weight: 500;
-            text-transform: uppercase;
-            padding: 2px 6px;
-            border-radius: 4px;
-            margin-left: 8px;
-            vertical-align: middle;
-        }
-
-        .tournament-type.arena {
-            background: rgba(255, 149, 0, 0.12);
-            color: #FF9500;
-        }
-
-        .tournament-type.swiss {
-            background: rgba(51, 144, 236, 0.12);
-            color: var(--tg-theme-button-color);
-        }
-
-        /* Empty state */
-        .tg-empty {
-            text-align: center;
-            padding: 32px 16px;
-            color: var(--tg-theme-hint-color);
-        }
-
-        .tg-empty-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-            opacity: 0.5;
-        }
-
-        .tg-empty-text {
-            font-size: 15px;
-        }
-
-        /* Upcoming tournament card */
-        .upcoming-card {
-            border-left: 3px solid var(--tg-theme-button-color);
-        }
-
-        .upcoming-time {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--tg-theme-button-color);
-        }
-
-        /* Tournament link */
-        .tournament-link {
-            margin-top: 8px;
-            font-size: 13px;
+        .btn-link {
+            background: transparent;
             color: var(--tg-theme-link-color);
+            padding: 8px 0;
         }
 
-        .tournament-link i {
-            margin-right: 4px;
-        }
-
-        /* Icon spacing in section headers */
-        .tg-section-header i,
-        .tg-page-title i {
-            margin-right: 8px;
-        }
-
-        .tg-progress-title i,
-        .tg-header-subtitle i {
-            margin-right: 6px;
-            width: 16px;
-            text-align: center;
-        }
-
-        .tg-cell-icon i {
-            color: var(--tg-theme-button-color);
-        }
-
-        .tournament-stat i {
-            margin-right: 4px;
-        }
-
-        .tournament-date i {
-            margin-right: 6px;
-        }
-
-        a.tournament-card {
-            display: block;
-            text-decoration: none;
-            color: inherit;
-        }
-
-        /* Loading state - Polytechnic themed */
-        .tg-loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 80vh;
-            background: linear-gradient(135deg, rgba(0, 128, 70, 0.03) 0%, rgba(0, 100, 50, 0.08) 100%);
-        }
-
-        .poly-logo {
-            position: relative;
-            width: 120px;
-            height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 24px;
-        }
-
-        .poly-ring {
-            position: absolute;
+        .btn-block {
             width: 100%;
-            height: 100%;
-            border: 3px solid transparent;
-            border-top-color: #008046;
-            border-right-color: #00a85a;
-            border-radius: 50%;
-            animation: polyRing 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
         }
 
-        .poly-ring-inner {
-            position: absolute;
-            width: 80%;
-            height: 80%;
-            border: 2px solid transparent;
-            border-bottom-color: #006838;
-            border-left-color: #00c96b;
-            border-radius: 50%;
-            animation: polyRingReverse 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
-        }
-
-        .poly-pi {
-            font-size: 48px;
-            font-weight: 700;
-            font-family: 'Times New Roman', serif;
-            color: #008046;
-            animation: polyPulse 2s ease-in-out infinite;
-            text-shadow: 0 0 20px rgba(0, 128, 70, 0.3);
-            z-index: 1;
-        }
-
-        .poly-chess {
-            position: absolute;
-            font-size: 14px;
-            color: #008046;
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 1000;
             opacity: 0;
-            animation: chessFloat 3s ease-in-out infinite;
+            visibility: hidden;
+            transition: all 0.3s;
         }
 
-        .poly-chess:nth-child(1) { top: -5px; left: 50%; transform: translateX(-50%); animation-delay: 0s; }
-        .poly-chess:nth-child(2) { top: 50%; right: -5px; transform: translateY(-50%); animation-delay: 0.5s; }
-        .poly-chess:nth-child(3) { bottom: -5px; left: 50%; transform: translateX(-50%); animation-delay: 1s; }
-        .poly-chess:nth-child(4) { top: 50%; left: -5px; transform: translateY(-50%); animation-delay: 1.5s; }
-
-        @@keyframes polyRing {
-            0% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(180deg) scale(1.05); }
-            100% { transform: rotate(360deg) scale(1); }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
         }
 
-        @@keyframes polyRingReverse {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(-360deg); }
+        .modal-content {
+            background: var(--tg-theme-bg-color);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s;
         }
 
-        @@keyframes polyPulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.8; }
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
         }
 
-        @@keyframes chessFloat {
-            0%, 100% { opacity: 0; transform: translateY(0) scale(0.8); }
-            50% { opacity: 0.6; transform: translateY(-5px) scale(1); }
+        .modal-header {
+            position: sticky;
+            top: 0;
+            background: var(--tg-theme-bg-color);
+            padding: 16px;
+            border-bottom: 0.5px solid var(--divider);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
         }
 
-        .tg-loading-text {
-            font-size: 16px;
-            font-weight: 500;
-            color: #008046;
-            letter-spacing: 0.5px;
+        .modal-title {
+            font-size: 17px;
+            font-weight: 600;
         }
 
-        .tg-loading-subtitle {
-            font-size: 13px;
+        .modal-close {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: var(--tg-theme-secondary-bg-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
             color: var(--tg-theme-hint-color);
-            margin-top: 8px;
-            opacity: 0.8;
         }
 
-        .tg-content {
-            display: none;
+        .modal-body {
+            padding: 16px;
         }
 
-        .tg-content.loaded {
-            display: block;
+        .divider {
+            height: 8px;
+            background: var(--tg-theme-secondary-bg-color);
+        }
+
+        .text-success { color: var(--success); }
+        .text-warning { color: var(--warning); }
+        .text-error { color: var(--error); }
+        .text-hint { color: var(--tg-theme-hint-color); }
+        .text-link { color: var(--tg-theme-link-color); }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+
+        .mt-8 { margin-top: 8px; }
+        .mt-16 { margin-top: 16px; }
+        .mb-8 { margin-bottom: 8px; }
+        .mb-16 { margin-bottom: 16px; }
+        .px-16 { padding-left: 16px; padding-right: 16px; }
+        .py-8 { padding-top: 8px; padding-bottom: 8px; }
+
+        .university-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+            padding: 4px 0;
+        }
+
+        .university-badge i {
+            color: var(--poly-accent);
         }
     </style>
 </head>
 <body>
-    <div class="tg-container">
-        <div class="tg-loading" id="loading">
-            <div class="poly-logo">
-                <div class="poly-ring"></div>
-                <div class="poly-ring-inner"></div>
-                <div class="poly-pi">π</div>
-                <i class="fa-solid fa-chess-knight poly-chess"></i>
-                <i class="fa-solid fa-chess-rook poly-chess"></i>
-                <i class="fa-solid fa-chess-queen poly-chess"></i>
-                <i class="fa-solid fa-chess-bishop poly-chess"></i>
-            </div>
-            <div class="tg-loading-text">PolyChess</div>
-            <div class="tg-loading-subtitle">Санкт-Петербургский Политех</div>
-        </div>
-        <div class="tg-content" id="content">
-            @RenderBody()
-        </div>
+    <div id="app-loading" class="loading-state" style="display: none;">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Загрузка...</div>
+    </div>
+    
+    <div id="app-content">
+        @RenderBody()
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-        
+        const tg = window.Telegram?.WebApp;
+    	tg.ready();
+        tg.expand();        
+
         function applyTheme() {
-            const root = document.documentElement;
-            const params = tg.themeParams;
+		    const root = document.documentElement;
+            const themeParams = tg.themeParams;
             
-            if (params.bg_color) root.style.setProperty('--tg-theme-bg-color', params.bg_color);
-            if (params.text_color) root.style.setProperty('--tg-theme-text-color', params.text_color);
-            if (params.hint_color) root.style.setProperty('--tg-theme-hint-color', params.hint_color);
-            if (params.link_color) root.style.setProperty('--tg-theme-link-color', params.link_color);
-            if (params.button_color) root.style.setProperty('--tg-theme-button-color', params.button_color);
-            if (params.button_text_color) root.style.setProperty('--tg-theme-button-text-color', params.button_text_color);
-            if (params.secondary_bg_color) root.style.setProperty('--tg-theme-secondary-bg-color', params.secondary_bg_color);
-            if (params.header_bg_color) root.style.setProperty('--tg-theme-header-bg-color', params.header_bg_color);
-            if (params.accent_text_color) root.style.setProperty('--tg-theme-accent-text-color', params.accent_text_color);
-            if (params.section_bg_color) root.style.setProperty('--tg-theme-section-bg-color', params.section_bg_color);
-            if (params.section_header_text_color) root.style.setProperty('--tg-theme-section-header-text-color', params.section_header_text_color);
-            if (params.subtitle_text_color) root.style.setProperty('--tg-theme-subtitle-text-color', params.subtitle_text_color);
-            if (params.destructive_text_color) root.style.setProperty('--tg-theme-destructive-text-color', params.destructive_text_color);
+            if (themeParams) {
+                if (themeParams.bg_color)
+					root.style.setProperty('--tg-theme-bg-color', themeParams.bg_color);
+                if (themeParams.text_color)
+					root.style.setProperty('--tg-theme-text-color', themeParams.text_color);
+                if (themeParams.hint_color)
+					root.style.setProperty('--tg-theme-hint-color', themeParams.hint_color);
+                if (themeParams.link_color)
+					root.style.setProperty('--tg-theme-link-color', themeParams.link_color);
+                if (themeParams.button_color) 
+					root.style.setProperty('--tg-theme-button-color', themeParams.button_color);
+                if (themeParams.button_text_color)
+					root.style.setProperty('--tg-theme-button-text-color', themeParams.button_text_color);
+                if (themeParams.secondary_bg_color)
+					root.style.setProperty('--tg-theme-secondary-bg-color', themeParams.secondary_bg_color);
+            }
         }
-        
-        applyTheme();
+
+		applyTheme();
         tg.onEvent('themeChanged', applyTheme);
 
+        
         function initPage() {
-            const loading = document.getElementById('loading');
-            const content = document.getElementById('content');
+            const loading = document.getElementById('app-loading');
             
             if (window.location.search.indexOf('initData') === -1 && tg.initData) {
                 const url = new URL(window.location);
@@ -642,7 +712,6 @@
             }
             
             loading.style.display = 'none';
-            content.classList.add('loaded');
         }
         
         initPage();
@@ -660,7 +729,39 @@
             }
         }
         setupBackButton();
+
+        function openLichessLink(url) {
+            if (tg && tg.openLink) {
+                tg.openLink(url);
+            } else {
+                window.open(url, '_blank', 'noopener,noreferrer');
+            }
+        }
+        
+        function navigateTo(path) {
+            const initData = (tg && tg.initData) ? tg.initData : '@Html.Raw(ViewData["InitData"] ?? "")';
+            if (initData) {
+                window.location.href = path + '?initData=' + encodeURIComponent(initData);
+            } else {
+                window.location.href = path;
+            }
+        }
+        
+        function showModal(modalId) {
+            document.getElementById(modalId)?.classList.add('active');
+        }
+        
+        function hideModal(modalId) {
+            document.getElementById(modalId)?.classList.remove('active');
+        }
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.classList.remove('active');
+            }
+        });
     </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

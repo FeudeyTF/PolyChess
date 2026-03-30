@@ -1,121 +1,177 @@
 @page
-@using PolyChess.Pages
-@model UpcomingTournamentsModel
+@model PolyChess.Pages.UpcomingTournamentsModel
 @{
     ViewData["Title"] = "Предстоящие турниры";
-    Layout = "_Layout";
-}
-
-@if (!Model.IsAuthenticated)
-{
-    <div class="tg-error">
-        <strong>Доступ запрещён</strong><br>
-        @Model.ErrorMessage
-    </div>
-}
-else
-{
-    <div class="tg-page-title"><i class="fa-solid fa-calendar"></i> Предстоящие турниры</div>
-
-    @if (Model.Tournaments.Count == 0)
+    ViewData["InitData"] = Model.InitData;
+    
+    string FormatDate(DateTime date)
     {
-        <div class="tg-empty">
-            <div class="tg-empty-icon"><i class="fa-solid fa-inbox"></i></div>
-            <div class="tg-empty-text">Нет запланированных турниров</div>
+        return date.ToString("d MMMM yyyy", new System.Globalization.CultureInfo("ru-RU"));
+    }
+    
+    string FormatTime(DateTime date)
+    {
+        return date.ToString("HH:mm");
+    }
+    
+    string GetTimeUntil(DateTime date)
+    {
+        var diff = date - DateTime.Now;
+        if (diff.TotalMinutes < 60)
+            return $"через {(int)diff.TotalMinutes} мин";
+        if (diff.TotalHours < 24)
+            return $"через {(int)diff.TotalHours} ч";
+        if (diff.TotalDays < 7)
+            return $"через {(int)diff.TotalDays} дн";
+        return FormatDate(date);
+    }
+}
+
+<div class="container">
+    @if (!Model.IsAuthenticated)
+    {
+        <div class="section">
+            <div class="error-state">
+                <div class="error-state-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="error-state-title">Доступ ограничен</div>
+                <div class="error-state-text">@Model.ErrorMessage</div>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="section">
+            <div class="error-state">
+                <div class="error-state-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="error-state-title">Ошибка</div>
+                <div class="error-state-text">@Model.ErrorMessage</div>
+            </div>
         </div>
     }
     else
     {
-        var soonTournaments = Model.Tournaments.Where(t => t.IsStartingSoon).ToList();
-        var laterTournaments = Model.Tournaments.Where(t => !t.IsStartingSoon).ToList();
+        var startingSoon = Model.Tournaments.Where(t => t.IsStartingSoon).ToList();
+        var upcoming = Model.Tournaments.Where(t => !t.IsStartingSoon).ToList();
+        
+        <div class="nav-tabs">
+            <button class="nav-tab" onclick="navigateTo('/')">
+                <i class="fas fa-user"></i> Профиль
+            </button>
+            <button class="nav-tab" onclick="navigateTo('/Tournaments')">
+                <i class="fas fa-trophy"></i> История
+            </button>
+            <button class="nav-tab active" onclick="navigateTo('/UpcomingTournaments')">
+                <i class="fas fa-calendar"></i> Турниры
+            </button>
+        </div>
 
-        if (soonTournaments.Any())
+        @if (startingSoon.Count > 0)
         {
-            <div class="tg-section">
-                <div class="tg-section-header"><i class="fa-solid fa-fire"></i> Скоро начнутся</div>
-                <div class="tg-section-content">
-                    @foreach (var tournament in soonTournaments)
-                    {
-                        var tournamentUrl = tournament.Type == "Arena" 
-                            ? $"https://lichess.org/tournament/{tournament.Id}" 
-                            : $"https://lichess.org/swiss/{tournament.Id}";
-                        
-                        <a href="@tournamentUrl" target="_blank" class="tournament-card upcoming-card tg-cell-clickable">
-                            <div class="tournament-name">
-                                @tournament.Name
-                                <span class="tournament-type @tournament.Type.ToLower()">@tournament.Type</span>
-                            </div>
-                            <div class="upcoming-time">
-                                <i class="fa-solid fa-clock"></i> Начало: @tournament.StartDate.ToString("HH:mm")
-                                @{
-                                    var timeLeft = tournament.StartDate - DateTime.Now;
-                                    if (timeLeft.TotalMinutes < 60)
-                                    {
-                                        <span>(через @((int)timeLeft.TotalMinutes) мин.)</span>
-                                    }
-                                    else
-                                    {
-                                        <span>(через @((int)timeLeft.TotalHours) ч. @(timeLeft.Minutes) мин.)</span>
-                                    }
-                                }
-                            </div>
-                            <div class="tournament-stats">
-                                <div class="tournament-stat">
-                                    <i class="fa-solid fa-stopwatch"></i> @tournament.TimeControl
-                                </div>
-                                @if (tournament.Duration > 0)
-                                {
-                                    <div class="tournament-stat">
-                                        <i class="fa-solid fa-hourglass-half"></i> @tournament.Duration мин.
-                                    </div>
-                                }
-                            </div>
-                            <div class="tournament-link">
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Открыть на Lichess
-                            </div>
-                        </a>
-                    }
+            <div class="section-title">Скоро начнётся</div>
+            <div class="section" style="padding: 0;">
+                @foreach (var tournament in startingSoon)
+                {
+                    <div class="tournament-card" onclick="openLichessLink('@GetLichessUrl(tournament)')">
+                        <div class="tournament-header">
+                            <div class="tournament-name">@tournament.Name</div>
+                            <span class="status-badge warning">
+                                <i class="fas fa-clock"></i>
+                                @GetTimeUntil(tournament.StartDate)
+                            </span>
+                        </div>
+                        <div class="tournament-meta">
+                            <span class="tournament-meta-item">
+                                <i class="fas fa-clock"></i>
+                                @FormatTime(tournament.StartDate)
+                            </span>
+                            <span class="tournament-meta-item">
+                                <i class="fas fa-stopwatch"></i>
+                                @tournament.TimeControl
+                            </span>
+                            @if (tournament.Duration > 0)
+                            {
+                                <span class="tournament-meta-item">
+                                    <i class="fas fa-hourglass-half"></i>
+                                    @tournament.Duration мин
+                                </span>
+                            }
+                        </div>
+                        <div class="mt-8">
+                            <span class="tournament-type">@tournament.Type</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (upcoming.Count > 0)
+        {
+            <div class="section-title">Предстоящие турниры (@upcoming.Count)</div>
+            <div class="section" style="padding: 0;">
+                @foreach (var tournament in upcoming)
+                {
+                    <div class="tournament-card" onclick="openLichessLink('@GetLichessUrl(tournament)')">
+                        <div class="tournament-header">
+                            <div class="tournament-name">@tournament.Name</div>
+                            <span class="tournament-type">@tournament.Type</span>
+                        </div>
+                        <div class="tournament-meta">
+                            <span class="tournament-meta-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                @FormatDate(tournament.StartDate)
+                            </span>
+                            <span class="tournament-meta-item">
+                                <i class="fas fa-clock"></i>
+                                @FormatTime(tournament.StartDate)
+                            </span>
+                            <span class="tournament-meta-item">
+                                <i class="fas fa-stopwatch"></i>
+                                @tournament.TimeControl
+                            </span>
+                            @if (tournament.Duration > 0)
+                            {
+                                <span class="tournament-meta-item">
+                                    <i class="fas fa-hourglass-half"></i>
+                                    @tournament.Duration мин
+                                </span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (Model.Tournaments.Count == 0)
+        {
+            <div class="section">
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="empty-state-title">Нет запланированных турниров</div>
+                    <div class="empty-state-text">Новые турниры появятся здесь, когда будут запланированы</div>
                 </div>
             </div>
         }
 
-        if (laterTournaments.Any())
-        {
-            <div class="tg-section">
-                <div class="tg-section-header"><i class="fa-solid fa-list"></i> Запланированные турниры (@laterTournaments.Count)</div>
-                <div class="tg-section-content">
-                    @foreach (var tournament in laterTournaments)
-                    {
-                        var tournamentUrl = tournament.Type == "Arena" 
-                            ? $"https://lichess.org/tournament/{tournament.Id}" 
-                            : $"https://lichess.org/swiss/{tournament.Id}";
-                        
-                        <a href="@tournamentUrl" target="_blank" class="tournament-card tg-cell-clickable">
-                            <div class="tournament-name">
-                                @tournament.Name
-                                <span class="tournament-type @tournament.Type.ToLower()">@tournament.Type</span>
-                            </div>
-                            <div class="tournament-date">
-                                <i class="fa-regular fa-calendar"></i> @tournament.StartDate.ToString("dd MMMM yyyy, HH:mm")
-                            </div>
-                            <div class="tournament-stats">
-                                <div class="tournament-stat">
-                                    <i class="fa-solid fa-stopwatch"></i> @tournament.TimeControl
-                                </div>
-                                @if (tournament.Duration > 0)
-                                {
-                                    <div class="tournament-stat">
-                                        <i class="fa-solid fa-hourglass-half"></i> @tournament.Duration мин.
-                                    </div>
-                                }
-                            </div>
-                            <div class="tournament-link">
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Открыть на Lichess
-                            </div>
-                        </a>
-                    }
-                </div>
+        <div class="px-16 py-8">
+            <div class="university-badge">
+                <i class="fas fa-graduation-cap"></i>
+                Шахматный клуб СПбПУ
             </div>
-        }
+        </div>
+    }
+</div>
+
+@functions {
+    string GetLichessUrl(UpcomingTournamentInfo tournament)
+    {
+        return tournament.Type == "Swiss" 
+            ? $"https://lichess.org/swiss/{tournament.Id}" 
+            : $"https://lichess.org/tournament/{tournament.Id}";
     }
 }
