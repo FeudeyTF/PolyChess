@@ -76,6 +76,11 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 			);
 
 			message.AddButton(
+				new InlineKeyboardButton("Добавить дополнительные очки за турниры студентам").WithData(nameof(AddAdditionalTournaments))
+			);
+
+
+			message.AddButton(
 				new InlineKeyboardButton("💾 Сохранить турнир").WithData(nameof(SaveTournament))
 			);
 
@@ -375,7 +380,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					return;
 				}
 
-				if(_polyContext.Attendances.Any(a => a.Lesson.Id == lesson.Id && a.Student.Id == student.Id))
+				if (_polyContext.Attendances.Any(a => a.Lesson.Id == lesson.Id && a.Student.Id == student.Id))
 				{
 					await args.ReplyAsync($"Студент '{student.Name} {student.Surname} {student.Patronymic}' уже отмечен на урока с '{lesson.StartDate}' до '{lesson.EndDate}'");
 					return;
@@ -866,6 +871,59 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 			}
 		}
 
+		[TelegramButton(nameof(AddAdditionalTournaments))]
+		private async Task AddAdditionalTournaments(TelegramButtonExecutionContext ctx)
+		{
+			if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
+				return;
+
+			DiscreteMessage message = new(
+				_discreteMessagesProvider,
+				[
+					new TelegramMessageBuilder("Введите имя студентов  (Фамилия, Фамилия Имя, Имя, ФИО, Ник)"),
+				],
+				HandleStudentNameEntered
+			);
+
+			if (ctx.Query.Message != null)
+				await ctx.SendMessageAsync(message, ctx.Query.Message.Chat.Id);
+
+			async Task HandleStudentNameEntered(DiscreteMessageEnteredArgs args)
+			{
+				var text = args.Responses[0].Text;
+				if (text == null)
+				{
+					await args.ReplyAsync("В сообщении должно быть имя студента!");
+					return;
+				}
+
+				List<string> names = [];
+
+				foreach (var identifier in text.Split('\n'))
+				{
+					var students = GetStudentsByIdentifier(identifier);
+					if (students.Count() > 1)
+					{
+						await args.ReplyAsync($"По введённой фамилии и имени '{identifier}' были найдены студенты:\n{string.Join('\n', students.Select(s => s.Surname + " " + s.Name + " " + s.Patronymic))}");
+						continue;
+					}
+
+					if (students.Count == 0)
+					{
+						await args.ReplyAsync($"По вашему запросу '{identifier}' не найдено ни одного студента!");
+						continue;
+					}
+
+					var student = students.First();
+					names.Add(student.Surname + " " + student.Name + " " + student.Patronymic);
+					student.AdditionalTournamentsScore++;
+				}
+
+				await _polyContext.SaveChangesAsync();
+				await ctx.ReplyAsync($"Студентам '{string.Join(", ", names)}' был выдан дополнительный балл за турнир!");
+			}
+		}
+
 		[TelegramButton(nameof(ViewStudentAttendance))]
 		private async Task ViewStudentAttendance(TelegramButtonExecutionContext ctx)
 		{
@@ -944,7 +1002,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 			else
 			{
 				var name = splittedName[0];
-				students.AddRange(_polyContext.Students.Where(s => s.Name == name || s.Surname == name));
+				students.AddRange(_polyContext.Students.Where(s => s.Name == name || s.Surname == name || (!string.IsNullOrEmpty(s.LichessId) && s.LichessId.Contains == name)));
 			}
 
 			return students;
