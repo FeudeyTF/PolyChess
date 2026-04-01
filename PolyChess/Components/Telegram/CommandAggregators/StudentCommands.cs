@@ -188,7 +188,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                     var student = _polyContext.Students.FirstOrDefault(s => s.TelegramId == telegramId);
                     if (student != null)
                     {
-                        TelegramMessageBuilder builder = new("[ОНТКЛОНЕНО]\n" + (ctx.Query.Message.Text ?? ctx.Query.Message.Caption));
+                        TelegramMessageBuilder builder = new("[ОТКЛОНЕНО]\n" + (ctx.Query.Message.Text ?? ctx.Query.Message.Caption));
                         if (ctx.Query.Message.Document != null)
                             builder.WithFile(ctx.Query.Message.Document.FileId);
 
@@ -363,12 +363,25 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                 "Ваша посещаемость:"
             ];
 
-            if (!attendace.Any())
-                msg.Add("Ни одного занятия не посещено!");
+            if (!attendace.Any()) {
+                await ctx.ReplyAsync("Ни одного занятия не посещено!");
+                return;
+            }
 
             foreach (var lesson in _polyContext.Lessons)
                 if (lesson.StartDate < DateTime.Now)
                     msg.Add($"Занятие с {lesson.StartDate:g} до {lesson.EndDate:g}: {(attendace.Any(a => a.Lesson.Id == lesson.Id) ? "Посещено" : "Не посещено")}. Занятие {(lesson.IsRequired ? "обязательно" : "не обязательно")} для посещения");
+            
+            var dateNow = DateTime.Now;
+            var lessonsCount = _polyContext.Lessons.Count(l => l.StartDate < dateNow && l.IsRequired);
+            if (lessonsCount == 0)
+            {
+                await ctx.ReplyAsync("В этом семестре ещё не было занятий!");
+                return;
+            }
+            
+            float attendancePercent = (float)attendace.Count() / lessonsCount;
+            msg.Add($"<b>Посещение занятий:</b> {attendace.Count()}/{lessonsCount} ({(int)(attendancePercent * 100)}%)");
 
             await ctx.ReplyAsync(string.Join("\n", msg));
         }
