@@ -94,13 +94,13 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 			message.AddKeyboard([
 				new InlineKeyboardButton("Добавить задачу для урока").WithData(nameof(AddPuzzle)),
-				new InlineKeyboardButton("Поставить задачу для урока").WithData(nameof(SetPuzzle)),
 				new InlineKeyboardButton("Убрать задачу для урока").WithData(nameof(RemovePuzzle))
 			]);
 
-			message.AddButton(
-				new InlineKeyboardButton("Посмотреть существующие задания").WithData(nameof(ShowPuzzles))
-			);
+			message.AddKeyboard([
+				new InlineKeyboardButton("Посмотреть существующие задания").WithData(nameof(ShowPuzzles)),
+				new InlineKeyboardButton("Поставить задачу для урока").WithData(nameof(SetPuzzle))
+			]);
 
 			message.AddButton(
 				new InlineKeyboardButton("Посмотреть ответы на текущее задание").WithData(nameof(ShowStudentsSolvedPuzzle))
@@ -915,8 +915,10 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					}
 
 					var student = students.First();
+					var readStudent = _polyContext.Students.FirstOrDefault(s => s.Id == student.Id);
 					names.Add(student.Surname + " " + student.Name + " " + student.Patronymic);
-					student.AdditionalTournamentsScore++;
+					if (readStudent != null)
+						readStudent.AdditionalTournamentsScore++;
 				}
 
 				await _polyContext.SaveChangesAsync();
@@ -1002,7 +1004,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 			else
 			{
 				var name = splittedName[0];
-				students.AddRange(_polyContext.Students.Where(s => s.Name == name || s.Surname == name || (!string.IsNullOrEmpty(s.LichessId) && s.LichessId.Contains == name)));
+				students.AddRange(_polyContext.Students.Where(s => s.Name == name || s.Surname == name || (!string.IsNullOrEmpty(s.LichessId) && s.LichessId == name)));
 			}
 
 			return students;
@@ -1013,7 +1015,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 		{
 			if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
 				return;
-			List<TelegramMessageBuilder> messages = [];
+
 			DiscreteMessage message = new(
 				_discreteMessagesProvider,
 				[
@@ -1077,7 +1079,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					CorrectAnswer = correctAnswer
 				};
 
-				_puzzles.AddPuzzle(puzzle);
+				await _puzzles.AddPuzzle(puzzle);
 				await args.ReplyAsync($"Задание {name} было успешно добавлено! Вопрос: {question}, Ответы: {string.Join(", ", answers)}, Правильный ответ: {correctAnswer}");
 			}
 		}

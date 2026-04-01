@@ -3,57 +3,64 @@ using Telegram.Bot.Types;
 
 namespace PolyChess.Core.Telegram.Messages.Discrete.Messages
 {
-    internal class DiscreteMessage : ITelegramMessage
-    {
-        public readonly Func<DiscreteMessageEnteredArgs, Task> OnEntered;
+	internal class DiscreteMessage : ITelegramMessage
+	{
+		public readonly Func<DiscreteMessageEnteredArgs, Task> OnEntered;
 
-        public readonly List<ITelegramMessage> Queries;
+		public readonly List<ITelegramMessage> Queries;
 
-        private readonly Message[] _responses;
+		private readonly Message[] _responses;
 
-        private readonly DiscreteMessagesProvider _provider;
+		private readonly DiscreteMessagesProvider _provider;
 
-        private int _progress;
+		private int _progress;
 
-        public DiscreteMessage(DiscreteMessagesProvider provider, List<ITelegramMessage> queries, Func<DiscreteMessageEnteredArgs, Task> onEntered)
-        {
-            OnEntered = onEntered;
-            Queries = queries;
-            _responses = new Message[queries.Count];
-            _provider = provider;
-            _progress = 0;
-        }
+		public DiscreteMessage(DiscreteMessagesProvider provider, List<ITelegramMessage> queries, Func<DiscreteMessageEnteredArgs, Task> onEntered)
+		{
+			OnEntered = onEntered;
+			Queries = queries;
+			_responses = new Message[queries.Count];
+			_provider = provider;
+			_progress = 0;
+		}
 
-        public async Task<bool> HandleTelegramMessage(ITelegramBotClient client, Message message, CancellationToken token)
-        {
-            if (message.From == null)
-                return false;
-            if (_progress < Queries.Count)
-            {
-                _responses[_progress] = message;
-                _progress++;
-            }
+		public async Task<bool> HandleTelegramMessage(ITelegramBotClient client, Message message, CancellationToken token)
+		{
+			if (message.From == null)
+				return false;
+			if (_progress < Queries.Count)
+			{
+				_responses[_progress] = message;
+				_progress++;
+			}
 
-            if (_progress == Queries.Count)
-            {
-                await OnEntered(new(_responses, client, message.Chat.Id, message.From, token));
-                return true;
-            }
-            else
-                await SendAsync(client, message.Chat.Id, token);
-            return false;
-        }
+			if (_progress == Queries.Count)
+			{
+				try
+				{
+					await OnEntered(new(_responses, client, message.Chat.Id, message.From, token));
+				}
+				catch (Exception e)
+				{
+					Console.WriteLine(e);
+				}
+				return true;
+			}
+			else
+				await SendAsync(client, message.Chat.Id, token);
+			return false;
+		}
 
-        public async Task SendAsync(ITelegramBotClient client, ChatId chatId, CancellationToken token)
-        {
-            if (_progress == 0 && !_provider.TryAddMessage(this, chatId))
-                return;
-            await Queries[_progress].SendAsync(client, chatId, token);
-        }
+		public async Task SendAsync(ITelegramBotClient client, ChatId chatId, CancellationToken token)
+		{
+			if (_progress == 0 && !_provider.TryAddMessage(this, chatId))
+				return;
+			await Queries[_progress].SendAsync(client, chatId, token);
+		}
 
-        public Task EditAsync(ITelegramBotClient client, Message oldMessage, CancellationToken token)
-        {
-            throw new Exception("Discrete message can't be edited");
-        }
-    }
+		public Task EditAsync(ITelegramBotClient client, Message oldMessage, CancellationToken token)
+		{
+			throw new Exception("Discrete message can't be edited");
+		}
+	}
 }

@@ -25,7 +25,7 @@
         int completed = 0;
         
         if (Model.TotalLessons > 0 && Model.RequiredLessons > 0)
-            completed += (int)(25.0 * Model.AttendedLessons / Model.TotalLessons / Model.RequiredLessons);
+            completed += Math.Max(25, (int)(25.0 * Model.AttendedLessons / Model.TotalLessons / Model.RequiredLessons * 100));
         
         if (Model.RequiredTournaments > 0 && Model.CurrentStudent != null)
             completed += Math.Min(25, (int)(25.0 * Model.CurrentStudent.TournamentScore / Model.RequiredTournaments));

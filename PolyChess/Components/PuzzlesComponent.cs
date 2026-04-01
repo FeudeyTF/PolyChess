@@ -41,10 +41,10 @@ namespace PolyChess.Components
 			return default;
 		}
 
-		public void AddPuzzle(Puzzle puzzle)
+		public async Task AddPuzzle(Puzzle puzzle)
 		{
 			_context.Puzzles.Add(puzzle);
-			_context.SaveChanges();
+			await _context.SaveChangesAsync();
 		}
 
 		public async Task DisposeAsync()
