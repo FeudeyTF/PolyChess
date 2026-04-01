@@ -374,6 +374,12 @@ namespace PolyChess.Components.Telegram.CommandAggregators
             
             var dateNow = DateTime.Now;
             var lessonsCount = _polyContext.Lessons.Count(l => l.StartDate < dateNow && l.IsRequired);
+            if (lessonsCount == 0)
+            {
+                await ctx.ReplyAsync("В этом семестре ещё не было занятий!");
+                return;
+            }
+            
             float attendancePercent = (float)attendace.Count() / lessonsCount;
             msg.Add($"<b>Посещение занятий:</b> {attendace.Count()}/{lessonsCount} ({(int)(attendancePercent * 100)}%)");
 
