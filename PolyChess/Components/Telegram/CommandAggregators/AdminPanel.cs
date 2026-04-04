@@ -111,6 +111,11 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 				new InlineKeyboardButton("Удалить запись FAQ").WithData(nameof(RemoveFaq))
 			]);
 
+			message.AddKeyboard([
+				new InlineKeyboardButton("Добавить полезную ссылку").WithData(nameof(AddHelp)),
+				new InlineKeyboardButton("Удалить полезную ссылку").WithData(nameof(RemoveHelp))
+			]);
+
 			await ctx.ReplyAsync(message);
 		}
 
@@ -1307,6 +1312,87 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 				_polyContext.FaqEntries.Remove(faqEntry);
 				await _polyContext.SaveChangesAsync();
 				await args.ReplyAsync("Вопрос был успешно удален");
+			}
+		}
+
+		[TelegramButton(nameof(AddHelp))]
+		private async Task AddHelp(TelegramButtonExecutionContext ctx)
+		{
+			if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
+				return;
+			DiscreteMessage message = new(
+				_discreteMessagesProvider,
+				[
+					new TelegramMessageBuilder("Введите название"),
+					new TelegramMessageBuilder("Введите основной текст"),
+					new TelegramMessageBuilder("Отправьте файл")
+				],
+				HandleHelpInfoEntered
+			);
+
+			if (ctx.Query.Message != null)
+				await ctx.SendMessageAsync(message, ctx.Query.Message.Chat.Id);
+
+			async Task HandleHelpInfoEntered(DiscreteMessageEnteredArgs args)
+			{
+				var title = args.Responses[0].Text;
+				var text = args.Responses[1].Text;
+				var file = args.Responses[2].Document?.FileId;
+				if (string.IsNullOrEmpty(title))
+				{
+					await args.ReplyAsync("Вы не ввели название");
+					return;
+				}
+				if (string.IsNullOrEmpty(text))
+				{
+					await args.ReplyAsync("Вы не ввели текст");
+					return;
+				}
+				HelpEntry helpEntry = new() {
+					Id = default, 
+					Title = title,
+					Text = text,
+					FileId = file
+				};
+				_polyContext.HelpEntries.Add(helpEntry);
+				await _polyContext.SaveChangesAsync();
+				await args.ReplyAsync("Ссылка была успешно добавлена");
+			}
+		}
+
+		[TelegramButton(nameof(RemoveHelp))]
+		private async Task RemoveHelp(TelegramButtonExecutionContext ctx)
+		{
+			if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
+				return;
+			DiscreteMessage message = new(
+				_discreteMessagesProvider,
+				[
+					new TelegramMessageBuilder("Введите название ссылки, которую хотите удалить"),
+				],
+				HandleHelpInfoEntered
+			);
+
+			if (ctx.Query.Message != null)
+				await ctx.SendMessageAsync(message, ctx.Query.Message.Chat.Id);
+				
+			async Task HandleHelpInfoEntered(DiscreteMessageEnteredArgs args)
+			{
+				var title = args.Responses[0].Text;
+				if (string.IsNullOrEmpty(title))
+				{
+					await args.ReplyAsync("Вы не ввели название");
+					return;
+				}
+				HelpEntry helpEntry = _polyContext.HelpEntries.FirstOrDefault(s => s.Title == title);
+				if (helpEntry == null)
+				{
+					await args.ReplyAsync("Такой ссылки нет в базе");
+					return;
+				}
+				_polyContext.HelpEntries.Remove(helpEntry);
+				await _polyContext.SaveChangesAsync();
+				await args.ReplyAsync("Ссылка была успешно удалена");
 			}
 		}
 	}
