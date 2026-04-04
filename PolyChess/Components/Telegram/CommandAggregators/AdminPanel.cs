@@ -106,6 +106,11 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 				new InlineKeyboardButton("Посмотреть ответы на текущее задание").WithData(nameof(ShowStudentsSolvedPuzzle))
 			);
 
+			message.AddKeyboard([
+				new InlineKeyboardButton("Создать запись FAQ").WithData(nameof(AddFaq)),
+				new InlineKeyboardButton("Удалить запись FAQ").WithData(nameof(RemoveFaq))
+			]);
+
 			await ctx.ReplyAsync(message);
 		}
 
@@ -1226,6 +1231,83 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 			}
 			await ctx.ReplyAsync($"Студенты, правильно ответившие на задание: {string.Join(", ", studentCorrect)}");
 			await ctx.ReplyAsync($"Студенты, неправильно ответившие на задание: {string.Join(", ", studentIncorrect)}");
+		}
+		[TelegramButton(nameof(AddFaq))]
+		private async Task AddFaq(TelegramButtonExecutionContext ctx)
+		{
+			if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
+				return;
+			DiscreteMessage message = new(
+				_discreteMessagesProvider,
+				[
+					new TelegramMessageBuilder("Введите вопрос"),
+					new TelegramMessageBuilder("Введите ответ на этот вопрос")
+				],
+				HandleFaqInfoEntered
+			);
+
+			if (ctx.Query.Message != null)
+				await ctx.SendMessageAsync(message, ctx.Query.Message.Chat.Id);
+
+			async Task HandleFaqInfoEntered(DiscreteMessageEnteredArgs args)
+			{
+				var question = args.Responses[0].Text;
+				var answer = args.Responses[1].Text;
+				if (string.IsNullOrEmpty(question))
+				{
+					await args.ReplyAsync("Вы не ввели вопрос");
+					return;
+				}
+				if (string.IsNullOrEmpty(answer))
+				{
+					await args.ReplyAsync("Вы не ввели ответ");
+					return;
+				}
+				FaqEntry faqEntry = new() {
+					Id = default, 
+					Question = question,
+					Answer = answer
+				};
+				_polyContext.FaqEntries.Add(faqEntry);
+				await _polyContext.SaveChangesAsync();
+				await args.ReplyAsync("Вопрос был успешно добавлен");
+			}
+		}
+
+		[TelegramButton(nameof(RemoveFaq))]
+		private async Task RemoveFaq(TelegramButtonExecutionContext ctx)
+		{
+			if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
+				return;
+			DiscreteMessage message = new(
+				_discreteMessagesProvider,
+				[
+					new TelegramMessageBuilder("Введите вопрос, который хотите удалить"),
+				],
+				HandleFaqInfoEntered
+			);
+
+			if (ctx.Query.Message != null)
+				await ctx.SendMessageAsync(message, ctx.Query.Message.Chat.Id);
+				
+			async Task HandleFaqInfoEntered(DiscreteMessageEnteredArgs args)
+			{
+				var question = args.Responses[0].Text;
+				if (string.IsNullOrEmpty(question))
+				{
+					await args.ReplyAsync("Вы не ввели вопрос");
+					return;
+				}
+				FaqEntry faqEntry = _polyContext.FaqEntries.FirstOrDefault(s => s.Question == question);
+				if (faqEntry == null)
+				{
+					await args.ReplyAsync("Такого вопроса нет в базе");
+					return;
+				}
+				_polyContext.FaqEntries.Remove(faqEntry);
+				await _polyContext.SaveChangesAsync();
+				await args.ReplyAsync("Вопрос был успешно удален");
+			}
 		}
 	}
 }
