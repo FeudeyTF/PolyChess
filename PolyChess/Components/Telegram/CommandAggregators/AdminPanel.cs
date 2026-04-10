@@ -1352,7 +1352,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 				}
 				if (string.IsNullOrEmpty(footer))
 				{
-					await args.ReplyAsync("Вы не ввели колонтитул");
+					await args.ReplyAsync("Вы не ввели нижний колонтитул");
 					return;
 				}
 				HelpEntry helpEntry = new() {
