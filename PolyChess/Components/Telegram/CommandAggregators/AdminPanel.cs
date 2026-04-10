@@ -1303,7 +1303,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					await args.ReplyAsync("Вы не ввели вопрос");
 					return;
 				}
-				FaqEntry faqEntry = _polyContext.FaqEntries.FirstOrDefault(s => s.Question == question);
+				FaqEntry? faqEntry = _polyContext.FaqEntries.FirstOrDefault(s => s.Question == question);
 				if (faqEntry == null)
 				{
 					await args.ReplyAsync("Такого вопроса нет в базе");
@@ -1325,6 +1325,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 				[
 					new TelegramMessageBuilder("Введите название"),
 					new TelegramMessageBuilder("Введите основной текст"),
+					new TelegramMessageBuilder("Введите колонтитул"),
 					new TelegramMessageBuilder("Отправьте файл")
 				],
 				HandleHelpInfoEntered
@@ -1337,7 +1338,8 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 			{
 				var title = args.Responses[0].Text;
 				var text = args.Responses[1].Text;
-				var file = args.Responses[2].Document?.FileId;
+				var footer = args.Responses[2].Text;
+				var file = args.Responses[3].Document?.FileId;
 				if (string.IsNullOrEmpty(title))
 				{
 					await args.ReplyAsync("Вы не ввели название");
@@ -1348,10 +1350,16 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					await args.ReplyAsync("Вы не ввели текст");
 					return;
 				}
+				if (string.IsNullOrEmpty(footer))
+				{
+					await args.ReplyAsync("Вы не ввели колонтитул");
+					return;
+				}
 				HelpEntry helpEntry = new() {
 					Id = default, 
 					Title = title,
 					Text = text,
+					Footer = footer,
 					FileId = file
 				};
 				_polyContext.HelpEntries.Add(helpEntry);
@@ -1384,7 +1392,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					await args.ReplyAsync("Вы не ввели название");
 					return;
 				}
-				HelpEntry helpEntry = _polyContext.HelpEntries.FirstOrDefault(s => s.Title == title);
+				HelpEntry? helpEntry = _polyContext.HelpEntries.FirstOrDefault(s => s.Title == title);
 				if (helpEntry == null)
 				{
 					await args.ReplyAsync("Такой ссылки нет в базе");
