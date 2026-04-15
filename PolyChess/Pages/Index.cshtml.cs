@@ -147,7 +147,7 @@ namespace PolyChess.Pages
 				RecordBookId = student.RecordBookId,
 				LichessId = student.LichessId,
 				CreativeTaskCompleted = student.CreativeTaskCompleted,
-				TournamentScore = participatedTournaments + student.AdditionalTournamentsScore,
+				TournamentScore = participatedTournaments + _context.TournamentEntries.Where(t => t.Student == student).Sum(t => t.Score),
 				ParticipatedTournamentsCount = participatedTournaments,
 				HasLichessToken = !string.IsNullOrEmpty(student.LichessToken)
 			};

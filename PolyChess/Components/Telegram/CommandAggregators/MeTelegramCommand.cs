@@ -219,15 +219,17 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 						totalScore += attendancePercent;
 					}
 
-					float visitedTournamentsCount = zeroScoreTournaments + oneScoreTournaments + student.AdditionalTournamentsScore;
+					var additionalScore = _polyContext.TournamentEntries.Where(t => t.Student == student).Sum(t => t.Score);
+					float visitedTournamentsCount = zeroScoreTournaments + oneScoreTournaments + additionalScore;
 					totalScore += Math.Min(visitedTournamentsCount / _mainConfig.Test.RequiredTournamentsCount, 1f);
 
 					text.Add($"🤝<b>Участие в турнирах:</b>");
 					text.Add($"       <b>Всего</b>: {visitedTournamentsCount} из {_mainConfig.Test.RequiredTournamentsCount} ({StringUtils.CreateSimpleBar(visitedTournamentsCount, _mainConfig.Test.RequiredTournamentsCount, bars: barsInBar)})");
 					text.Add("         - Не в топе: " + zeroScoreTournaments);
 					text.Add("         - В топе: " + oneScoreTournaments);
-					if (student.AdditionalTournamentsScore != 0)
-						text.Add("         - Дополнительно: " + student.AdditionalTournamentsScore);
+
+					if (additionalScore != 0)
+						text.Add("         - Дополнительно: " + additionalScore);
 
 					if (!string.IsNullOrEmpty(student.LichessToken))
 					{
@@ -391,7 +393,10 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 			foreach (var tournament in _tournaments.SwissTournamentsList)
 				if (tournament.Tournament.Started < DateTime.UtcNow && tournament.Rating.Players.Any(p => p.Student != null && p.Student.TelegramId == userId))
 					result.Add(tournament);
-			return new List<object>([.. from r in result orderby (r is ArenaTournamentInfo t ? t.Tournament.StartDate : r is SwissTournamentInfo s ? s.Tournament.Started : DateTime.Now) descending select r]);
+			foreach (var tournament in _tournaments.CustomTournamentsList)
+				if (tournament.Tournament.StartDate < DateTime.UtcNow && tournament.Rating.Players.Any(p => p.Student != null && p.Student.TelegramId == userId))
+					result.Add(tournament);
+			return new List<object>([.. from r in result orderby (r is ArenaTournamentInfo t ? t.Tournament.StartDate : r is SwissTournamentInfo s ? s.Tournament.Started : r is CustomTournamentInfo c ? c.Tournament.StartDate : DateTime.Now) descending select r]);
 		}
 
 		private string MyTournamentToString(object info, int index, ChatId chatId)
@@ -477,6 +482,32 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 								result.Add(" - <b>Отсутствовал</b>");
 						}
 					}
+					else if (info is CustomTournamentInfo customTournamentInfo)
+					{
+						if (customTournamentInfo != null)
+						{
+							TournamentUser<CustomSheetEntry>? player = default;
+							foreach (var p in customTournamentInfo.Rating.Players)
+							{
+								if (p.TournamentEntry.Student == student)
+								{
+									player = p;
+									break;
+								}
+							}
+
+							if (player != default)
+							{
+								result.Add($"Турнир <b>{customTournamentInfo.Tournament.Name}</a></b>. Состоялся <b>{customTournamentInfo.Tournament.StartDate:g}</b>");
+								result.Add($" - Описание: <b>{(customTournamentInfo.Tournament.Description)}</b>");
+								result.Add($" - Балл: <b>{(player.Score)}</b>");
+							}
+							else
+								result.Add(" - <b>Отсутствовал</b>");
+
+						}
+					}
+
 					result.Add("");
 					return string.Join("\n", result);
 				}

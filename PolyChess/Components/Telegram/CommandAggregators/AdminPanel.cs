@@ -76,11 +76,6 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 			);
 
 			message.AddButton(
-				new InlineKeyboardButton("Добавить дополнительные очки за турниры студентам").WithData(nameof(AddAdditionalTournaments))
-			);
-
-
-			message.AddButton(
 				new InlineKeyboardButton("💾 Сохранить турнир").WithData(nameof(SaveTournament))
 			);
 
@@ -227,7 +222,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					puzzles,
 					zeroScoreTournaments,
 					oneScoreTournaments,
-					student.AdditionalTournamentsScore
+					_polyContext.TournamentEntries.Where(t => t.Student == student).Sum(t => t.Score)
 				]);
 				csv.Add(entry);
 			}
@@ -878,61 +873,6 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					result.Add("Турнир не сохранён с помощью команды /saveswiss!");
 
 				return result;
-			}
-		}
-
-		[TelegramButton(nameof(AddAdditionalTournaments))]
-		private async Task AddAdditionalTournaments(TelegramButtonExecutionContext ctx)
-		{
-			if (!_mainConfig.TelegramAdmins.Contains(ctx.Query.From.Id))
-				return;
-
-			DiscreteMessage message = new(
-				_discreteMessagesProvider,
-				[
-					new TelegramMessageBuilder("Введите имя студентов  (Фамилия, Фамилия Имя, Имя, ФИО, Ник)"),
-				],
-				HandleStudentNameEntered
-			);
-
-			if (ctx.Query.Message != null)
-				await ctx.SendMessageAsync(message, ctx.Query.Message.Chat.Id);
-
-			async Task HandleStudentNameEntered(DiscreteMessageEnteredArgs args)
-			{
-				var text = args.Responses[0].Text;
-				if (text == null)
-				{
-					await args.ReplyAsync("В сообщении должно быть имя студента!");
-					return;
-				}
-
-				List<string> names = [];
-
-				foreach (var identifier in text.Split('\n'))
-				{
-					var students = GetStudentsByIdentifier(identifier);
-					if (students.Count() > 1)
-					{
-						await args.ReplyAsync($"По введённой фамилии и имени '{identifier}' были найдены студенты:\n{string.Join('\n', students.Select(s => s.Surname + " " + s.Name + " " + s.Patronymic))}");
-						continue;
-					}
-
-					if (students.Count == 0)
-					{
-						await args.ReplyAsync($"По вашему запросу '{identifier}' не найдено ни одного студента!");
-						continue;
-					}
-
-					var student = students.First();
-					var readStudent = _polyContext.Students.FirstOrDefault(s => s.Id == student.Id);
-					names.Add(student.Surname + " " + student.Name + " " + student.Patronymic);
-					if (readStudent != null)
-						readStudent.AdditionalTournamentsScore++;
-				}
-
-				await _polyContext.SaveChangesAsync();
-				await ctx.ReplyAsync($"Студентам '{string.Join(", ", names)}' был выдан дополнительный балл за турнир!");
 			}
 		}
 

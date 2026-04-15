@@ -8,340 +8,364 @@ using PolyChess.LichessAPI.Types.Swiss;
 
 namespace PolyChess.Components.Tournaments
 {
-    /// <summary>
-    /// TODO: Полностью переписать компонент
-    /// </summary>
-    internal class TournamentsComponent : IComponent
-    {
-        public readonly Division DivisionC = new(0, 1300);
+	/// <summary>
+	/// TODO: Полностью переписать компонент
+	/// </summary>
+	internal class TournamentsComponent : IComponent
+	{
+		public readonly Division DivisionC = new(0, 1300);
 
-        public readonly Division DivisionB = new(1301, 1800);
+		public readonly Division DivisionB = new(1301, 1800);
 
-        public readonly Division DivisionA = new(1801, 4000);
+		public readonly Division DivisionA = new(1801, 4000);
 
-        public List<ArenaTournamentInfo> TournamentsList { get; private set; }
+		public List<ArenaTournamentInfo> TournamentsList { get; private set; }
 
-        public List<SwissTournamentInfo> SwissTournamentsList { get; private set; }
+		public List<SwissTournamentInfo> SwissTournamentsList { get; private set; }
 
-        private readonly IMainConfig _mainConfig;
+		public List<CustomTournamentInfo> CustomTournamentsList { get; private set; }
 
-        private readonly ILogger _logger;
+		private readonly IMainConfig _mainConfig;
 
-        private readonly LichessClient _lichess;
+		private readonly ILogger _logger;
 
-        private readonly PolyContext _context;
+		private readonly LichessClient _lichess;
 
-        public TournamentsComponent(IMainConfig config, ILogger logger, LichessClient lichess, PolyContext context)
-        {
-            _mainConfig = config;
-            _lichess = lichess;
-            _context = context;
-            _logger = logger;
-            TournamentsList = [];
-            SwissTournamentsList = [];
-        }
+		private readonly PolyContext _context;
 
-        public async Task StartAsync()
-        {
-            _logger.Info($"Собираю турниры от {_mainConfig.SemesterStartDate:g}...");
-            var tournamentsPath = Path.Combine(Environment.CurrentDirectory, "Tournaments");
-            if (!Directory.Exists(tournamentsPath))
-                Directory.CreateDirectory(tournamentsPath);
+		public TournamentsComponent(IMainConfig config, ILogger logger, LichessClient lichess, PolyContext context)
+		{
+			_mainConfig = config;
+			_lichess = lichess;
+			_context = context;
+			_logger = logger;
+			TournamentsList = [];
+			SwissTournamentsList = [];
+			CustomTournamentsList = [];
+		}
 
-            var swissPath = Path.Combine(Environment.CurrentDirectory, "SwissTournaments");
-            if (!Directory.Exists(swissPath))
-                Directory.CreateDirectory(swissPath);
+		public async Task StartAsync()
+		{
+			_logger.Info($"Собираю турниры от {_mainConfig.SemesterStartDate:g}...");
+			var tournamentsPath = Path.Combine(Environment.CurrentDirectory, "Tournaments");
+			if (!Directory.Exists(tournamentsPath))
+				Directory.CreateDirectory(tournamentsPath);
 
-            foreach (var filePath in Directory.GetFiles(tournamentsPath))
-            {
-                var tournamentName = Path.GetFileName(filePath)[..^4];
-                var tournament = await _lichess.GetTournament(tournamentName);
-                if (tournament != null && IsSemesterTournament(tournament))
-                {
-                    List<SheetEntry>? tournamentSheet = default;
+			var swissPath = Path.Combine(Environment.CurrentDirectory, "SwissTournaments");
+			if (!Directory.Exists(swissPath))
+				Directory.CreateDirectory(swissPath);
 
-                    try
-                    {
-                        using var reader = File.OpenText(filePath);
-                        tournamentSheet = await _lichess.GetTournamentSheet(reader);
-                    }
-                    catch
-                    {
-                        File.Delete(filePath);
-                    }
+			foreach (var filePath in Directory.GetFiles(tournamentsPath))
+			{
+				var tournamentName = Path.GetFileName(filePath)[..^4];
+				var tournament = await _lichess.GetTournament(tournamentName);
+				if (tournament != null && IsSemesterTournament(tournament))
+				{
+					List<SheetEntry>? tournamentSheet = default;
 
-                    if (tournamentSheet != null)
-                    {
-                        List<string> exclude = [.. _mainConfig.ClubTeamPlayers];
-                        tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username) || e.Team != null && !_mainConfig.InstitutesTeams.Contains(e.Team))).ToList();
-                        var tournamentRating = GenerateTournamentRating(tournamentSheet);
-                        TournamentsList.Add(new(tournament, tournamentRating));
-                    }
-                }
-            }
+					try
+					{
+						using var reader = File.OpenText(filePath);
+						tournamentSheet = await _lichess.GetTournamentSheet(reader);
+					}
+					catch
+					{
+						File.Delete(filePath);
+					}
 
-            foreach (var filePath in Directory.GetFiles(swissPath))
-            {
-                var tournamentName = Path.GetFileName(filePath)[..^4];
-                var tournament = await _lichess.GetSwissTournament(tournamentName);
-                if (tournament != null && IsSemesterTournament(tournament))
-                {
-                    List<SwissSheetEntry>? tournamentSheet = default;
+					if (tournamentSheet != null)
+					{
+						List<string> exclude = [.. _mainConfig.ClubTeamPlayers];
+						tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username) || e.Team != null && !_mainConfig.InstitutesTeams.Contains(e.Team))).ToList();
+						var tournamentRating = GenerateTournamentRating(tournamentSheet);
+						TournamentsList.Add(new(tournament, tournamentRating));
+					}
+				}
+			}
 
-                    try
-                    {
-                        using (var reader = File.OpenText(filePath))
-                        {
-                            tournamentSheet = await _lichess.GetSwissTournamentSheet(reader);
-                        }
-                    }
-                    catch
-                    {
-                        File.Delete(filePath);
-                    }
 
-                    if (tournamentSheet != null)
-                    {
-                        List<string> exclude = [.. _mainConfig.ClubTeamPlayers];
-                        tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username))).ToList();
-                        var tournamentRating = GenerateTournamentRating(tournamentSheet);
-                        SwissTournamentsList.Add(new(tournament, tournamentRating));
-                    }
-                }
-            }
+			foreach (var filePath in Directory.GetFiles(swissPath))
+			{
+				var tournamentName = Path.GetFileName(filePath)[..^4];
+				var tournament = await _lichess.GetSwissTournament(tournamentName);
+				if (tournament != null && IsSemesterTournament(tournament))
+				{
+					List<SwissSheetEntry>? tournamentSheet = default;
 
-            TournamentsList = [.. from r in TournamentsList orderby r.Tournament.StartDate descending select r];
-            SwissTournamentsList = [.. from r in SwissTournamentsList orderby r.Tournament.Started descending select r];
-            _logger.Info($"Найдено {TournamentsList.Count} турниров и {SwissTournamentsList.Count} турниров по швейцарской системе!");
-        }
+					try
+					{
+						using (var reader = File.OpenText(filePath))
+						{
+							tournamentSheet = await _lichess.GetSwissTournamentSheet(reader);
+						}
+					}
+					catch
+					{
+						File.Delete(filePath);
+					}
 
-        public Task DisposeAsync()
-        {
-            return Task.CompletedTask;
-        }
+					if (tournamentSheet != null)
+					{
+						List<string> exclude = [.. _mainConfig.ClubTeamPlayers];
+						tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username))).ToList();
+						var tournamentRating = GenerateTournamentRating(tournamentSheet);
+						SwissTournamentsList.Add(new(tournament, tournamentRating));
+					}
+				}
+			}
 
-        public DivisionType GetTournamentDivision(SwissSheetEntry entry)
-            => GetTournamentDivision(entry.Rating);
+			foreach (var customTournament in _context.Tournaments)
+			{
+				List<CustomSheetEntry> tourmanetSheet = [];
+				foreach (var customTournamentEntry in _context.TournamentEntries)
+				{
+					if (customTournamentEntry.Tournament == customTournament)
+						tourmanetSheet.Add(new(customTournamentEntry.Score, customTournamentEntry.Student));
+				}
 
-        public DivisionType GetTournamentDivision(SheetEntry entry)
-            => GetTournamentDivision(entry.Rating);
+				List<TournamentUser<CustomSheetEntry>> tournamentUsers = [];
 
-        public DivisionType GetTournamentDivision(int rating)
-        {
-            if (DivisionC.InDivision(rating))
-                return DivisionType.C;
-            else if (DivisionB.InDivision(rating))
-                return DivisionType.B;
-            else if (DivisionA.InDivision(rating))
-                return DivisionType.A;
-            return DivisionType.None;
-        }
+				foreach (var entry in tourmanetSheet)
+					tournamentUsers.Add(new(entry.Student, entry.Score, entry));
 
-        public static string GetLichessName(SwissSheetEntry entry)
-            => entry.Username;
+				TournamentRating<CustomSheetEntry> rating = new([], tournamentUsers);
 
-        public static string GetLichessName(SheetEntry entry)
-            => entry.Username;
+				CustomTournamentsList.Add(new(customTournament, rating));
+			}
 
-        public static int CalculateScore(SwissSheetEntry entry, bool inDivision)
-        {
-            int totalScore = -1;
-            if (!entry.Absent)
-            {
-                totalScore = 0;
-                if (inDivision)
-                    totalScore = 1;
-            }
-            return totalScore;
-        }
+			TournamentsList = [.. from r in TournamentsList orderby r.Tournament.StartDate descending select r];
+			SwissTournamentsList = [.. from r in SwissTournamentsList orderby r.Tournament.Started descending select r];
+			CustomTournamentsList = [.. from r in CustomTournamentsList orderby r.Tournament.StartDate descending select r];
+			_logger.Info($"Найдено {TournamentsList.Count} турниров и {SwissTournamentsList.Count} турниров по швейцарской системе, а также {CustomTournamentsList.Count} пользовательских турниров!");
+		}
 
-        public static int CalculateScore(SheetEntry entry, bool inDivision)
-        {
-            int totalScore = -1;
-            if (entry.Sheet != null)
-            {
-                int zeroNumbers = entry.Sheet.Scores.Count(c => c == '0');
-                var otherNumbers = entry.Sheet.Scores.Count(c => c != '0');
-                int total = zeroNumbers + otherNumbers;
+		public Task DisposeAsync()
+		{
+			return Task.CompletedTask;
+		}
 
-                if (total >= 7 && otherNumbers > 0)
-                {
-                    if (inDivision)
-                        totalScore = 1;
-                    else
-                        totalScore = 0;
-                }
-            }
-            return totalScore;
-        }
+		public DivisionType GetTournamentDivision(SwissSheetEntry entry)
+			=> GetTournamentDivision(entry.Rating);
 
-        public TournamentRating<SwissSheetEntry> GenerateTournamentRating(List<SwissSheetEntry> tournament)
-            => GenerateTournamentRating(tournament, GetTournamentDivision, GetLichessName, CalculateScore);
+		public DivisionType GetTournamentDivision(SheetEntry entry)
+			=> GetTournamentDivision(entry.Rating);
 
-        public TournamentRating<SheetEntry> GenerateTournamentRating(List<SheetEntry> tournament)
-            => GenerateTournamentRating(tournament, GetTournamentDivision, GetLichessName, CalculateScore);
+		public DivisionType GetTournamentDivision(int rating)
+		{
+			if (DivisionC.InDivision(rating))
+				return DivisionType.C;
+			else if (DivisionB.InDivision(rating))
+				return DivisionType.B;
+			else if (DivisionA.InDivision(rating))
+				return DivisionType.A;
+			return DivisionType.None;
+		}
 
-        public TournamentRating<TValue> GenerateTournamentRating<TValue>(List<TValue> tournament, Func<TValue, DivisionType> getDivision, Func<TValue, string> getLichessName, Func<TValue, bool, int> calculateScore)
-        {
-            Dictionary<string, Student> students = [];
-            foreach (var student in _context.Students)
-                if (!string.IsNullOrEmpty(student.LichessId))
-                    students.Add(student.LichessId, student);
+		public static string GetLichessName(SwissSheetEntry entry)
+			=> entry.Username;
 
-            Dictionary<DivisionType, List<TValue>> playersInDivision = new()
-                {
-                    { DivisionType.A, [] },
-                    { DivisionType.B, [] },
-                    { DivisionType.C, [] }
-                };
+		public static string GetLichessName(SheetEntry entry)
+			=> entry.Username;
 
-            foreach (var entry in tournament)
-            {
-                var division = getDivision(entry);
-                if (division != DivisionType.None && playersInDivision[division].Count < 3)
-                    playersInDivision[division].Add(entry);
-            }
+		public static int CalculateScore(SwissSheetEntry entry, bool inDivision)
+		{
+			int totalScore = -1;
+			if (!entry.Absent)
+			{
+				totalScore = 0;
+				if (inDivision)
+					totalScore = 1;
+			}
+			return totalScore;
+		}
 
-            List<TournamentUser<TValue>> tournamentUsers = [];
+		public static int CalculateScore(SheetEntry entry, bool inDivision)
+		{
+			int totalScore = -1;
+			if (entry.Sheet != null)
+			{
+				int zeroNumbers = entry.Sheet.Scores.Count(c => c == '0');
+				var otherNumbers = entry.Sheet.Scores.Count(c => c != '0');
+				int total = zeroNumbers + otherNumbers;
 
-            foreach (var entry in tournament)
-            {
-                bool inDivision = false;
-                for (int i = 0; i < playersInDivision.Count; i++)
-                    if (playersInDivision[(DivisionType)i].Contains(entry))
-                    {
-                        inDivision = true;
-                        break;
-                    }
-                var score = calculateScore(entry, inDivision);
-                if (students.TryGetValue(getLichessName(entry), out var founded))
-                    tournamentUsers.Add(new(founded, score, entry));
-                else
-                    tournamentUsers.Add(new(null, score, entry));
-            }
+				if (total >= 7 && otherNumbers > 0)
+				{
+					if (inDivision)
+						totalScore = 1;
+					else
+						totalScore = 0;
+				}
+			}
+			return totalScore;
+		}
 
-            return new(playersInDivision, tournamentUsers);
-        }
+		public TournamentRating<SwissSheetEntry> GenerateTournamentRating(List<SwissSheetEntry> tournament)
+			=> GenerateTournamentRating(tournament, GetTournamentDivision, GetLichessName, CalculateScore);
 
-        public static string GetTournamentFolder()
-            => Path.Combine(Environment.CurrentDirectory, "Tournaments");
+		public TournamentRating<SheetEntry> GenerateTournamentRating(List<SheetEntry> tournament)
+			=> GenerateTournamentRating(tournament, GetTournamentDivision, GetLichessName, CalculateScore);
 
-        public static string GetSwissTournamentFolder()
-            => Path.Combine(Environment.CurrentDirectory, "SwissTournaments");
+		public TournamentRating<TValue> GenerateTournamentRating<TValue>(List<TValue> tournament, Func<TValue, DivisionType> getDivision, Func<TValue, string> getLichessName, Func<TValue, bool, int> calculateScore)
+		{
+			Dictionary<string, Student> students = [];
+			foreach (var student in _context.Students)
+				if (!string.IsNullOrEmpty(student.LichessId))
+					students.Add(student.LichessId, student);
 
-        public static string GetTournamentPath(string id)
-            => Path.Combine(GetTournamentFolder(), id + ".txt");
+			Dictionary<DivisionType, List<TValue>> playersInDivision = new()
+				{
+					{ DivisionType.A, [] },
+					{ DivisionType.B, [] },
+					{ DivisionType.C, [] }
+				};
 
-        public static string GetSwissTournamentPath(string id)
-            => Path.Combine(GetSwissTournamentFolder(), id + ".txt");
+			foreach (var entry in tournament)
+			{
+				var division = getDivision(entry);
+				if (division != DivisionType.None && playersInDivision[division].Count < 3)
+					playersInDivision[division].Add(entry);
+			}
 
-        public async Task<ArenaTournamentInfo?> UpdateTournament(string id)
-        {
-            var arenaTournament = await _lichess.GetTournament(id);
-            if (arenaTournament != null)
-            {
-                foreach (var tournament in new List<ArenaTournamentInfo>(TournamentsList))
-                    if (tournament.Tournament.ID == id)
-                        TournamentsList.Remove(tournament);
-                await _lichess.SaveTournamentSheet(GetTournamentPath(id), id, true);
-                if (IsSemesterTournament(arenaTournament))
-                {
-                    using var reader = File.OpenText(GetTournamentPath(arenaTournament.ID));
-                    var result = new ArenaTournamentInfo(arenaTournament, GenerateTournamentRating(await _lichess.GetTournamentSheet(reader)));
-                    TournamentsList.Add(result);
-                    return result;
-                }
-            }
-            return default;
-        }
+			List<TournamentUser<TValue>> tournamentUsers = [];
 
-        public async Task<SwissTournamentInfo?> UpdateSwissTournament(string id)
-        {
-            var swissTournament = await _lichess.GetSwissTournament(id);
-            if (swissTournament != null)
-            {
-                foreach (var tournament in new List<SwissTournamentInfo>(SwissTournamentsList))
-                    if (tournament.Tournament.ID == id)
-                        SwissTournamentsList.Remove(tournament);
-                await _lichess.SaveSwissTournamentSheet(GetSwissTournamentPath(id), id);
-                if (IsSemesterTournament(swissTournament))
-                {
-                    using var reader = File.OpenText(GetSwissTournamentPath(swissTournament.ID));
-                    var result = new SwissTournamentInfo(swissTournament, GenerateTournamentRating(await _lichess.GetSwissTournamentSheet(reader)));
-                    SwissTournamentsList.Add(result);
-                    return result;
-                }
-            }
-            return default;
-        }
+			foreach (var entry in tournament)
+			{
+				bool inDivision = false;
+				for (int i = 0; i < playersInDivision.Count; i++)
+					if (playersInDivision[(DivisionType)i].Contains(entry))
+					{
+						inDivision = true;
+						break;
+					}
+				var score = calculateScore(entry, inDivision);
+				if (students.TryGetValue(getLichessName(entry), out var founded))
+					tournamentUsers.Add(new(founded, score, entry));
+				else
+					tournamentUsers.Add(new(null, score, entry));
+			}
 
-        public async Task<List<(string id, string name)>> UpdateTournaments(string teamID)
-        {
-            List<(string id, string name)> result = [];
-            List<ArenaTournamentInfo> arenaTournamentsInfos = [];
-            List<SwissTournamentInfo> swissTournamentsInfos = [];
-            var swissTournaments = await _lichess.GetTeamSwissTournaments(teamID);
-            var arenaTournaments = await _lichess.GetTeamArenaTournaments(teamID);
-            List<string> savedSwissTournaments = [];
-            List<string> savedArenaTournaments = [];
+			return new(playersInDivision, tournamentUsers);
+		}
 
-            foreach (var filePath in Directory.GetFiles(GetTournamentFolder()))
-                savedArenaTournaments.Add(Path.GetFileName(filePath)[..^4]);
+		public static string GetTournamentFolder()
+			=> Path.Combine(Environment.CurrentDirectory, "Tournaments");
 
-            foreach (var filePath in Directory.GetFiles(GetSwissTournamentFolder()))
-                savedSwissTournaments.Add(Path.GetFileName(filePath)[..^4]);
+		public static string GetSwissTournamentFolder()
+			=> Path.Combine(Environment.CurrentDirectory, "SwissTournaments");
 
-            swissTournaments = [.. swissTournaments.Except(swissTournaments.Where(t => savedSwissTournaments.Contains(t.ID) || !IsSemesterTournament(t)))];
-            arenaTournaments = [.. arenaTournaments.Except(arenaTournaments.Where(t => savedArenaTournaments.Contains(t.ID) || !IsSemesterTournament(t)))];
+		public static string GetTournamentPath(string id)
+			=> Path.Combine(GetTournamentFolder(), id + ".txt");
 
-            foreach (var tournament in TournamentsList)
-            {
-                if (File.GetLastWriteTime(GetTournamentPath(tournament.Tournament.ID)) < tournament.Tournament.StartDate && tournament.Tournament.StartDate < DateTime.Now)
-                    arenaTournaments.Add(tournament.Tournament);
-            }
+		public static string GetSwissTournamentPath(string id)
+			=> Path.Combine(GetSwissTournamentFolder(), id + ".txt");
 
-            foreach (var tournament in SwissTournamentsList)
-            {
-                if (File.GetLastWriteTime(GetSwissTournamentPath(tournament.Tournament.ID)) < tournament.Tournament.Started && tournament.Tournament.Started < DateTime.Now)
-                    swissTournaments.Add(tournament.Tournament);
-            }
+		public async Task<ArenaTournamentInfo?> UpdateTournament(string id)
+		{
+			var arenaTournament = await _lichess.GetTournament(id);
+			if (arenaTournament != null)
+			{
+				foreach (var tournament in new List<ArenaTournamentInfo>(TournamentsList))
+					if (tournament.Tournament.ID == id)
+						TournamentsList.Remove(tournament);
+				await _lichess.SaveTournamentSheet(GetTournamentPath(id), id, true);
+				if (IsSemesterTournament(arenaTournament))
+				{
+					using var reader = File.OpenText(GetTournamentPath(arenaTournament.ID));
+					var result = new ArenaTournamentInfo(arenaTournament, GenerateTournamentRating(await _lichess.GetTournamentSheet(reader)));
+					TournamentsList.Add(result);
+					return result;
+				}
+			}
+			return default;
+		}
 
-            foreach (var swissTournament in swissTournaments)
-            {
-                result.Add((swissTournament.ID, swissTournament.Name));
-                await _lichess.SaveSwissTournamentSheet(GetSwissTournamentPath(swissTournament.ID), swissTournament.ID);
-                using var reader = File.OpenText(GetSwissTournamentPath(swissTournament.ID));
-                if (IsSemesterTournament(swissTournament))
-                    swissTournamentsInfos.Add(new(swissTournament, GenerateTournamentRating(await _lichess.GetSwissTournamentSheet(reader))));
-            }
+		public async Task<SwissTournamentInfo?> UpdateSwissTournament(string id)
+		{
+			var swissTournament = await _lichess.GetSwissTournament(id);
+			if (swissTournament != null)
+			{
+				foreach (var tournament in new List<SwissTournamentInfo>(SwissTournamentsList))
+					if (tournament.Tournament.ID == id)
+						SwissTournamentsList.Remove(tournament);
+				await _lichess.SaveSwissTournamentSheet(GetSwissTournamentPath(id), id);
+				if (IsSemesterTournament(swissTournament))
+				{
+					using var reader = File.OpenText(GetSwissTournamentPath(swissTournament.ID));
+					var result = new SwissTournamentInfo(swissTournament, GenerateTournamentRating(await _lichess.GetSwissTournamentSheet(reader)));
+					SwissTournamentsList.Add(result);
+					return result;
+				}
+			}
+			return default;
+		}
 
-            foreach (var arenaTournament in arenaTournaments)
-            {
-                result.Add((arenaTournament.ID, arenaTournament.FullName));
-                await _lichess.SaveTournamentSheet(GetTournamentPath(arenaTournament.ID), arenaTournament.ID, true);
-                using var reader = File.OpenText(GetTournamentPath(arenaTournament.ID));
-                if (IsSemesterTournament(arenaTournament))
-                    arenaTournamentsInfos.Add(new(arenaTournament, GenerateTournamentRating(await _lichess.GetTournamentSheet(reader))));
-            }
+		public async Task<List<(string id, string name)>> UpdateTournaments(string teamID)
+		{
+			List<(string id, string name)> result = [];
+			List<ArenaTournamentInfo> arenaTournamentsInfos = [];
+			List<SwissTournamentInfo> swissTournamentsInfos = [];
+			var swissTournaments = await _lichess.GetTeamSwissTournaments(teamID);
+			var arenaTournaments = await _lichess.GetTeamArenaTournaments(teamID);
+			List<string> savedSwissTournaments = [];
+			List<string> savedArenaTournaments = [];
 
-            foreach (var tournament in new List<ArenaTournamentInfo>(TournamentsList))
-                foreach (var tournamentInfo in arenaTournamentsInfos)
-                    if (tournament.Tournament.ID == tournamentInfo.Tournament.ID)
-                        TournamentsList.Remove(tournament);
+			foreach (var filePath in Directory.GetFiles(GetTournamentFolder()))
+				savedArenaTournaments.Add(Path.GetFileName(filePath)[..^4]);
 
-            foreach (var tournament in new List<SwissTournamentInfo>(SwissTournamentsList))
-                foreach (var tournamentInfo in swissTournamentsInfos)
-                    if (tournament.Tournament.ID == tournamentInfo.Tournament.ID)
-                        SwissTournamentsList.Remove(tournament);
+			foreach (var filePath in Directory.GetFiles(GetSwissTournamentFolder()))
+				savedSwissTournaments.Add(Path.GetFileName(filePath)[..^4]);
 
-            TournamentsList = [.. TournamentsList, .. arenaTournamentsInfos];
-            SwissTournamentsList = [.. SwissTournamentsList, .. swissTournamentsInfos];
-            return result;
-        }
-        private bool IsSemesterTournament(ArenaTournament tournament)
-           => tournament.StartDate > _mainConfig.SemesterStartDate && !tournament.Description.Contains("баллы за этот турнир не начисляются", StringComparison.CurrentCultureIgnoreCase);
+			swissTournaments = [.. swissTournaments.Except(swissTournaments.Where(t => savedSwissTournaments.Contains(t.ID) || !IsSemesterTournament(t)))];
+			arenaTournaments = [.. arenaTournaments.Except(arenaTournaments.Where(t => savedArenaTournaments.Contains(t.ID) || !IsSemesterTournament(t)))];
 
-        private bool IsSemesterTournament(SwissTournament tournament)
-            => tournament.Started > _mainConfig.SemesterStartDate;
-    }
+			foreach (var tournament in TournamentsList)
+			{
+				if (File.GetLastWriteTime(GetTournamentPath(tournament.Tournament.ID)) < tournament.Tournament.StartDate && tournament.Tournament.StartDate < DateTime.Now)
+					arenaTournaments.Add(tournament.Tournament);
+			}
+
+			foreach (var tournament in SwissTournamentsList)
+			{
+				if (File.GetLastWriteTime(GetSwissTournamentPath(tournament.Tournament.ID)) < tournament.Tournament.Started && tournament.Tournament.Started < DateTime.Now)
+					swissTournaments.Add(tournament.Tournament);
+			}
+
+			foreach (var swissTournament in swissTournaments)
+			{
+				result.Add((swissTournament.ID, swissTournament.Name));
+				await _lichess.SaveSwissTournamentSheet(GetSwissTournamentPath(swissTournament.ID), swissTournament.ID);
+				using var reader = File.OpenText(GetSwissTournamentPath(swissTournament.ID));
+				if (IsSemesterTournament(swissTournament))
+					swissTournamentsInfos.Add(new(swissTournament, GenerateTournamentRating(await _lichess.GetSwissTournamentSheet(reader))));
+			}
+
+			foreach (var arenaTournament in arenaTournaments)
+			{
+				result.Add((arenaTournament.ID, arenaTournament.FullName));
+				await _lichess.SaveTournamentSheet(GetTournamentPath(arenaTournament.ID), arenaTournament.ID, true);
+				using var reader = File.OpenText(GetTournamentPath(arenaTournament.ID));
+				if (IsSemesterTournament(arenaTournament))
+					arenaTournamentsInfos.Add(new(arenaTournament, GenerateTournamentRating(await _lichess.GetTournamentSheet(reader))));
+			}
+
+			foreach (var tournament in new List<ArenaTournamentInfo>(TournamentsList))
+				foreach (var tournamentInfo in arenaTournamentsInfos)
+					if (tournament.Tournament.ID == tournamentInfo.Tournament.ID)
+						TournamentsList.Remove(tournament);
+
+			foreach (var tournament in new List<SwissTournamentInfo>(SwissTournamentsList))
+				foreach (var tournamentInfo in swissTournamentsInfos)
+					if (tournament.Tournament.ID == tournamentInfo.Tournament.ID)
+						SwissTournamentsList.Remove(tournament);
+
+			TournamentsList = [.. TournamentsList, .. arenaTournamentsInfos];
+			SwissTournamentsList = [.. SwissTournamentsList, .. swissTournamentsInfos];
+			return result;
+		}
+		private bool IsSemesterTournament(ArenaTournament tournament)
+		   => tournament.StartDate > _mainConfig.SemesterStartDate && !tournament.Description.Contains("баллы за этот турнир не начисляются", StringComparison.CurrentCultureIgnoreCase);
+
+		private bool IsSemesterTournament(SwissTournament tournament)
+			=> tournament.Started > _mainConfig.SemesterStartDate;
+	}
 }

@@ -28,8 +28,6 @@ namespace PolyChess.Components.Data.Tables
 
 		public string? LichessToken { get; set; }
 
-		public int AdditionalTournamentsScore { get; set; }
-
 		public override string ToString()
 		{
 			return $"Имя: <b>{Name}</b>, Lichess: <b>{LichessId}</b>, Telegram: <b>{TelegramId}</b>, Курс: <b>{Year}</b>";
