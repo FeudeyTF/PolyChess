@@ -13,6 +13,8 @@ namespace PolyChess.Configuration
 
 		public List<long> TelegramAdmins { get; set; } = [];
 
+		public List<long> TournamentsAdmins { get; set; } = [];
+
 		public DateTime SemesterStartDate { get; set; }
 
 		public DateTime SemesterEndDate { get; set; }
