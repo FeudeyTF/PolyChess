@@ -48,6 +48,7 @@ namespace PolyChess.Components.Telegram
 		public async Task StartAsync()
 		{
 			_webApp?.Start();
+			_logger.Info("Web App загружен");
 			await _telegramProvider.StartAsync();
 			var user = await _telegramProvider.Client.GetMe();
 			if (user == null)
@@ -99,7 +100,7 @@ namespace PolyChess.Components.Telegram
 		{
 			if (message.Text != null && message.From != null)
 			{
-				_logger.Info($"Получено сообщение {message.Text} от пользователя {message.From.Username} (Id: {message.From.Id})");
+				_logger.Info($"Получено сообщение {message.Text} от пользователя {message.From.Username} (Id: {message.From.Id}) в канале {message.Chat.Title} (Id: {message.Chat.Id})");
 
 				if (message.Text.StartsWith(_commandSpecifier))
 				{

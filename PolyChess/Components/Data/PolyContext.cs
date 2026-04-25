@@ -21,6 +21,8 @@ namespace PolyChess.Components.Data
 
 		public DbSet<CustomTournamentEntry> TournamentEntries { get; set; } 
 
+		public DbSet<CustomTournamentAttendance> TournamentAttendances { get; set; }
+
 		public PolyContext(DbContextOptions<PolyContext> options) : base(options)
 		{
 		}

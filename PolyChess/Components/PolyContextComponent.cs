@@ -1,5 +1,7 @@
-﻿using PolyChess.Components.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using PolyChess.Components.Data;
 using PolyChess.Core.Logging;
+using System.Data;
 
 namespace PolyChess.Components
 {
@@ -34,5 +36,5 @@ namespace PolyChess.Components
             await _context.DisposeAsync();
             _logger.Info("Данные базы данных успешно освобождены");
         }
-    }
+	}
 }
