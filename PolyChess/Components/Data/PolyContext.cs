@@ -30,5 +30,31 @@ namespace PolyChess.Components.Data
 			base.ConfigureConventions(configurationBuilder);
 			configurationBuilder.Properties<DateTime>().HaveConversion<DateTimeConverter>();
 		}
+
+		public List<Student> GetStudentsByIdentifier(string text)
+		{
+			List<Student> students = [];
+			var splittedName = text.Split(' ');
+			if (splittedName.Length >= 3)
+			{
+				var surname = splittedName[0];
+				var name = splittedName[1];
+				var patronomic = splittedName[2];
+				students.AddRange(Students.Where(s => s.Name == name && s.Surname == surname && s.Patronymic == patronomic));
+			}
+			else if (splittedName.Length == 2)
+			{
+				var surname = splittedName[0];
+				var name = splittedName[1];
+				students.AddRange(Students.Where(s => s.Name == name && s.Surname == surname));
+			}
+			else
+			{
+				var name = splittedName[0];
+				students.AddRange(Students.Where(s => s.Name == name || s.Surname == name || (!string.IsNullOrEmpty(s.LichessId) && s.LichessId == name)));
+			}
+
+			return students;
+		}
 	}
 }

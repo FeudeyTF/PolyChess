@@ -1,4 +1,5 @@
-﻿using PolyChess.Components.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using PolyChess.Components.Data;
 using PolyChess.Components.Data.Tables;
 using PolyChess.Configuration;
 using PolyChess.Core.Logging;
@@ -117,7 +118,7 @@ namespace PolyChess.Components.Tournaments
 			foreach (var customTournament in _context.Tournaments)
 			{
 				List<CustomSheetEntry> tourmanetSheet = [];
-				foreach (var customTournamentEntry in _context.TournamentEntries)
+				foreach (var customTournamentEntry in _context.TournamentEntries.Include(e => e.Student))
 				{
 					if (customTournamentEntry.Tournament == customTournament)
 						tourmanetSheet.Add(new(customTournamentEntry.Score, customTournamentEntry.Student));
