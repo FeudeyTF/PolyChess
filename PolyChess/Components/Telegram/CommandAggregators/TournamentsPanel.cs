@@ -194,11 +194,12 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                     return;
                 }
 				var students = enteredStudents.Split("\n");
-                if (int.TryParse(args.Responses[2].Text, out var score))
+                if (!int.TryParse(args.Responses[2].Text, out var score))
                 {
-                    await args.ReplyAsync("Кол-во очков введено некорректно");
+                    await args.ReplyAsync("Количество очков введено некорректно");
                     return;
                 }
+
 				foreach(var studentData in students)
 				{
 					var studentsFound = _polyContext.GetStudentsByIdentifier(studentData);

@@ -394,8 +394,13 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 				if (tournament.Tournament.Started < DateTime.UtcNow && tournament.Rating.Players.Any(p => p.Student != null && p.Student.TelegramId == userId))
 					result.Add(tournament);
 			foreach (var tournament in _tournaments.CustomTournamentsList)
+			{
 				if (tournament.Tournament.StartDate < DateTime.UtcNow && tournament.Rating.Players.Any(p => p.Student != null && p.Student.TelegramId == userId))
+				{
 					result.Add(tournament);
+
+				}
+			}
 			return new List<object>([.. from r in result orderby (r is ArenaTournamentInfo t ? t.Tournament.StartDate : r is SwissTournamentInfo s ? s.Tournament.Started : r is CustomTournamentInfo c ? c.Tournament.StartDate : DateTime.Now) descending select r]);
 		}
 
@@ -498,13 +503,12 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 							if (player != default)
 							{
-								result.Add($"Турнир <b>{customTournamentInfo.Tournament.Name}</a></b>. Состоялся <b>{customTournamentInfo.Tournament.StartDate:g}</b>");
+								result.Add($"Турнир <b>{customTournamentInfo.Tournament.Name}</b>. Состоялся <b>{customTournamentInfo.Tournament.StartDate:g}</b>");
 								result.Add($" - Описание: <b>{(customTournamentInfo.Tournament.Description)}</b>");
 								result.Add($" - Балл: <b>{(player.Score)}</b>");
 							}
 							else
 								result.Add(" - <b>Отсутствовал</b>");
-
 						}
 					}
 
