@@ -77,7 +77,7 @@ namespace PolyChess.Components.Tournaments
 					if (tournamentSheet != null)
 					{
 						List<string> exclude = [.. _mainConfig.ClubTeamPlayers];
-						tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username) || e.Team != null && !_mainConfig.InstitutesTeams.Contains(e.Team))).ToList();
+						tournamentSheet = [.. tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username) || e.Team != null && !_mainConfig.InstitutesTeams.Contains(e.Team)))];
 						var tournamentRating = GenerateTournamentRating(tournamentSheet);
 						TournamentsList.Add(new(tournament, tournamentRating));
 					}
@@ -95,10 +95,8 @@ namespace PolyChess.Components.Tournaments
 
 					try
 					{
-						using (var reader = File.OpenText(filePath))
-						{
-							tournamentSheet = await _lichess.GetSwissTournamentSheet(reader);
-						}
+						using var reader = File.OpenText(filePath);
+						tournamentSheet = await _lichess.GetSwissTournamentSheet(reader);
 					}
 					catch
 					{
@@ -108,7 +106,7 @@ namespace PolyChess.Components.Tournaments
 					if (tournamentSheet != null)
 					{
 						List<string> exclude = [.. _mainConfig.ClubTeamPlayers];
-						tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username))).ToList();
+						tournamentSheet = [.. tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username)))];
 						var tournamentRating = GenerateTournamentRating(tournamentSheet);
 						SwissTournamentsList.Add(new(tournament, tournamentRating));
 					}
