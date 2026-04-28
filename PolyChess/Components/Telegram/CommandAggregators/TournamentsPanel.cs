@@ -5,15 +5,12 @@ using PolyChess.Components.Telegram.Buttons;
 using PolyChess.Components.Telegram.Commands;
 using PolyChess.Components.Tournaments;
 using PolyChess.Configuration;
-using PolyChess.Core.Logging;
 using PolyChess.Core.Telegram;
 using PolyChess.Core.Telegram.Messages;
 using PolyChess.Core.Telegram.Messages.Discrete;
 using PolyChess.Core.Telegram.Messages.Discrete.Messages;
 using PolyChess.LichessAPI.Clients;
-using PolyChess.LichessAPI.Clients.Authorized;
 using PolyChess.LichessAPI.Types.Arena;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PolyChess.Components.Telegram.CommandAggregators
@@ -26,18 +23,15 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 		private readonly LichessClient _lichessClient;
 
-		private readonly ILogger _logger;
-
 		private readonly TournamentsComponent _tournaments;
 
 		private readonly IMainConfig _mainConfig;
 
 		private readonly DiscreteMessagesProvider _discreteMessagesProvider;
 
-		public TournamentsPanel(ITelegramProvider telegramProvider, TournamentsComponent tournaments, IMainConfig config, PolyContext polyContext, ILogger logger, LichessClient client)
+		public TournamentsPanel(ITelegramProvider telegramProvider, TournamentsComponent tournaments, IMainConfig config, PolyContext polyContext, LichessClient client)
 		{
 			_polyContext = polyContext;
-			_logger = logger;
 			_lichessClient = client;
 			_discreteMessagesProvider = new(telegramProvider);
 			_mainConfig = config;
@@ -202,9 +196,9 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 				var students = enteredStudents
 					.Split("\n")
 					.Select(s => s.Trim())
-					.Where(s => !string.IsNullOrEmpty(s))
-					.ToList();
-				if (students.Count == 0)
+					.Where(s => !string.IsNullOrEmpty(s));
+
+				if (!students.Any())
 				{
 					await args.ReplyAsync("Вы не ввели ФИО студентов");
 					return;
@@ -223,19 +217,19 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					if (studentsFound.Count() > 1)
 					{
 						await args.ReplyAsync($"По введённой фамилии и имени были найдены студенты:\n{string.Join('\n', studentsFound.Select(s => s.Surname + " " + s.Name + " " + s.Patronymic))}");
-						return;
+						continue;
 					}
 					if (studentsFound.Count == 0)
 					{
-						await args.ReplyAsync("По вашему запросу не найдено ни одного студента!");
-						return;
+						await args.ReplyAsync($"По вашему запросу {studentData} не найдено ни одного студента!");
+						continue;
 					}
 
 					var student = studentsFound.First();
 					var entry = _polyContext.TournamentEntries.FirstOrDefault(e => e.Student.Id == student.Id && e.Tournament.Id == tournament.Id);
 					if (entry == null)
 					{
-						entry = new CustomTournamentEntry()
+						entry = new()
 						{
 							Id = default,
 							Tournament = tournament,
@@ -322,9 +316,8 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 				var students = enteredStudents
 					.Split("\n")
 					.Select(s => s.Trim())
-					.Where(s => !string.IsNullOrEmpty(s))
-					.ToList();
-				if (students.Count == 0)
+					.Where(s => !string.IsNullOrEmpty(s));
+				if (!students.Any())
 				{
 					await args.ReplyAsync("Вы не ввели ФИО студентов");
 					return;
@@ -339,12 +332,12 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					if (studentsFound.Count > 1)
 					{
 						await args.ReplyAsync($"По введённой фамилии и имени были найдены студенты:\n{string.Join('\n', studentsFound.Select(s => s.Surname + " " + s.Name + " " + s.Patronymic))}");
-						return;
+						continue;
 					}
 					if (studentsFound.Count == 0)
 					{
-						await args.ReplyAsync("По вашему запросу не найдено ни одного студента!");
-						return;
+						await args.ReplyAsync($"По вашему запросу {studentData} не найдено ни одного студента!");
+						continue;
 					}
 
 					var student = studentsFound.First();
@@ -365,16 +358,11 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 					var entry = _polyContext.TournamentEntries.FirstOrDefault(e => e.Student.Id == student.Id && e.Tournament.Id == tournament.Id);
 					if (entry != null && entry.Score >= (int)CustomTournamentParticipantCategory.Guest && entry.Score <= (int)CustomTournamentParticipantCategory.Main && entry.Score != categoryScore)
-					{
 						categoryConflicts.Add($"{student.Surname} {student.Name} {student.Patronymic}: за турнир уже выставлено {entry.Score} очк.");
-					}
 				}
 
 				if (categoryConflicts.Count > 0)
-				{
 					await args.ReplyAsync("Нельзя выставлять разные категории одному и тому же участнику в одном турнире:\n" + string.Join('\n', categoryConflicts));
-					return;
-				}
 
 				var awarded = 0;
 				foreach (var student in foundStudents)
@@ -512,7 +500,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					var tournamentLink = args.Responses[0].Text;
 					if (tournamentLink != null)
 					{
-						List<string> exclude = new(_mainConfig.ClubTeamPlayers);
+						List<string> exclude = [.. _mainConfig.ClubTeamPlayers];
 						var toExclude = args.Responses[1].Text;
 						if (toExclude != null && toExclude.Trim() != "-")
 						{
@@ -575,7 +563,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 					if (tournament != null && tournamentSheet != null)
 					{
-						tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username) || e.Team != null && !_mainConfig.InstitutesTeams.Contains(e.Team))).ToList();
+						tournamentSheet = [.. tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username) || e.Team != null && !_mainConfig.InstitutesTeams.Contains(e.Team)))];
 						List<string> csv = ["Имя;Ник Lichess;Балл"];
 						List<string> text = [
 							$"Турнир <b>{tournament.FullName}</b>. Состоялся <b>{tournament.StartDate:g}</b>",
@@ -639,7 +627,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 				if (File.Exists(filePath))
 				{
 					var tournamentSheet = await _lichessClient.GetSwissTournamentSheet(File.OpenText(filePath));
-					tournamentSheet = tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username))).ToList();
+					tournamentSheet = [.. tournamentSheet.Except(tournamentSheet.Where(e => exclude.Contains(e.Username)))];
 					if (tournament != null && tournamentSheet != null)
 					{
 						List<string> csv = ["Имя;Ник Lichess;Балл"];
@@ -723,7 +711,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 			if (tournament != null)
 				return tournament;
 
-			var tournamentList = _polyContext.Tournaments.Where(t => t.Name.Contains(trimmedName)).ToList();
+			List<CustomTournament> tournamentList = [.. _polyContext.Tournaments.Where(t => t.Name.Contains(trimmedName))];
 			if (tournamentList.Count == 1)
 				return tournamentList[0];
 			return null;

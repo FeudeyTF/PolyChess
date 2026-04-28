@@ -72,10 +72,10 @@ namespace PolyChess
 				builder.Services.AddHttpClient("tgwebhook").AddTypedClient(httpClient => telegramClient);
 				builder.Services.AddAuthorization();
 				builder.Services.AddRazorPages();
-				
+
 				builder.Services.AddSingleton<IMainConfig>(_configuration);
 				builder.Services.AddSingleton(tournaments);
-				builder.Services.AddScoped(sp => 
+				builder.Services.AddScoped(sp =>
 				{
 					var optionsBuilder = new DbContextOptionsBuilder<PolyContext>();
 					optionsBuilder.UseSqlite(_configuration.DatabaseConnectionString);
@@ -85,7 +85,7 @@ namespace PolyChess
 				app = builder.Build();
 				app.UseHttpsRedirection();
 				app.UseAuthorization();
-			
+
 				telegramProvider = new WebhookTelegramProvider(
 					telegramClient,
 					_configuration.Telegram.TelegramWebhookUrl,
@@ -107,7 +107,7 @@ namespace PolyChess
 			MeTelegramCommand telegramCommands = new(telegramProvider, _lichessClient, polyContext, tournaments, _configuration, new(telegramProvider), _logger);
 			StudentCommands studentCommands = new(polyContext, _configuration, telegramProvider, _lichessClient);
 			AdminPanel adminPanel = new(telegramProvider, tournaments, puzzles, _configuration, polyContext, _logger, _lichessClient);
-			TournamentsPanel tournamentsPanel = new(telegramProvider, tournaments, _configuration, polyContext, _logger, _lichessClient);
+			TournamentsPanel tournamentsPanel = new(telegramProvider, tournaments, _configuration, polyContext, _lichessClient);
 
 			AttendanceHandler attendanceHandler = new(polyContext);
 			QuestionHandler questionHandler = new(_configuration);
