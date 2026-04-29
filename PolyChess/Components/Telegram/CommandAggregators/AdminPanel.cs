@@ -328,7 +328,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 				_discreteMessagesProvider,
 				[
 					new TelegramMessageBuilder("Введите дату урока (не обязательно точно)"),
-					new TelegramMessageBuilder("Введите имя студента (ФИО, Фамилия Имя, Имя)")
+					new TelegramMessageBuilder("Введите имя студентов (ФИО, Фамилия Имя, Имя). Каждое имя с новой строки.")
 				],
 				HandleAttendancesEntered
 			);
@@ -338,23 +338,21 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 			async Task HandleAttendancesEntered(DiscreteMessageEnteredArgs args)
 			{
-				var studentName = args.Responses[1].Text;
-				if (studentName == null)
+				var studentNames = args.Responses[1].Text;
+				if (string.IsNullOrEmpty(studentNames))
 				{
 					await args.ReplyAsync("Вы не ввели имя студента!");
 					return;
 				}
 
-				var students = _polyContext.GetStudentsByIdentifier(studentName);
-				if (students.Count() > 1)
-				{
-					await args.ReplyAsync($"По введённой фамилии и имени были найдены студенты:\n{string.Join('\n', students.Select(s => s.Surname + " " + s.Name + " " + s.Patronymic))}");
-					return;
-				}
+				var students = studentNames
+					.Split("\n")
+					.Select(s => s.Trim())
+					.Where(s => !string.IsNullOrEmpty(s));
 
-				if (students.Count == 0)
+				if (!students.Any())
 				{
-					await args.ReplyAsync("По вашему запросу не найдено ни одного студента!");
+					await args.ReplyAsync("Вы не ввели ФИО студентов");
 					return;
 				}
 
@@ -365,28 +363,49 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 				}
 
 				var lesson = _polyContext.Lessons.FirstOrDefault(l => l.StartDate < lessonDate && lessonDate < l.EndDate);
-				var student = students.First();
-
 				if (lesson == null)
 				{
 					await args.ReplyAsync($"Урок в '{lessonDate}' не проводился!");
 					return;
 				}
 
-				if (_polyContext.Attendances.Any(a => a.Lesson.Id == lesson.Id && a.Student.Id == student.Id))
+				List<string> successedAttendances = [];
+
+				foreach (var studentData in students)
 				{
-					await args.ReplyAsync($"Студент '{student.Name} {student.Surname} {student.Patronymic}' уже отмечен на урока с '{lesson.StartDate}' до '{lesson.EndDate}'");
-					return;
+					var studentsFound = _polyContext.GetStudentsByIdentifier(studentData);
+
+					if (studentsFound.Count() > 1)
+					{
+						await args.ReplyAsync($"По запросу {studentData} были найдены студенты:\n{string.Join('\n', studentsFound.Select(s => s.Surname + " " + s.Name + " " + s.Patronymic))}");
+						continue;
+					}
+
+					if (studentsFound.Count == 0)
+					{
+						await args.ReplyAsync($"По вашему запросу {studentData} не найдено ни одного студента!");
+						continue;
+					}
+
+					var student = studentsFound.First();
+					if (_polyContext.Attendances.Any(a => a.Lesson.Id == lesson.Id && a.Student.Id == student.Id))
+					{
+						await args.ReplyAsync($"Студент '{student.Name} {student.Surname} {student.Patronymic}' уже отмечен на урока с '{lesson.StartDate}' до '{lesson.EndDate}'");
+						return;
+					}
+
+					_polyContext.Attendances.Add(new Attendance()
+					{
+						Lesson = lesson,
+						Student = student
+					});
+					successedAttendances.Add(student.Surname + " " + student.Name + " " + student.Patronymic);
+
 				}
-
-				_polyContext.Attendances.Add(new Attendance()
-				{
-					Lesson = lesson,
-					Student = student
-				});
-
 				await _polyContext.SaveChangesAsync();
-				await args.ReplyAsync($"Студент '{student.Surname} {student.Name} {student.Patronymic}' был успешно отмечен на уроке с {lesson.StartDate} до {lesson.EndDate}");
+
+
+				await args.ReplyAsync($"Студенты '{string.Join(", ", successedAttendances)}' были успешно отмечены на уроке с {lesson.StartDate} до {lesson.EndDate}");
 			}
 		}
 
@@ -878,8 +897,9 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					await args.ReplyAsync("Вы не ввели ответ");
 					return;
 				}
-				FaqEntry faqEntry = new() {
-					Id = default, 
+				FaqEntry faqEntry = new()
+				{
+					Id = default,
 					Question = question,
 					Answer = answer
 				};
@@ -904,7 +924,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 			if (ctx.Query.Message != null)
 				await ctx.SendMessageAsync(message, ctx.Query.Message.Chat.Id);
-				
+
 			async Task HandleFaqInfoEntered(DiscreteMessageEnteredArgs args)
 			{
 				var question = args.Responses[0].Text;
@@ -965,8 +985,9 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					await args.ReplyAsync("Вы не ввели нижний колонтитул");
 					return;
 				}
-				HelpEntry helpEntry = new() {
-					Id = default, 
+				HelpEntry helpEntry = new()
+				{
+					Id = default,
 					Title = title,
 					Text = text,
 					Footer = footer,
@@ -993,7 +1014,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 			if (ctx.Query.Message != null)
 				await ctx.SendMessageAsync(message, ctx.Query.Message.Chat.Id);
-				
+
 			async Task HandleHelpInfoEntered(DiscreteMessageEnteredArgs args)
 			{
 				var title = args.Responses[0].Text;
