@@ -309,7 +309,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 					EndDate = endDate,
 					Latitude = latitude.Value,
 					Longitude = longitude.Value,
-					IsRequired = isRequiredResponse == "-" ? true : false
+					IsRequired = isRequiredResponse == "-"
 				};
 
 				_polyContext.Lessons.Add(lesson);
