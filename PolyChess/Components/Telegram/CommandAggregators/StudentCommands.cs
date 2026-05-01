@@ -139,7 +139,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
                         if (!student.CreativeTaskCompleted)
                         {
                             List<string> text = ["Пришло выполненное творческое задание!"];
-                            text.Add($"Студент: <b>{student.Name}</b>");
+                            text.Add($"Студент: <b>{student.Surname} {student.Name} {student.Patronymic}</b>");
                             text.Add($"Курс: <b>{student.Year}</b>");
                             text.Add($"Сообщение от студента:");
                             text.Add($"<b>{msg.Text ?? msg.Caption ?? "Студент не отправлял текстового сообщения"}</b>");
