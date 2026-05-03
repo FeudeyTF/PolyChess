@@ -153,7 +153,7 @@ namespace PolyChess.Pages
 			};
 
 			TotalLessons = await _context.Lessons
-				.CountAsync(l => l.StartDate < DateTime.Now);
+				.CountAsync(l => l.StartDate < DateTime.Now && l.IsRequired);
 
 			RequiredLessons = _config.Test.RequiredVisitedLessonsPercent;
 
