@@ -385,7 +385,7 @@ namespace PolyChess.Components.Telegram.CommandAggregators
 
 		private List<object> GetMyTournaments(Message message)
 		{
-			var userId = message.From != null ? message.From.Id : message.Chat.Id;
+			var userId = message.Chat.Id;// message.From != null ? message.From.Id : message.Chat.Id;
 			List<object> result = [];
 			foreach (var tournament in _tournaments.TournamentsList)
 				if (tournament.Tournament.StartDate < DateTime.UtcNow && tournament.Rating.Players.Any(p => p.Student != null && p.Student.TelegramId == userId))
